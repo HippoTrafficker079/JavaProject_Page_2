@@ -398,3 +398,66 @@
     -fx-tick-label-fill: #475569;
     -fx-tick-mark-visible: true;
 }
+
+/* --- Shaded DatePicker (Matches .shaded-combo & Editable Searchable ComboBox) --- */
+.date-picker.shaded-combo {
+    -fx-background-color: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%);
+    -fx-background-radius: 6px;
+    -fx-border-color: #94a3b8;
+    -fx-border-radius: 6px;
+    -fx-border-width: 1px;
+    -fx-padding: 2px 6px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.08), 3, 0, 0, 1);
+    -fx-cursor: hand;
+}
+.date-picker.shaded-combo:hover {
+    -fx-background-color: linear-gradient(to bottom, #ffffff 0%, #cbd5e1 100%);
+    -fx-border-color: #64748b;
+}
+.date-picker.shaded-combo:focused,
+.date-picker.shaded-combo:showing {
+    -fx-background-color: #e2e8f0;
+    -fx-border-color: #2563eb;
+}
+.date-picker.shaded-combo .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1e293b;
+    -fx-font-weight: 600;
+    -fx-font-size: 12px;
+    -fx-padding: 4px 6px;
+}
+.date-picker.shaded-combo .arrow-button {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+.date-picker.shaded-combo .arrow-button .arrow {
+    -fx-background-color: #334155;
+}
+
+/* --- Shaded CheckBoxes (Matches .shaded-combo Palette) --- */
+.shaded-checkbox {
+    -fx-text-fill: #1e293b;
+    -fx-font-weight: 600;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+.shaded-checkbox .box {
+    -fx-background-color: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%);
+    -fx-background-radius: 5px;
+    -fx-border-color: #94a3b8;
+    -fx-border-radius: 5px;
+    -fx-border-width: 1px;
+    -fx-padding: 3px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.08), 3, 0, 0, 1);
+}
+.shaded-checkbox:hover .box {
+    -fx-background-color: linear-gradient(to bottom, #ffffff 0%, #cbd5e1 100%);
+    -fx-border-color: #64748b;
+}
+.shaded-checkbox:selected .box {
+    -fx-background-color: #2563eb;
+    -fx-border-color: #1d4ed8;
+}
+.shaded-checkbox:selected .mark {
+    -fx-background-color: #ffffff;
+}
