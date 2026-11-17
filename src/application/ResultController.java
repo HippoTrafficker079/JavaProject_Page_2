@@ -170,6 +170,7 @@ public class ResultController {
             passRateLabel.setText("N/A");
             totalGradedLabel.setText("0");
         }
+        lockTableColumns(resultsTable, 0.18, 0.38, 0.22, 0.216);
     }
 
     private void updateMaxMarksInfo(Exam exam) {
@@ -298,5 +299,18 @@ public class ResultController {
         }
 
         applyFilters();
+    }
+    
+    private void lockTableColumns(TableView<?> table, double... ratios) {
+        if (table == null || table.getColumns().size() != ratios.length) return;
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        for (int i = 0; i < ratios.length; i++) {
+            TableColumn<?, ?> col = table.getColumns().get(i);
+            col.setReorderable(false);
+            col.setSortable(false);
+            col.minWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
+            col.maxWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
+            col.prefWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
+        }
     }
 }

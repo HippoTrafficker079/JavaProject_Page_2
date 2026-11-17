@@ -11,16 +11,16 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.Region?>
 
-<ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ExamsController">
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ExamsController">
    <content>
-      <VBox fx:id="rootPane" spacing="20.0" style="-fx-padding: 20px;">
+      <VBox fx:id="rootPane" spacing="18.0" style="-fx-padding: 22px;">
          <children>
-            
+
             <!-- TOP BAR: Notification & Profile -->
             <HBox alignment="CENTER_RIGHT" spacing="15.0">
                <children>
@@ -45,15 +45,21 @@
                </children>
             </HBox>
 
-            <!-- PAGE TITLE & SUBTITLE -->
-            <VBox spacing="3.0">
+            <!-- PAGE TITLE, SUBTITLE & DEPARTMENT BADGE -->
+            <HBox alignment="CENTER_LEFT" spacing="12.0">
                <children>
-                  <Label styleClass="page-title" text="Exams" />
-                  <Label styleClass="page-subtitle" text="Manage and view all exams, subjects and academic activities across the university." />
+                  <VBox spacing="3.0">
+                     <children>
+                        <Label styleClass="page-title" text="Exams" />
+                        <Label styleClass="page-subtitle" text="Manage and view all exams, subjects and academic activities across the university." />
+                     </children>
+                  </VBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label fx:id="examsDeptLabel" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 5px 12px; -fx-background-radius: 12px; -fx-border-color: #bfdbfe; -fx-border-radius: 12px;" text="CEIT (Computer Engineering and Information Technology)" />
                </children>
-            </VBox>
+            </HBox>
 
-            <!-- 1. METRIC CARDS ROW (Moved Above Filter Box) -->
+            <!-- 1. METRIC CARDS ROW -->
             <HBox spacing="12.0">
                <children>
                   <!-- 1. Drafts -->
@@ -124,14 +130,12 @@
                </children>
             </HBox>
 
-            <!-- FILTER & SEARCH PANEL (Major Dropdown Removed -> 3 Columns) -->
+            <!-- FILTER & SEARCH PANEL -->
             <VBox spacing="12.0" styleClass="panel-card">
                <children>
                   <HBox alignment="CENTER_LEFT">
                      <children>
                         <Label styleClass="panel-header" text="Filter &amp; Search Exams" />
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="examsDeptLabel" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-size: 10.5px; -fx-font-weight: bold; -fx-padding: 3px 10px; -fx-background-radius: 10px;" text="CEIT (Computer Engineering and Information Technology)" />
                      </children>
                   </HBox>
                   

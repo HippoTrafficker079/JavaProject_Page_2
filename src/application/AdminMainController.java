@@ -19,6 +19,8 @@ public class AdminMainController {
 
     private Node classesView;
     private Node dashboardView;
+    private Node examsView;
+    
     @FXML
     public void initialize() {
         try {
@@ -46,6 +48,14 @@ public class AdminMainController {
                 }
             }
             
+            examsView = FXMLLoader.load(getClass().getResource("AdminExamsView.fxml"));
+//            if (examsView != null) {
+//                contentArea.getChildren().setAll(examsView);
+//                if (btnDashboard != null) {
+//                    updateActiveButton(btnExams);
+//                }
+//            }
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -57,9 +67,10 @@ public class AdminMainController {
         updateActiveButton(clickedButton);
         if (clickedButton == btnDashboard && dashboardView != null) {
             contentArea.getChildren().setAll(dashboardView);
-        }
-        else if (clickedButton == btnClasses && classesView != null) {
+        } else if (clickedButton == btnClasses && classesView != null) {
             contentArea.getChildren().setAll(classesView);
+        } else if (clickedButton == btnExams && examsView != null) {
+            contentArea.getChildren().setAll(examsView);
         }
     }
 

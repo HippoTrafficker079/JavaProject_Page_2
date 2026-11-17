@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -13,11 +14,11 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ClassesController">
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ClassesController">
    <content>
-      <VBox fx:id="rootPane" spacing="20.0" styleClass="content-area">
+      <VBox fx:id="rootPane" spacing="18.0" style="-fx-padding: 22px;">
          <children>
-            
+
             <!-- TOP BAR: Notification & Profile -->
             <HBox alignment="CENTER_RIGHT" spacing="15.0">
                <children>
@@ -42,57 +43,20 @@
                </children>
             </HBox>
 
-            <!-- PAGE TITLE & SUBTITLE -->
-            <VBox spacing="3.0">
+            <!-- PAGE TITLE, SUBTITLE & DEPARTMENT BADGE -->
+            <HBox alignment="CENTER_LEFT" spacing="12.0">
                <children>
-                  <Label styleClass="page-title" text="Classes" />
-                  <Label styleClass="page-subtitle" text="Manage your classes, view schedules and student progress." />
-               </children>
-            </VBox>
-            
-            <!-- FILTER & MANAGE CLASSES (Major Dropdown Removed) -->
-            <VBox spacing="12.0" style="-fx-padding: 16px;" styleClass="panel-card">
-               <children>
-                  <HBox alignment="CENTER_LEFT">
+                  <VBox spacing="3.0">
                      <children>
-                        <Label style="-fx-font-size: 14px;" styleClass="panel-header" text="Filter &amp; Manage Classes" />
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="classesDeptLabel" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-size: 10.5px; -fx-font-weight: bold; -fx-padding: 3px 10px; -fx-background-radius: 10px;" text="CEIT (Computer Engineering and Information Technology)" />
+                        <Label styleClass="page-title" text="Classes" />
+                        <Label styleClass="page-subtitle" text="Manage your classes, view schedules and student progress." />
                      </children>
-                  </HBox>
-
-                  <HBox alignment="BOTTOM_LEFT" spacing="12.0">
-                     <children>
-                        <VBox prefWidth="190.0" spacing="4.0">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Academic Year" />
-                              <ComboBox fx:id="academicYearCombo" maxWidth="Infinity" promptText="All Years" styleClass="shaded-combo" />
-                           </children>
-                        </VBox>
-
-                        <VBox prefWidth="190.0" spacing="4.0">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Semester" />
-                              <ComboBox fx:id="semesterCombo" maxWidth="Infinity" promptText="All Semesters" styleClass="shaded-combo" />
-                           </children>
-                        </VBox>
-
-                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Search Classes" />
-                              <HBox alignment="CENTER_LEFT" spacing="8.0">
-                                 <children>
-                                    <TextField fx:id="searchField" promptText="🔍 Search by class code, title, or room..." style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 7px 12px;" HBox.hgrow="ALWAYS" />
-                                    <Button mnemonicParsing="false" onAction="#handleResetFilters" styleClass="secondary-button" text="↻ Reset" />
-                                 </children>
-                              </HBox>
-                           </children>
-                        </VBox>
-                     </children>
-                  </HBox>
+                  </VBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label fx:id="classesDeptLabel" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 5px 12px; -fx-background-radius: 12px; -fx-border-color: #bfdbfe; -fx-border-radius: 12px;" text="CEIT (Computer Engineering and Information Technology)" />
                </children>
-            </VBox>
-            
+            </HBox>
+
             <!-- METRIC CARDS ROW -->
             <HBox spacing="10.0">
                <children>
@@ -207,9 +171,50 @@
                   </VBox>
                </children>
             </HBox>
-            
-            <!-- STRIKING CLASS LIST TAB HEADER (Image 2 Enhancement) -->
-            <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-border-color: transparent transparent #cbd5e1 transparent; -fx-border-width: 0 0 2 0; -fx-padding: 10px 0 0 0;">
+
+            <!-- FILTER & MANAGE CLASSES -->
+            <VBox spacing="12.0" style="-fx-padding: 16px;" styleClass="panel-card">
+               <children>
+                  <HBox alignment="CENTER_LEFT">
+                     <children>
+                        <Label style="-fx-font-size: 14px;" styleClass="panel-header" text="Filter &amp; Manage Classes" />
+                     </children>
+                  </HBox>
+
+                  <HBox alignment="BOTTOM_LEFT" spacing="12.0">
+                     <children>
+                        <VBox prefWidth="190.0" spacing="4.0">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Academic Year" />
+                              <ComboBox fx:id="academicYearCombo" maxWidth="Infinity" promptText="All Years" styleClass="shaded-combo" />
+                           </children>
+                        </VBox>
+
+                        <VBox prefWidth="190.0" spacing="4.0">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Semester" />
+                              <ComboBox fx:id="semesterCombo" maxWidth="Infinity" promptText="All Semesters" styleClass="shaded-combo" />
+                           </children>
+                        </VBox>
+
+                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Search Classes" />
+                              <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                 <children>
+                                    <TextField fx:id="searchField" promptText="🔍 Search by class code, title, or room..." style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 7px 12px;" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="resetFilterBtn" mnemonicParsing="false" onAction="#handleResetFilters" styleClass="secondary-button" text="↻ Reset" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+
+            <!-- STRIKING CLASS LIST TAB HEADER -->
+            <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-border-color: transparent transparent #cbd5e1 transparent; -fx-border-width: 0 0 2 0; -fx-padding: 6px 0 0 0;">
                <children>
                   <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-border-color: transparent transparent #1b315e transparent; -fx-border-width: 0 0 3.5 0; -fx-padding: 0 4px 6px 0;">
                      <children>
@@ -219,20 +224,20 @@
                   </HBox>
                </children>
             </HBox>
-            
+
             <!-- COURSE CARDS DYNAMIC GRID CONTAINER -->
             <GridPane fx:id="cardsGrid" hgap="15.0" vgap="15.0">
-              <columnConstraints>
-                <ColumnConstraints percentWidth="33.33" />
-                <ColumnConstraints percentWidth="33.33" />
-                <ColumnConstraints percentWidth="33.33" />
-              </columnConstraints>
-              <rowConstraints>
-                <RowConstraints />
-                <RowConstraints />
-              </rowConstraints>
+               <columnConstraints>
+                  <ColumnConstraints percentWidth="33.33" />
+                  <ColumnConstraints percentWidth="33.33" />
+                  <ColumnConstraints percentWidth="33.33" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
             </GridPane>
-            
+
             <!-- BOTTOM FOOTER & DYNAMIC PAGINATION -->
             <HBox alignment="CENTER_LEFT">
                <children>

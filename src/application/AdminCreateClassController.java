@@ -105,6 +105,8 @@ public class AdminCreateClassController {
         weeklySlots.add(new WeeklySlot(DayOfWeek.FRIDAY, 1, 2));
         renderWeeklySlotChips();
         regenerateSessions();
+        
+        lockTableColumns(sessionTable, 0.09, 0.22, 0.13, 0.34, 0.216);
     }
 
     private void initWeightageFields() {
@@ -270,7 +272,9 @@ public class AdminCreateClassController {
         if (slotDurationCombo != null) {
             slotDurationCombo.setItems(FXCollections.observableArrayList(
                 "1 Period (Single)",
-                "2 Periods (Double)"
+                "2 Periods (Double)",
+                "3 Periods (Triple)",
+                "4 Periods (Quad)"
             ));
             slotDurationCombo.setValue("2 Periods (Double)");
         }
@@ -286,11 +290,12 @@ public class AdminCreateClassController {
 
         DayOfWeek day = DayOfWeek.valueOf(dayName.toUpperCase(Locale.ENGLISH));
         int startPeriod = extractPeriodNumber(periodStr);
-        int duration = (durationStr != null && durationStr.startsWith("2")) ? 2 : 1;
+        int duration = extractDurationCount(durationStr);
 
         if (startPeriod + duration - 1 > 9) {
             showAlert(Alert.AlertType.WARNING, "Exceeds Daily Periods",
-                    "Period 9 is the final period of the day, so a 2-period block cannot start at Period 9.");
+                    "Period 9 is the final period of the day, so a " + duration
+                    + "-period block cannot start at Period " + startPeriod + ".");
             return;
         }
 
@@ -313,6 +318,16 @@ public class AdminCreateClassController {
 
         renderWeeklySlotChips();
         regenerateSessions();
+    }
+
+    private int extractDurationCount(String durationText) {
+        if (durationText == null || durationText.isEmpty()) return 1;
+        char firstChar = durationText.trim().charAt(0);
+        if (Character.isDigit(firstChar)) {
+            int val = Character.getNumericValue(firstChar);
+            return Math.max(1, Math.min(val, 4));
+        }
+        return 1;
     }
 
     private void renderWeeklySlotChips() {
@@ -715,5 +730,18 @@ public class AdminCreateClassController {
 
         public String getPeriodLabel() { return periodLabel.get(); }
         public StringProperty periodLabelProperty() { return periodLabel; }
+    }
+    
+    private void lockTableColumns(TableView<?> table, double... ratios) {
+        if (table == null || table.getColumns().size() != ratios.length) return;
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        for (int i = 0; i < ratios.length; i++) {
+            TableColumn<?, ?> col = table.getColumns().get(i);
+            col.setReorderable(false);
+            col.setSortable(false);
+            col.minWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
+            col.maxWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
+            col.prefWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
+        }
     }
 }

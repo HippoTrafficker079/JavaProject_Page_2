@@ -6,6 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -23,12 +24,21 @@ public class LoginController {
     @FXML private Button roleTeacherBtn;
     @FXML private Button roleAdminBtn;
     @FXML private TextField usernameField;
+    @FXML private TextField emailField;
+
+    // Password & Eye Toggle
     @FXML private PasswordField passwordField;
     @FXML private TextField visiblePasswordField;
     @FXML private Label eyeIconLabel;
 
+    // Confirm Password & Eye Toggle
+    @FXML private PasswordField confirmPasswordField;
+    @FXML private TextField visibleConfirmPasswordField;
+    @FXML private Label confirmEyeIconLabel;
+
     private String selectedRole = "Teacher"; // Default
     private boolean isPasswordVisible = false;
+    private boolean isConfirmPasswordVisible = false;
 
     @FXML
     public void initialize() {
@@ -36,18 +46,35 @@ public class LoginController {
             logoImageView.setImage(new Image(getClass().getResourceAsStream("ytulogo.png")));
         }
 
-        // Synchronize text between masked passwordField and unmasked visiblePasswordField
-        passwordField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!isPasswordVisible && visiblePasswordField != null) {
-                visiblePasswordField.setText(newVal);
-            }
-        });
+        // Synchronize masked and unmasked Password fields
+        if (passwordField != null && visiblePasswordField != null) {
+            passwordField.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (!isPasswordVisible) {
+                    visiblePasswordField.setText(newVal);
+                }
+            });
 
-        visiblePasswordField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (isPasswordVisible && passwordField != null) {
-                passwordField.setText(newVal);
-            }
-        });
+            visiblePasswordField.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (isPasswordVisible) {
+                    passwordField.setText(newVal);
+                }
+            });
+        }
+
+        // Synchronize masked and unmasked Confirm Password fields
+        if (confirmPasswordField != null && visibleConfirmPasswordField != null) {
+            confirmPasswordField.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (!isConfirmPasswordVisible) {
+                    visibleConfirmPasswordField.setText(newVal);
+                }
+            });
+
+            visibleConfirmPasswordField.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (isConfirmPasswordVisible) {
+                    confirmPasswordField.setText(newVal);
+                }
+            });
+        }
     }
 
     @FXML
@@ -71,30 +98,59 @@ public class LoginController {
             visiblePasswordField.setText(passwordField.getText());
             visiblePasswordField.setVisible(true);
             passwordField.setVisible(false);
-            eyeIconLabel.setText("👁‍🗨"); // Active eye indicator
-            eyeIconLabel.setStyle("-fx-text-fill: #2563eb; -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 0 0 0 8px;");
+            eyeIconLabel.setText("👁‍🗨");
+            eyeIconLabel.setStyle("-fx-text-fill: #2563eb; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;");
         } else {
             passwordField.setText(visiblePasswordField.getText());
             passwordField.setVisible(true);
             visiblePasswordField.setVisible(false);
-            eyeIconLabel.setText("👁"); // Standard eye indicator
-            eyeIconLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 0 0 0 8px;");
+            eyeIconLabel.setText("👁");
+            eyeIconLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;");
+        }
+    }
+
+    @FXML
+    public void toggleConfirmPasswordVisibility(MouseEvent event) {
+        isConfirmPasswordVisible = !isConfirmPasswordVisible;
+        if (isConfirmPasswordVisible) {
+            visibleConfirmPasswordField.setText(confirmPasswordField.getText());
+            visibleConfirmPasswordField.setVisible(true);
+            confirmPasswordField.setVisible(false);
+            confirmEyeIconLabel.setText("👁‍🗨");
+            confirmEyeIconLabel.setStyle("-fx-text-fill: #2563eb; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;");
+        } else {
+            confirmPasswordField.setText(visibleConfirmPasswordField.getText());
+            confirmPasswordField.setVisible(true);
+            visibleConfirmPasswordField.setVisible(false);
+            confirmEyeIconLabel.setText("👁");
+            confirmEyeIconLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;");
         }
     }
 
     @FXML
     public void handleLogin(ActionEvent event) {
+        String pass = isPasswordVisible ? visiblePasswordField.getText() : passwordField.getText();
+        String confirmPass = isConfirmPasswordVisible ? visibleConfirmPasswordField.getText() : confirmPasswordField.getText();
+
+        // Validate matching passwords if Confirm Password was entered
+        if (confirmPass != null && !confirmPass.isEmpty() && !confirmPass.equals(pass)) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Password Mismatch");
+            alert.setHeaderText(null);
+            alert.setContentText("Password and Confirm Password do not match.");
+            alert.showAndWait();
+            return;
+        }
+
         try {
-            // Assign lecturer name & department automatically upon Teacher login
             if ("Teacher".equals(selectedRole)) {
                 assignLecturerSession();
             }
 
             String targetFxml = selectedRole.equals("Admin") ? "AdminMainLayout.fxml" : "MainLayout.fxml";
-            
+
             Stage stage = (Stage) usernameField.getScene().getWindow();
-            
-            // Capture current window state and size before switching scenes
+
             boolean wasMaximized = stage.isMaximized();
             double currentWidth = stage.getWidth();
             double currentHeight = stage.getHeight();
@@ -102,9 +158,8 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(targetFxml));
             Parent root = loader.load();
 
-            // Use current window dimensions so it doesn't drop down to default 1024x700
             Scene scene = new Scene(root, currentWidth > 0 ? currentWidth : 1024, currentHeight > 0 ? currentHeight : 700);
-            
+
             if (getClass().getResource("style.css") != null) {
                 scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
             }
@@ -113,7 +168,6 @@ public class LoginController {
             stage.setTitle("YTU Student Information Management System - " + (selectedRole.equals("Admin") ? "System Administrator" : "Lecturer"));
             stage.show();
 
-            // Ensure maximized state persists across scene reloads
             if (wasMaximized) {
                 Platform.runLater(() -> stage.setMaximized(true));
             }
@@ -144,7 +198,6 @@ public class LoginController {
             UserSession.lecturerName = "Dr. Myo Tint";
             UserSession.setDepartmentByCode("MC");
         } else {
-            // Default CEIT Lecturer
             UserSession.lecturerName = "Dr. Hla Myint";
             UserSession.setDepartmentByCode("CEIT");
         }

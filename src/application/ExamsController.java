@@ -108,6 +108,7 @@ public class ExamsController {
         }
 
         buildCalendar();
+        lockTableColumns(examsTable, 0.20, 0.32, 0.18, 0.14, 0.156);
     }
 
     @FXML
@@ -291,5 +292,18 @@ public class ExamsController {
 
     private int liturgicalSundayOffset(int dayOfWeekValue) {
         return dayOfWeekValue % 7;
+    }
+    
+    private void lockTableColumns(TableView<?> table, double... ratios) {
+        if (table == null || table.getColumns().size() != ratios.length) return;
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        for (int i = 0; i < ratios.length; i++) {
+            TableColumn<?, ?> col = table.getColumns().get(i);
+            col.setReorderable(false);
+            col.setSortable(false);
+            col.minWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
+            col.maxWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
+            col.prefWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
+        }
     }
 }

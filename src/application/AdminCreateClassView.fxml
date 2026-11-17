@@ -238,7 +238,7 @@
                                        </children>
                                     </VBox>
 
-                                    <VBox minWidth="130.0" prefWidth="145.0" spacing="4.0">
+                                    <VBox minWidth="150.0" prefWidth="165.0" spacing="4.0">
                                        <children>
                                           <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Length" />
                                           <ComboBox fx:id="slotDurationCombo" maxWidth="Infinity" styleClass="shaded-combo" />
