@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ClassesController">
+   <content>
+      <VBox fx:id="rootPane" spacing="20.0" styleClass="content-area">
+         <children>
+            
+            <!-- TOP BAR: Notification & Profile -->
+            <HBox alignment="CENTER_RIGHT" spacing="15.0">
+               <children>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label style="-fx-font-size: 16px;" text="🔔" />
+                  <HBox alignment="CENTER" spacing="8.0" style="-fx-background-color: #ffffff; -fx-background-radius: 20px; -fx-padding: 6px 14px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 6, 0, 0, 2); -fx-border-color: #e2e8f0; -fx-border-radius: 20px;">
+                     <children>
+                        <StackPane style="-fx-background-color: #dbeafe; -fx-background-radius: 12px; -fx-min-width: 24px; -fx-min-height: 24px;">
+                           <children>
+                              <Label style="-fx-font-size: 13px; -fx-text-fill: #2563eb;" text="👨‍🏫" />
+                           </children>
+                        </StackPane>
+                        <VBox alignment="CENTER_LEFT" spacing="1.0">
+                           <children>
+                              <Label style="-fx-font-size: 9px; -fx-text-fill: #16a34a; -fx-font-weight: bold;" text="● LOGGED IN AS" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-font-size: 12px;" text="Lecturer (Dr. Hla Myint)" />
+                           </children>
+                        </VBox>
+                        <Label style="-fx-text-fill: #64748b; -fx-font-size: 10px;" text="▼" />
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+
+            <!-- PAGE TITLE & SUBTITLE -->
+            <VBox spacing="3.0">
+               <children>
+                  <Label styleClass="page-title" text="Classes" />
+                  <Label styleClass="page-subtitle" text="Manage your classes, view schedules and student progress." />
+               </children>
+            </VBox>
+            
+            <!-- FILTER & MANAGE CLASSES (Major Dropdown Removed) -->
+            <VBox spacing="12.0" style="-fx-padding: 16px;" styleClass="panel-card">
+               <children>
+                  <HBox alignment="CENTER_LEFT">
+                     <children>
+                        <Label style="-fx-font-size: 14px;" styleClass="panel-header" text="Filter &amp; Manage Classes" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="classesDeptLabel" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-size: 10.5px; -fx-font-weight: bold; -fx-padding: 3px 10px; -fx-background-radius: 10px;" text="CEIT (Computer Engineering and Information Technology)" />
+                     </children>
+                  </HBox>
+
+                  <HBox alignment="BOTTOM_LEFT" spacing="12.0">
+                     <children>
+                        <VBox prefWidth="190.0" spacing="4.0">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Academic Year" />
+                              <ComboBox fx:id="academicYearCombo" maxWidth="Infinity" promptText="All Years" styleClass="shaded-combo" />
+                           </children>
+                        </VBox>
+
+                        <VBox prefWidth="190.0" spacing="4.0">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Semester" />
+                              <ComboBox fx:id="semesterCombo" maxWidth="Infinity" promptText="All Semesters" styleClass="shaded-combo" />
+                           </children>
+                        </VBox>
+
+                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Search Classes" />
+                              <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                 <children>
+                                    <TextField fx:id="searchField" promptText="🔍 Search by class code, title, or room..." style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 7px 12px;" HBox.hgrow="ALWAYS" />
+                                    <Button mnemonicParsing="false" onAction="#handleResetFilters" styleClass="secondary-button" text="↻ Reset" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+            
+            <!-- METRIC CARDS ROW -->
+            <HBox spacing="10.0">
+               <children>
+                  <!-- 1. My Classes -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 12px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="36.0" maxWidth="36.0" minHeight="36.0" minWidth="36.0" style="-fx-background-color: #dbeafe; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-text-fill: #2563eb; -fx-font-size: 17px;" text="👥" />
+                                 </children>
+                              </StackPane>
+                              <Label fx:id="myClassesCountLabel" styleClass="metric-value" text="12" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="My Classes" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Total classes" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 2. Total Students -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 12px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="36.0" maxWidth="36.0" minHeight="36.0" minWidth="36.0" style="-fx-background-color: #dcfce7; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-text-fill: #16a34a; -fx-font-size: 17px;" text="🎓" />
+                                 </children>
+                              </StackPane>
+                              <Label styleClass="metric-value" text="348" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Total Students" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Enrolled" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 3. Total Teachers -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 12px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="36.0" maxWidth="36.0" minHeight="36.0" minWidth="36.0" style="-fx-background-color: #ffe4e6; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-text-fill: #e11d48; -fx-font-size: 17px;" text="👨‍🏫" />
+                                 </children>
+                              </StackPane>
+                              <Label styleClass="metric-value" text="84" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Total Teachers" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Active faculty" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 4. Total Courses -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 12px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="36.0" maxWidth="36.0" minHeight="36.0" minWidth="36.0" style="-fx-background-color: #f3e8ff; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-text-fill: #9333ea; -fx-font-size: 17px;" text="📚" />
+                                 </children>
+                              </StackPane>
+                              <Label styleClass="metric-value" text="96" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Total Courses" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Course offerings" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 5. Today's Attendance -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 12px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="36.0" maxWidth="36.0" minHeight="36.0" minWidth="36.0" style="-fx-background-color: #fef3c7; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-text-fill: #d97706; -fx-font-size: 17px;" text="📅" />
+                                 </children>
+                              </StackPane>
+                              <Label styleClass="metric-value" text="92.3%" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Today's Attendance" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Present: 1,158" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            
+            <!-- STRIKING CLASS LIST TAB HEADER (Image 2 Enhancement) -->
+            <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-border-color: transparent transparent #cbd5e1 transparent; -fx-border-width: 0 0 2 0; -fx-padding: 10px 0 0 0;">
+               <children>
+                  <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-border-color: transparent transparent #1b315e transparent; -fx-border-width: 0 0 3.5 0; -fx-padding: 0 4px 6px 0;">
+                     <children>
+                        <Label styleClass="class-list-header-title" text="Class List" />
+                        <Label fx:id="classListBadge" style="-fx-background-color: #dbeafe; -fx-text-fill: #1d4ed8; -fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 12px; -fx-padding: 2px 8px;" text="12 total" />
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+            
+            <!-- COURSE CARDS DYNAMIC GRID CONTAINER -->
+            <GridPane fx:id="cardsGrid" hgap="15.0" vgap="15.0">
+              <columnConstraints>
+                <ColumnConstraints percentWidth="33.33" />
+                <ColumnConstraints percentWidth="33.33" />
+                <ColumnConstraints percentWidth="33.33" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints />
+                <RowConstraints />
+              </rowConstraints>
+            </GridPane>
+            
+            <!-- BOTTOM FOOTER & DYNAMIC PAGINATION -->
+            <HBox alignment="CENTER_LEFT">
+               <children>
+                  <Label fx:id="paginationInfoLabel" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Showing 1 - 6 of 12 classes" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <HBox fx:id="paginationControlsBox" alignment="CENTER" spacing="5.0">
+                     <!-- Dynamically managed in controller -->
+                  </HBox>
+               </children>
+            </HBox>
+
+         </children>
+      </VBox>
+   </content>
+</ScrollPane>

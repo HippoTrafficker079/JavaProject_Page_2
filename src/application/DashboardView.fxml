@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.DashboardController">
+   <content>
+      <VBox spacing="16.0" style="-fx-padding: 18px;">
+         <children>
+            
+            <!-- TOP BAR: Notification & Profile -->
+            <HBox alignment="CENTER_RIGHT" spacing="12.0">
+               <children>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label style="-fx-font-size: 16px;" text="🔔" />
+                  <HBox alignment="CENTER" spacing="8.0" style="-fx-background-color: #ffffff; -fx-background-radius: 20px; -fx-padding: 6px 14px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 6, 0, 0, 2); -fx-border-color: #e2e8f0; -fx-border-radius: 20px;">
+                     <children>
+                        <StackPane style="-fx-background-color: #dbeafe; -fx-background-radius: 12px; -fx-min-width: 24px; -fx-min-height: 24px;">
+                           <children>
+                              <Label style="-fx-font-size: 13px; -fx-text-fill: #2563eb;" text="👨‍🏫" />
+                           </children>
+                        </StackPane>
+                        <VBox alignment="CENTER_LEFT" spacing="1.0">
+                           <children>
+                              <Label style="-fx-font-size: 9px; -fx-text-fill: #16a34a; -fx-font-weight: bold;" text="● LOGGED IN AS" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-font-size: 12px;" text="Lecturer (Dr. Hla Myint)" />
+                           </children>
+                        </VBox>
+                        <Label style="-fx-text-fill: #64748b; -fx-font-size: 10px;" text="▼" />
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+
+            <!-- PAGE TITLE & SEARCH BAR -->
+            <HBox alignment="CENTER_LEFT" spacing="15.0">
+               <children>
+                  <Label styleClass="page-title" text="Dashboard" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <HBox alignment="CENTER_LEFT" maxWidth="300.0" prefWidth="260.0" style="-fx-background-color: white; -fx-background-radius: 20px; -fx-padding: 4px 14px; -fx-border-color: #cbd5e1; -fx-border-radius: 20px;">
+                     <children>
+                        <Label style="-fx-text-fill: #94a3b8;" text="🔍" />
+                        <TextField promptText="Search students, classes, subjects..." style="-fx-background-color: transparent; -fx-border-width: 0; -fx-font-size: 12px;" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+
+            <!-- WELCOME BANNER -->
+            <HBox alignment="CENTER_LEFT" spacing="12.0" style="-fx-background-color: linear-gradient(to right, #f0f9ff, #e0f2fe); -fx-background-radius: 12px; -fx-padding: 18px 20px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 4, 0, 0, 2); -fx-border-color: #bae6fd; -fx-border-radius: 12px;">
+               <children>
+                  <VBox spacing="6.0" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <Label fx:id="welcomeTitleLabel" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" text="Good Morning, Dr. Hla Myint 👋" />
+                              <Label fx:id="departmentBadgeLabel" style="-fx-background-color: #dbeafe; -fx-text-fill: #1d4ed8; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 3px 10px; -fx-background-radius: 12px; -fx-border-color: #93c5fd; -fx-border-radius: 12px;" text="🏛️ Department: CEIT (Computer Engineering and Information Technology)" />
+                           </children>
+                        </HBox>
+                        <Label style="-fx-text-fill: #475569; -fx-font-size: 12px;" text="Welcome to your teaching dashboard. Here's an overview of your department classes and academic activities." wrapText="true" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+
+            <!-- 4 METRIC CARDS -->
+            <HBox spacing="12.0">
+               <children>
+                  <!-- 1. My Subjects -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 14px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="38.0" maxWidth="38.0" minHeight="38.0" minWidth="38.0" style="-fx-background-color: #dbeafe; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-font-size: 18px; -fx-text-fill: #2563eb;" text="📘" />
+                                 </children>
+                              </StackPane>
+                              <Label styleClass="metric-value" text="4" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="My Subjects" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Current Semester" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 2. Total Students -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 14px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="38.0" maxWidth="38.0" minHeight="38.0" minWidth="38.0" style="-fx-background-color: #dcfce7; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-font-size: 18px; -fx-text-fill: #16a34a;" text="👥" />
+                                 </children>
+                              </StackPane>
+                              <Label styleClass="metric-value" text="186" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Total Students" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Assigned Classes" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 3. Average Attendance -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 14px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="38.0" maxWidth="38.0" minHeight="38.0" minWidth="38.0" style="-fx-background-color: #fef3c7; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-font-size: 18px; -fx-text-fill: #d97706;" text="📋" />
+                                 </children>
+                              </StackPane>
+                              <Label styleClass="metric-value" text="94.2%" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Average Attendance" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="All Active Courses" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 4. Average GPA -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 14px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="38.0" maxWidth="38.0" minHeight="38.0" minWidth="38.0" style="-fx-background-color: #f3e8ff; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-font-size: 18px; -fx-text-fill: #9333ea;" text="📊" />
+                                 </children>
+                              </StackPane>
+                              <Label styleClass="metric-value" text="3.62" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Average GPA" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Cumulative Standing" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+
+            <!-- 2 COLUMN CONTENT GRID (Upcoming & Assigned Classes Removed) -->
+            <GridPane hgap="12.0">
+               <columnConstraints>
+                  <ColumnConstraints percentWidth="50.0" />
+                  <ColumnConstraints percentWidth="50.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints />
+               </rowConstraints>
+               <children>
+                  
+                  <!-- COLUMN 1: My Courses (5 Individual Course Blocks from Classes View) -->
+                  <VBox spacing="10.0" style="-fx-padding: 14px;" styleClass="panel-card" GridPane.columnIndex="0">
+                     <children>
+                        <HBox alignment="CENTER_LEFT">
+                           <children>
+                              <Label style="-fx-font-size: 13px;" styleClass="panel-header" text="📚 My Courses" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="viewAllCoursesLabel" onMouseClicked="#handleViewAllCourses" style="-fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand;" text="View All →" />
+                           </children>
+                        </HBox>
+
+                        <!-- Dynamically populated with up to 5 individual bordered course blocks -->
+                        <VBox fx:id="myCoursesContainer" spacing="8.0" VBox.vgrow="ALWAYS" />
+                     </children>
+                  </VBox>
+
+                  <!-- COLUMN 2: Performance & Submissions -->
+                  <VBox spacing="12.0" GridPane.columnIndex="1">
+                     <children>
+                        <!-- Student Performance Bar Chart -->
+                        <VBox spacing="4.0" style="-fx-padding: 14px;" styleClass="panel-card">
+                           <children>
+                              <HBox alignment="CENTER_LEFT">
+                                 <children>
+                                    <Label style="-fx-font-size: 13px;" styleClass="panel-header" text="📊 Student Performance" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Label style="-fx-font-size: 10px; -fx-text-fill: #475569; -fx-border-color: #cbd5e1; -fx-border-radius: 4px; -fx-padding: 2px 6px;" text="By Course ⌄" />
+                                 </children>
+                              </HBox>
+                              
+                              <BarChart fx:id="performanceChart" animated="false" barGap="2.0" categoryGap="16.0" horizontalGridLinesVisible="true" legendVisible="false" minHeight="185.0" prefHeight="195.0" style="-fx-padding: 0;" verticalGridLinesVisible="false">
+                                <xAxis>
+                                  <CategoryAxis fx:id="xAxisPerformance" side="BOTTOM" style="-fx-border-color: #cbd5e1 transparent transparent transparent; -fx-border-width: 1px 0 0 0; -fx-tick-label-font-size: 10px;" tickLabelFill="#475569" tickMarkVisible="true" />
+                                </xAxis>
+                                <yAxis>
+                                  <NumberAxis fx:id="yAxisPerformance" autoRanging="false" lowerBound="0.0" minorTickVisible="false" side="LEFT" style="-fx-border-color: transparent #cbd5e1 transparent transparent; -fx-border-width: 0 1px 0 0; -fx-tick-label-font-size: 9px;" tickLabelFill="#475569" tickMarkVisible="true" tickUnit="0.5" upperBound="4.5" />
+                                </yAxis>
+                              </BarChart>
+                           </children>
+                        </VBox>
+
+                        <!-- Recent Submissions -->
+                        <VBox spacing="10.0" style="-fx-padding: 14px;" styleClass="panel-card" VBox.vgrow="ALWAYS">
+                           <children>
+                              <HBox alignment="CENTER_LEFT">
+                                 <children>
+                                    <Label style="-fx-font-size: 13px;" styleClass="panel-header" text="📄 Submissions" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Label style="-fx-text-fill: #2563eb; -fx-font-size: 10px; -fx-cursor: hand;" text="View All →" />
+                                 </children>
+                              </HBox>
+                              
+                              <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                 <children>
+                                    <StackPane style="-fx-background-color: #dcfce7; -fx-background-radius: 20px; -fx-min-width: 22px; -fx-min-height: 22px;"><Label style="-fx-text-fill: #16a34a; -fx-font-weight: bold; -fx-font-size: 10px;" text="✓" /></StackPane>
+                                    <VBox HBox.hgrow="ALWAYS">
+                                       <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" text="IT201 - Assignment 1" />
+                                       <Label style="-fx-font-size: 9px; -fx-text-fill: #64748b;" text="2A · 56/56 · 2h ago" />
+                                    </VBox>
+                                 </children>
+                              </HBox>
+
+                              <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                 <children>
+                                    <StackPane style="-fx-background-color: #fef3c7; -fx-background-radius: 20px; -fx-min-width: 22px; -fx-min-height: 22px;"><Label style="-fx-text-fill: #d97706; -fx-font-weight: bold; -fx-font-size: 10px;" text="🕒" /></StackPane>
+                                    <VBox HBox.hgrow="ALWAYS">
+                                       <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" text="IT203 - Lab Report" />
+                                       <Label style="-fx-font-size: 9px; -fx-text-fill: #64748b;" text="2B · 47/48 · 5h ago" />
+                                    </VBox>
+                                 </children>
+                              </HBox>
+
+                              <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                 <children>
+                                    <StackPane style="-fx-background-color: #dcfce7; -fx-background-radius: 20px; -fx-min-width: 22px; -fx-min-height: 22px;"><Label style="-fx-text-fill: #16a34a; -fx-font-weight: bold; -fx-font-size: 10px;" text="✓" /></StackPane>
+                                    <VBox HBox.hgrow="ALWAYS">
+                                       <Label style="-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" text="IT205 - Project Proposal" />
+                                       <Label style="-fx-font-size: 9px; -fx-text-fill: #64748b;" text="3A · 82/82 · 1d ago" />
+                                    </VBox>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+               </children>
+            </GridPane>
+         </children>
+      </VBox>
+   </content>
+</ScrollPane>
