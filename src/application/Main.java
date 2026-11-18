@@ -9,29 +9,33 @@ import javafx.scene.Scene;
 public class Main extends Application {
 
 	@Override
-	public void start(Stage primaryStage) {
-		try {
-			String css = this.getClass().getResource("style.css").toExternalForm();
-			Parent root = FXMLLoader.load(getClass().getResource("Loginview.fxml"));
+    public void start(Stage primaryStage) {
+        try {
+            // Window 1: Main Login (Log in as Admin here)
+            Parent root1 = FXMLLoader.load(getClass().getResource("LoginView.fxml"));
+            Scene scene1 = new Scene(root1, 1060, 660);
+            if (getClass().getResource("style.css") != null) {
+                scene1.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+            }
+            primaryStage.setTitle("YTU SIMS - Window 1 (Admin)");
+            primaryStage.setScene(scene1);
+            primaryStage.show();
 
-			// Increased startup window size to match reference proportions
-			Scene scene = new Scene(root, 1060, 660);
-			scene.getStylesheets().add(css);
-
-			primaryStage.setTitle("YTU Student Information Management System"); 
-			primaryStage.setScene(scene);
-
-			// Prevent shrinking the window smaller than what fits all UI columns cleanly
-			primaryStage.setMinWidth(1060);
-			primaryStage.setMinHeight(660);
-
-			primaryStage.centerOnScreen();
-			primaryStage.show();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
+            // Window 2: Second Login (Log in as Lecturer here to see live updates)
+            Stage secondStage = new Stage();
+            Parent root2 = FXMLLoader.load(getClass().getResource("LoginView.fxml"));
+            Scene scene2 = new Scene(root2, 1060, 660);
+            if (getClass().getResource("style.css") != null) {
+                scene2.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+            }
+            secondStage.setTitle("YTU SIMS - Window 2 (Lecturer)");
+            secondStage.setScene(scene2);
+            secondStage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+	
 	public static void main(String[] args) {
 		launch(args);
 	}

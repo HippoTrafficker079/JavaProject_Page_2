@@ -144,7 +144,8 @@ public class LoginController {
 
         try {
             if ("Teacher".equals(selectedRole)) {
-                assignLecturerSession();
+            	// Assign department & profile for both Teacher and Admin logins
+                assignSessionByUsername();
             }
 
             String targetFxml = selectedRole.equals("Admin") ? "AdminMainLayout.fxml" : "MainLayout.fxml";
@@ -177,26 +178,53 @@ public class LoginController {
         }
     }
 
-    private void assignLecturerSession() {
+    private void assignSessionByUsername() {
         String user = (usernameField != null && usernameField.getText() != null)
                 ? usernameField.getText().trim().toLowerCase()
                 : "";
 
-        if (user.contains("ce") && !user.contains("ceit")) {
-            UserSession.lecturerName = "Dr. Aung Naing";
-            UserSession.setDepartmentByCode("CE");
-        } else if (user.contains("me")) {
+        if (user.contains("ceit")) {
+            UserSession.lecturerName = "Dr. Hla Myint";
+            UserSession.setDepartmentByCode("CEIT");
+        } else if (user.contains("mech")) {
             UserSession.lecturerName = "Dr. Su Su";
-            UserSession.setDepartmentByCode("ME");
+            UserSession.setDepartmentByCode("Mech");
+        } else if (user.contains("mce")) {
+            UserSession.lecturerName = "Dr. Myo Tint";
+            UserSession.setDepartmentByCode("McE");
+        } else if (user.contains("che")) {
+            UserSession.lecturerName = "Dr. Khin Marlar";
+            UserSession.setDepartmentByCode("ChE");
+        } else if (user.contains("tex")) {
+            UserSession.lecturerName = "Daw Thiri Nandar";
+            UserSession.setDepartmentByCode("Tex");
+        } else if (user.contains("tele")) {
+            UserSession.lecturerName = "U Zaw Min";
+            UserSession.setDepartmentByCode("Tele");
+        } else if (user.contains("met")) {
+            UserSession.lecturerName = "Dr. Aye Aye Mon";
+            UserSession.setDepartmentByCode("Met");
+        } else if (user.contains("arch")) {
+            UserSession.lecturerName = "U Kyaw Swar";
+            UserSession.setDepartmentByCode("Arch");
         } else if (user.contains("ep")) {
             UserSession.lecturerName = "Prof. Kyaw Zin";
             UserSession.setDepartmentByCode("EP");
         } else if (user.contains("ec")) {
             UserSession.lecturerName = "Dr. Tin Maung";
             UserSession.setDepartmentByCode("EC");
-        } else if (user.contains("mc")) {
-            UserSession.lecturerName = "Dr. Myo Tint";
-            UserSession.setDepartmentByCode("MC");
+        } else if (user.contains("mn")) {
+            UserSession.lecturerName = "U Than Htike";
+            UserSession.setDepartmentByCode("Mn");
+        } else if (user.contains("pe")) {
+            UserSession.lecturerName = "Dr. Min Thu";
+            UserSession.setDepartmentByCode("PE");
+        } else if (user.contains("fe")) {
+            UserSession.lecturerName = "Daw Ei Ei Phyo";
+            UserSession.setDepartmentByCode("FE");
+        } else if (user.equals("c") || user.startsWith("c_") || user.contains("civil")) {
+            UserSession.lecturerName = "Dr. Aung Naing";
+            UserSession.setDepartmentByCode("C");
         } else {
             UserSession.lecturerName = "Dr. Hla Myint";
             UserSession.setDepartmentByCode("CEIT");

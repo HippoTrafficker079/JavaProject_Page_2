@@ -38,7 +38,8 @@ public class AdminClassesController {
     @FXML private GridPane cardsGrid;
     @FXML private Label paginationInfoLabel;
     @FXML private HBox paginationControlsBox;
-
+    @FXML private Label adminClassesDeptLabel;
+    
     private static final int ITEMS_PER_PAGE = 6;
     private int currentPage = 1;
 
@@ -58,6 +59,9 @@ public class AdminClassesController {
         }
         if (searchField != null) {
             searchField.textProperty().addListener((obs, o, n) -> applyFilter());
+        }
+        if (adminClassesDeptLabel != null) {
+            adminClassesDeptLabel.setText(UserSession.getFormattedDepartment());
         }
 
         applyFilter();

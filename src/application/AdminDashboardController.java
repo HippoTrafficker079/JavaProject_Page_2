@@ -37,7 +37,9 @@ public class AdminDashboardController {
     @FXML private TableColumn<RiskStudent, String> colAttendance;
     @FXML private TableColumn<RiskStudent, String> colRiskLevel;
     @FXML private Label riskCountLabel;
-
+    
+    @FXML private Label adminDeptLabel;
+    
     private final ObservableList<RiskStudent> riskData = FXCollections.observableArrayList();
 
     @FXML
@@ -45,6 +47,9 @@ public class AdminDashboardController {
         initSemesterCombo();
         initEnrollmentChart();
         initRiskTable();
+        if (adminDeptLabel != null) {
+            adminDeptLabel.setText(UserSession.getFormattedDepartment());
+        }
     }
 
     private void initSemesterCombo() {

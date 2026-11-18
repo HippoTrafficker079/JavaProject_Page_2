@@ -128,7 +128,14 @@ public class AdminResultController {
         if (searchField != null) {
             searchField.textProperty().addListener((obs, o, n) -> applyFilters());
         }
-
+        if (exam != null) {
+            SubjectWeightageStore.Weightage w = SubjectWeightageStore.getForSubject(exam.getSubject());
+            quizWeight = w.quiz;
+            assignWeight = w.assignment;
+            tutWeight = w.tutorial;
+            finalWeight = w.finalExam;
+        }
+        refreshWeightageUI();
         refreshWeightageUI();
         recalculateMetrics();
     }
@@ -209,6 +216,9 @@ public class AdminResultController {
                     assignWeight = a;
                     tutWeight = t;
                     finalWeight = f;
+                    if (currentExam != null) {
+                        SubjectWeightageStore.setForSubject(currentExam.getSubject(), q, a, t, f);
+                    }
                     refreshWeightageUI();
                 } catch (NumberFormatException ex) {
                     Alert err = new Alert(Alert.AlertType.ERROR, "Please enter valid integer percentages.", ButtonType.OK);

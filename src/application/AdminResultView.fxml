@@ -132,24 +132,23 @@
                            <children>
                               <Label styleClass="panel-header" text="🎓 Grading Criteria" />
                               <Region HBox.hgrow="ALWAYS" />
-                              <Button mnemonicParsing="false" onAction="#handleEditWeightage" style="-fx-background-color: #e2e8f0; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-font-size: 11px; -fx-background-radius: 6px; -fx-padding: 4px 10px; -fx-cursor: hand;" text="✎ Edit" />
+                              <Button mnemonicParsing="false" onAction="#handleEditWeightage" style="-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-font-size: 11px; -fx-background-radius: 6px; -fx-border-color: #e2e8f0; -fx-border-radius: 6px; -fx-padding: 4px 10px; -fx-cursor: hand;" text="✎ Edit" />
                            </children>
                         </HBox>
 
                         <VBox spacing="0.0" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 8px; -fx-background-radius: 8px;">
                            <children>
                               <!-- Header -->
-                              <HBox alignment="CENTER_LEFT" style="-fx-background-color: #f8fafc; -fx-padding: 9px 14px; -fx-background-radius: 8px 8px 0 0;">
+                              <HBox alignment="CENTER_LEFT" style="-fx-background-color: #f8fafc; -fx-padding: 9px 14px; -fx-background-radius: 8px 8px 0 0; -fx-border-color: transparent transparent #f1f5f9 transparent; -fx-border-width: 0 0 1 0;">
                                  <children>
                                     <Label style="-fx-font-weight: bold; -fx-font-size: 11.5px; -fx-text-fill: #334155;" text="Criteria" />
                                     <Region HBox.hgrow="ALWAYS" />
                                     <Label style="-fx-font-weight: bold; -fx-font-size: 11.5px; -fx-text-fill: #334155;" text="Weightage" />
                                  </children>
                               </HBox>
-                              <Separator />
 
                               <!-- Quiz -->
-                              <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-padding: 9px 14px;">
+                              <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-padding: 9px 14px; -fx-border-color: transparent transparent #f1f5f9 transparent; -fx-border-width: 0 0 1 0;">
                                  <children>
                                     <Circle fill="#fbbf24" radius="4.5" />
                                     <Label style="-fx-font-size: 12px; -fx-text-fill: #334155;" text="Quiz" />
@@ -157,10 +156,9 @@
                                     <Label fx:id="quizWeightLabel" style="-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #0f172a;" text="5%" />
                                  </children>
                               </HBox>
-                              <Separator />
 
                               <!-- Assignment -->
-                              <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-padding: 9px 14px;">
+                              <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-padding: 9px 14px; -fx-border-color: transparent transparent #f1f5f9 transparent; -fx-border-width: 0 0 1 0;">
                                  <children>
                                     <Circle fill="#9333ea" radius="4.5" />
                                     <Label style="-fx-font-size: 12px; -fx-text-fill: #334155;" text="Assignment" />
@@ -168,10 +166,9 @@
                                     <Label fx:id="assignmentWeightLabel" style="-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #0f172a;" text="15%" />
                                  </children>
                               </HBox>
-                              <Separator />
 
                               <!-- Tutorial -->
-                              <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-padding: 9px 14px;">
+                              <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-padding: 9px 14px; -fx-border-color: transparent transparent #f1f5f9 transparent; -fx-border-width: 0 0 1 0;">
                                  <children>
                                     <Circle fill="#3b82f6" radius="4.5" />
                                     <Label style="-fx-font-size: 12px; -fx-text-fill: #334155;" text="Tutorial" />
@@ -179,10 +176,9 @@
                                     <Label fx:id="tutorialWeightLabel" style="-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #0f172a;" text="20%" />
                                  </children>
                               </HBox>
-                              <Separator />
 
                               <!-- Final -->
-                              <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-padding: 9px 14px;">
+                              <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-padding: 9px 14px; -fx-border-color: transparent transparent #f1f5f9 transparent; -fx-border-width: 0 0 1 0;">
                                  <children>
                                     <Circle fill="#22c55e" radius="4.5" />
                                     <Label style="-fx-font-size: 12px; -fx-text-fill: #334155;" text="Final" />
@@ -190,7 +186,6 @@
                                     <Label fx:id="finalWeightLabel" style="-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #0f172a;" text="60%" />
                                  </children>
                               </HBox>
-                              <Separator />
 
                               <!-- Total -->
                               <HBox alignment="CENTER_LEFT" style="-fx-background-color: #f8fafc; -fx-padding: 9px 14px; -fx-background-radius: 0 0 8px 8px;">

@@ -43,13 +43,19 @@
                </children>
             </HBox>
 
-            <!-- PAGE TITLE & SUBTITLE -->
-            <VBox spacing="3.0">
+            <!-- PAGE TITLE, SUBTITLE & DEPARTMENT BADGE -->
+            <HBox alignment="CENTER_LEFT" spacing="12.0">
                <children>
-                  <Label fx:id="classHeaderLabel" styleClass="page-title" text="Admin Class Management" />
-                  <Label styleClass="page-subtitle" text="Assign lecturers, update schedules, and manage class enrollment rosters." />
+                  <VBox spacing="3.0">
+                     <children>
+                        <Label fx:id="classHeaderLabel" styleClass="page-title" text="Admin Class Management" />
+                        <Label styleClass="page-subtitle" text="Assign lecturers, update schedules, and manage class enrollment rosters." />
+                     </children>
+                  </VBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label fx:id="adminClassesDeptLabel" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 5px 12px; -fx-background-radius: 12px; -fx-border-color: #bfdbfe; -fx-border-radius: 12px;" text="CEIT (Computer Engineering and Information Technology)" />
                </children>
-            </VBox>
+            </HBox>
 
             <!-- METRIC CARDS ROW -->
             <HBox spacing="10.0">
