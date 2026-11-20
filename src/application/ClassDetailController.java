@@ -192,7 +192,7 @@ public class ClassDetailController {
             lockTableColumns(studentTable, 0.10, 0.14, 0.21, 0.26, 0.09, 0.196);
         }
     }
-
+    
     @FXML
     public void handleFilter() {
         if (filteredRosterData == null) return;
@@ -367,22 +367,39 @@ public class ClassDetailController {
 
     public void initClassData(String classCode) {
         this.currentClassCode = classCode != null ? classCode : "IT201";
-        this.currentSubjectName = switch (this.currentClassCode) {
-            case "IT201" -> "Data Structures and Algorithms";
-            case "IT202" -> "Database Systems";
-            case "IT203" -> "Computer Networks";
-            case "IT204" -> "Web Technologies";
-            case "IT205" -> "Operating Systems";
-            case "IT206" -> "Software Engineering";
-            default -> "General Class";
-        };
+
+        // Resolve real subject title from SHARED_CLASS_DATA (works for newly created classes too)
+        ClassesController.ClassItem matched = ClassesController.SHARED_CLASS_DATA.stream()
+                .filter(c -> c.code.equalsIgnoreCase(this.currentClassCode))
+                .findFirst()
+                .orElse(null);
+
+        this.currentSubjectName = (matched != null) ? matched.title : "General Class";
 
         if (classNameLabel != null) {
             classNameLabel.setText("Class Details (" + this.currentClassCode + ") - " + this.currentSubjectName);
         }
 
-        loadSampleStudentsForClass(this.currentClassCode);
-        loadSampleDailyLogsForClass(this.currentSubjectName);
+        // Load auto-assigned students if this class was created via Create New Class
+        if (ClassRosterStore.hasRoster(this.currentClassCode)) {
+            masterStudentData.clear();
+            for (ClassRosterStore.RosterRecord r : ClassRosterStore.getRoster(this.currentClassCode)) {
+                masterStudentData.add(new StudentModel(r.id, r.rollNo, r.name, r.email, r.attendancePercent, r.gpa));
+            }
+            masterDailyLogData.clear();
+            for (ClassRosterStore.DailyLogRecord l : ClassRosterStore.getDailyLogs(this.currentClassCode)) {
+                masterDailyLogData.add(new DailyLogEntry(l.no, l.rollNo, l.studentName, l.date, l.subject, l.status, l.remarks));
+            }
+            if (!masterDailyLogData.isEmpty() && dailyDatePicker != null) {
+                dailyDatePicker.setValue(LocalDate.parse(masterDailyLogData.get(0).getDate()));
+            }
+            refreshRollNoCombo();
+            updateMetricsAndFooters();
+        } else {
+            loadSampleStudentsForClass(this.currentClassCode);
+            loadSampleDailyLogsForClass(this.currentSubjectName);
+        }
+
         applyDailyFilters();
     }
 

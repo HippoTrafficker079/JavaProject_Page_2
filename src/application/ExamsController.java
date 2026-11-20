@@ -27,6 +27,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class ExamsController {
+	@FXML private Label profileNameLabel;
+	
     @FXML private VBox rootPane;
     @FXML private TableView<Exam> examsTable;
     @FXML private TableColumn<Exam, String> titleColumn;
@@ -71,6 +73,9 @@ public class ExamsController {
                 examsTable.getSelectionModel().clearSelection();
                 rootPane.requestFocus();
             });
+        }
+        if (profileNameLabel != null) {
+            profileNameLabel.setText("Lecturer (" + UserSession.lecturerName + ")");
         }
 
         examsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

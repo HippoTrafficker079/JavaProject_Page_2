@@ -1,20 +1,29 @@
 package application;
 
-import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.ComboBoxTableCell;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -24,41 +33,44 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class AdminClassDetailController {
 
     @FXML private VBox rootPane;
     @FXML private Label classNameLabel;
-    @FXML private ComboBox<String> assignTeacherCombo;
-    @FXML private ComboBox<String> standingCombo;
-    @FXML private TextField scheduleField;
-
-    // Metric Labels
     @FXML private Label totalStudentsLabel;
     @FXML private Label activeStudentsLabel;
     @FXML private Label atRiskLabel;
     @FXML private Label inactiveLabel;
 
-    // Navigation Tabs & Sections
+    // Course Allocation & Schedule
+    @FXML private ComboBox<String> assignTeacherCombo;
+    @FXML private TextField scheduleField;
+
+    // Navigation Tabs
     @FXML private Button tabRosterBtn;
     @FXML private Button tabAttendanceBtn;
     @FXML private VBox rosterSection;
     @FXML private VBox attendanceSection;
 
-    // Tab 1: Student Roster Controls & Table
+    // Tab 1: Student Roster
     @FXML private ComboBox<String> rollNoCombo;
+    @FXML private ComboBox<String> standingCombo;
     @FXML private TextField searchField;
     @FXML private Label studentCountFooterLabel;
 
-    @FXML private TableView<StudentModel> studentTable;
-    @FXML private TableColumn<StudentModel, String> colId;
-    @FXML private TableColumn<StudentModel, String> colRollNo;
-    @FXML private TableColumn<StudentModel, String> colName;
-    @FXML private TableColumn<StudentModel, String> colEmail;
-    @FXML private TableColumn<StudentModel, Double> colGpa;
+    @FXML private TableView<StudentRecord> studentTable;
+    @FXML private TableColumn<StudentRecord, String> colId;
+    @FXML private TableColumn<StudentRecord, String> colRollNo;
+    @FXML private TableColumn<StudentRecord, String> colName;
+    @FXML private TableColumn<StudentRecord, String> colEmail;
+    @FXML private TableColumn<StudentRecord, Double> colGpa;
+    @FXML private TableColumn<StudentRecord, String> colAcademicStanding;
 
-    // Tab 2: Daily Attendance Log Controls & Table (Editable by Admin)
+    // Tab 2: Daily Attendance Log
     @FXML private DatePicker dailyDatePicker;
     @FXML private TextField dailySearchField;
     @FXML private CheckBox chkPresent;
@@ -74,188 +86,153 @@ public class AdminClassDetailController {
     @FXML private TableColumn<DailyLogEntry, String> colSubjLog;
     @FXML private TableColumn<DailyLogEntry, String> colStatusLog;
     @FXML private TableColumn<DailyLogEntry, String> colRemarksLog;
-    @FXML private TableColumn<StudentModel, String> colAcademicStanding;
-    
-    private final ObservableList<StudentModel> masterStudents = FXCollections.observableArrayList();
-    private FilteredList<StudentModel> filteredStudents;
-
-    private final ObservableList<DailyLogEntry> masterDailyLogs = FXCollections.observableArrayList();
-    private FilteredList<DailyLogEntry> filteredDailyLogs;
-    private final Map<DailyLogEntry, String> originalStatuses = new HashMap<>();
 
     private String currentClassCode = "IT201";
-    private String currentSubjectName = "Data Structures and Algorithms";
+    private String currentCourseTitle = "Data Structures and Algorithms";
+    private String currentMajor = "CEIT";
+    private ClassesController.ClassItem currentClassItem;
+
+    private final ObservableList<StudentRecord> masterStudentData = FXCollections.observableArrayList();
+    private FilteredList<StudentRecord> filteredStudentData;
+
+    private final ObservableList<DailyLogEntry> masterDailyLogData = FXCollections.observableArrayList();
+    private FilteredList<DailyLogEntry> filteredDailyLogData;
+    private final Map<String, String> originalDailyStatuses = new HashMap<>();
 
     @FXML
     public void initialize() {
-        if (rootPane != null) {
-            rootPane.setOnMouseClicked(event -> {
-                if (studentTable != null) studentTable.getSelectionModel().clearSelection();
-                if (dailyLogTable != null) dailyLogTable.getSelectionModel().clearSelection();
-                rootPane.requestFocus();
-            });
-        }
-
-        if (assignTeacherCombo != null) {
-            assignTeacherCombo.setItems(FXCollections.observableArrayList(
-                "Dr. Hla Myint", "Dr. Aung Naing", "Dr. Su Su", "Prof. Kyaw Zin", "Dr. Tin Maung", "Dr. Myo Tint"
-            ));
-            assignTeacherCombo.setValue("Dr. Hla Myint");
-        }
-
-        setupRosterTable();
+        setupStudentTable();
         setupDailyLogControlsAndTable();
-
-        if (masterStudents.isEmpty()) {
-            loadSampleStudents();
-            loadSampleDailyLogs(currentSubjectName);
-        }
-
         switchToRosterTab();
     }
 
-    // =========================================================================
-    // TAB SWITCHING
-    // =========================================================================
+    public void initClassData(String classCode) {
+        this.currentClassCode = (classCode != null && !classCode.isBlank()) ? classCode : "IT201";
 
-    @FXML
-    public void switchToRosterTab() {
-        if (rosterSection != null) {
-            rosterSection.setVisible(true);
-            rosterSection.setManaged(true);
-        }
-        if (attendanceSection != null) {
-            attendanceSection.setVisible(false);
-            attendanceSection.setManaged(false);
-        }
-        setActiveTabStyle(tabRosterBtn, tabAttendanceBtn);
-    }
+        // Locate matching ClassItem in shared list
+        currentClassItem = ClassesController.SHARED_CLASS_DATA.stream()
+                .filter(c -> c.code.equalsIgnoreCase(this.currentClassCode))
+                .findFirst()
+                .orElse(null);
 
-    @FXML
-    public void switchToAttendanceTab() {
-        if (rosterSection != null) {
-            rosterSection.setVisible(false);
-            rosterSection.setManaged(false);
+        if (currentClassItem != null) {
+            currentCourseTitle = currentClassItem.title;
+            currentMajor = currentClassItem.major;
         }
-        if (attendanceSection != null) {
-            attendanceSection.setVisible(true);
-            attendanceSection.setManaged(true);
-        }
-        setActiveTabStyle(tabAttendanceBtn, tabRosterBtn);
-        if (dailyLogTable != null) {
-            dailyLogTable.refresh();
-        }
-    }
 
-    private void setActiveTabStyle(Button activeBtn, Button inactiveBtn) {
-        if (activeBtn != null) {
-            activeBtn.setStyle(
-                "-fx-background-color: transparent; -fx-border-color: transparent transparent #1b315e transparent; " +
-                "-fx-border-width: 0 0 3.5 0; -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 800; " +
-                "-fx-padding: 6px 8px; -fx-cursor: hand;"
-            );
+        if (classNameLabel != null) {
+            classNameLabel.setText("Admin Class Management (" + currentClassCode + ")");
         }
-        if (inactiveBtn != null) {
-            inactiveBtn.setStyle(
-                "-fx-background-color: transparent; -fx-border-color: transparent; " +
-                "-fx-border-width: 0 0 3.5 0; -fx-text-fill: #64748b; -fx-font-size: 14px; -fx-font-weight: bold; " +
-                "-fx-padding: 6px 8px; -fx-cursor: hand;"
-            );
-        }
-    }
 
-    // =========================================================================
-    // TAB 1: STUDENT ROSTER SETUP & FILTERING
-    // =========================================================================
-
-    private void setupRosterTable() {
-        if (colId != null) colId.setCellValueFactory(cell -> cell.getValue().idProperty());
-        if (colRollNo != null) colRollNo.setCellValueFactory(cell -> cell.getValue().rollNoProperty());
-        if (colName != null) colName.setCellValueFactory(cell -> cell.getValue().nameProperty());
-        if (colEmail != null) colEmail.setCellValueFactory(cell -> cell.getValue().emailProperty());
-        if (colGpa != null) colGpa.setCellValueFactory(cell -> cell.getValue().gpaProperty().asObject());
-
-        if (colAcademicStanding != null) {
-            colAcademicStanding.setCellValueFactory(cell -> cell.getValue().academicStandingProperty());
-            colAcademicStanding.setCellFactory(col -> new TableCell<>() {
-                @Override
-                protected void updateItem(String standing, boolean empty) {
-                    super.updateItem(standing, empty);
-                    if (empty || standing == null) {
-                        setText(null);
-                        setGraphic(null);
-                    } else {
-                        Label badge = new Label(standing);
-                        String base = "-fx-padding: 3px 10px; -fx-background-radius: 12px; -fx-font-weight: bold; -fx-font-size: 11px;";
-                        switch (standing.toLowerCase()) {
-                            case "excellent" -> badge.setStyle(base + " -fx-background-color: #dcfce7; -fx-text-fill: #16a34a;");
-                            case "good"      -> badge.setStyle(base + " -fx-background-color: #e0f2fe; -fx-text-fill: #0284c7;");
-                            case "average"   -> badge.setStyle(base + " -fx-background-color: #fef3c7; -fx-text-fill: #d97706;");
-                            default          -> badge.setStyle(base + " -fx-background-color: #fee2e2; -fx-text-fill: #dc2626;");
-                        }
-                        setGraphic(badge);
-                        setText(null);
-                    }
+        if (assignTeacherCombo != null) {
+            List<String> teachers = TeacherDirectoryStore.getTeacherNamesByDept(currentMajor);
+            assignTeacherCombo.setItems(FXCollections.observableArrayList(teachers));
+            if (currentClassItem != null && currentClassItem.lecturer != null) {
+                String cleanLecturer = currentClassItem.lecturer.replace(" (Assigned)", "").trim();
+                if (!teachers.contains(cleanLecturer)) {
+                    assignTeacherCombo.getItems().add(cleanLecturer);
                 }
-            });
+                assignTeacherCombo.setValue(cleanLecturer);
+            } else if (!teachers.isEmpty()) {
+                assignTeacherCombo.setValue(teachers.get(0));
+            }
+        }
+
+        if (scheduleField != null && currentClassItem != null) {
+            scheduleField.setText(currentClassItem.schedule);
+        }
+
+        loadSampleRosterAndAttendance();
+    }
+
+    private void loadSampleRosterAndAttendance() {
+        String prefix = "III-" + (currentMajor != null ? currentMajor.toUpperCase() : "CEIT") + "-";
+        String emailPrefix = "iii" + (currentMajor != null ? currentMajor.toLowerCase() : "ceit");
+
+        masterStudentData.setAll(
+            new StudentRecord("STD-001", prefix + "1", "Aung Thura",  emailPrefix + "1@ytu.edu.mm", 3.85, "Active"),
+            new StudentRecord("STD-002", prefix + "2", "Su Myat Mya", emailPrefix + "2@ytu.edu.mm", 3.72, "Active"),
+            new StudentRecord("STD-003", prefix + "3", "Min Khant",   emailPrefix + "3@ytu.edu.mm", 3.40, "Active"),
+            new StudentRecord("STD-004", prefix + "4", "Hnin Wai",    emailPrefix + "4@ytu.edu.mm", 3.65, "Active"),
+            new StudentRecord("STD-005", prefix + "5", "Ko Thant",    emailPrefix + "5@ytu.edu.mm", 2.45, "At Risk"),
+            new StudentRecord("STD-006", prefix + "6", "Zaw Hein",    emailPrefix + "6@ytu.edu.mm", 3.90, "Active"),
+            new StudentRecord("STD-007", prefix + "7", "May Thu",     emailPrefix + "7@ytu.edu.mm", 2.10, "Inactive"),
+            new StudentRecord("STD-008", prefix + "8", "Kyaw Zin",    emailPrefix + "8@ytu.edu.mm", 2.60, "At Risk")
+        );
+
+        if (rollNoCombo != null) {
+            ObservableList<String> rollOptions = FXCollections.observableArrayList("All Roll Nos");
+            for (StudentRecord s : masterStudentData) {
+                rollOptions.add(s.getRollNo());
+            }
+            rollNoCombo.setItems(rollOptions);
+            rollNoCombo.setValue("All Roll Nos");
         }
 
         if (standingCombo != null) {
-            standingCombo.setItems(FXCollections.observableArrayList(
-                "All Standings", "Excellent", "Good", "Average", "Poor"
-            ));
+            standingCombo.setItems(FXCollections.observableArrayList("All Standings", "Active", "At Risk", "Inactive"));
             standingCombo.setValue("All Standings");
         }
 
-        // No auto-filter listeners here — filters run only when Filter or Reset is clicked
-        filteredStudents = new FilteredList<>(masterStudents, s -> true);
-        if (studentTable != null) {
-            SortedList<StudentModel> sorted = new SortedList<>(filteredStudents);
-            sorted.comparatorProperty().bind(studentTable.comparatorProperty());
-            studentTable.setItems(sorted);
-            lockTableColumns(studentTable, 0.10, 0.14, 0.21, 0.26, 0.09, 0.196);
+        // Populate Daily Attendance Log entries for this class
+        masterDailyLogData.clear();
+        originalDailyStatuses.clear();
+        String logDate = (dailyDatePicker != null && dailyDatePicker.getValue() != null)
+                ? dailyDatePicker.getValue().toString()
+                : "2026-11-16";
+
+        int rowNum = 1;
+        for (StudentRecord s : masterStudentData) {
+            String status = "Present";
+            String remarks = "On Time";
+            if (rowNum == 3) { status = "Excused"; remarks = "Medical Leave"; }
+            else if (rowNum == 5) { status = "Absent"; remarks = "Unexcused"; }
+
+            DailyLogEntry entry = new DailyLogEntry(rowNum, s.getRollNo(), s.getName(), logDate, currentCourseTitle, status, remarks);
+            masterDailyLogData.add(entry);
+            originalDailyStatuses.put(entry.getRollNo() + "_" + entry.getDate(), status);
+            rowNum++;
         }
+
+        updateStudentMetrics();
+        handleFilterStudents();
+        applyDailyFilters();
     }
 
-    @FXML
-    public void handleFilterStudents(ActionEvent event) {
-        applyStudentFilters();
-    }
+    private void setupStudentTable() {
+        if (studentTable == null) return;
 
-    @FXML
-    public void handleResetFilters(ActionEvent event) {
-        if (rollNoCombo != null) rollNoCombo.setValue("All Roll Nos");
-        if (standingCombo != null) standingCombo.setValue("All Standings");
-        if (searchField != null) searchField.clear();
-        applyStudentFilters();
-    }
+        colId.setCellValueFactory(c -> c.getValue().idProperty());
+        colRollNo.setCellValueFactory(c -> c.getValue().rollNoProperty());
+        colName.setCellValueFactory(c -> c.getValue().nameProperty());
+        colEmail.setCellValueFactory(c -> c.getValue().emailProperty());
+        colGpa.setCellValueFactory(c -> c.getValue().gpaProperty().asObject());
+        colAcademicStanding.setCellValueFactory(c -> c.getValue().standingProperty());
 
-    private void applyStudentFilters() {
-        if (filteredStudents == null) return;
-        String selRoll = rollNoCombo != null ? rollNoCombo.getValue() : "All Roll Nos";
-        String selStanding = standingCombo != null ? standingCombo.getValue() : "All Standings";
-        String q = (searchField != null && searchField.getText() != null)
-                ? searchField.getText().trim().toLowerCase()
-                : "";
-
-        filteredStudents.setPredicate(s -> {
-            boolean matchRoll = selRoll == null || selRoll.equals("All Roll Nos") || s.getRollNo().equalsIgnoreCase(selRoll);
-            boolean matchStanding = selStanding == null || selStanding.equals("All Standings")
-                    || s.getAcademicStanding().equalsIgnoreCase(selStanding);
-            boolean matchSearch = q.isEmpty()
-                    || s.getId().toLowerCase().contains(q)
-                    || s.getRollNo().toLowerCase().contains(q)
-                    || s.getName().toLowerCase().contains(q)
-                    || s.getEmail().toLowerCase().contains(q);
-            return matchRoll && matchStanding && matchSearch;
+        colAcademicStanding.setCellFactory(tc -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    if (item.equalsIgnoreCase("Active")) {
+                        setStyle("-fx-text-fill: #15803d; -fx-font-weight: bold;");
+                    } else if (item.equalsIgnoreCase("At Risk")) {
+                        setStyle("-fx-text-fill: #b45309; -fx-font-weight: bold;");
+                    } else {
+                        setStyle("-fx-text-fill: #b91c1c; -fx-font-weight: bold;");
+                    }
+                }
+            }
         });
 
-        updateMetricsAndFooter();
+        filteredStudentData = new FilteredList<>(masterStudentData, b -> true);
+        studentTable.setItems(filteredStudentData);
+        lockTableColumns(studentTable, 0.10, 0.15, 0.23, 0.27, 0.09, 0.156);
     }
-
-    // =========================================================================
-    // TAB 2: DAILY ATTENDANCE LOG SETUP, EDITING & FILTERING
-    // =========================================================================
 
     private void setupDailyLogControlsAndTable() {
         if (dailyDatePicker != null) {
@@ -285,6 +262,8 @@ public class AdminClassDetailController {
 
         if (dailyLogTable == null) return;
 
+        dailyLogTable.setEditable(false);
+
         colNoLog.setCellValueFactory(c -> c.getValue().noProperty().asObject());
         colRollLog.setCellValueFactory(c -> c.getValue().rollNoProperty());
         colNameLog.setCellValueFactory(c -> c.getValue().studentNameProperty());
@@ -292,132 +271,292 @@ public class AdminClassDetailController {
         colSubjLog.setCellValueFactory(c -> c.getValue().subjectProperty());
         colRemarksLog.setCellValueFactory(c -> c.getValue().remarksProperty());
 
-        dailyLogTable.setEditable(true);
         colStatusLog.setCellValueFactory(c -> c.getValue().statusProperty());
-        colStatusLog.setCellFactory(tc -> {
-            ComboBoxTableCell<DailyLogEntry, String> cell =
-                new ComboBoxTableCell<>("Present", "Absent", "Excused") {
-                    @Override
-                    public void startEdit() {
-                        getTableView().getSelectionModel().clearSelection();
-                        super.startEdit();
-                    }
-
-                    @Override
-                    public void updateItem(String item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty || item == null) {
-                            setText(null);
-                            setGraphic(null);
-                        } else if (!isEditing()) {
-                            if (item.equalsIgnoreCase("Present")) {
-                                setText("✔ Present");
-                                setStyle("-fx-text-fill: #15803d; -fx-font-weight: bold;");
-                            } else if (item.equalsIgnoreCase("Absent")) {
-                                setText("✖ Absent");
-                                setStyle("-fx-text-fill: #b91c1c; -fx-font-weight: bold;");
-                            } else {
-                                setText("● " + item);
-                                setStyle("-fx-text-fill: #b45309; -fx-font-weight: bold;");
-                            }
-                        } else {
-                            setStyle("-fx-text-fill: #0f172a;");
-                        }
-                    }
-                };
-            cell.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED,
-                    e -> dailyLogTable.getSelectionModel().clearSelection());
-            return cell;
-        });
-
-        colStatusLog.setOnEditCommit(event -> {
-            DailyLogEntry entry = event.getRowValue();
-            String newStatus = event.getNewValue();
-            entry.setStatus(newStatus);
-            if ("Present".equalsIgnoreCase(newStatus)) {
-                entry.setRemarks("On Time");
-            } else if ("Excused".equalsIgnoreCase(newStatus)) {
-                entry.setRemarks("Medical / Approved");
-            } else {
-                entry.setRemarks("Unexcused");
+        colStatusLog.setCellFactory(tc -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    setStyle("");
+                } else if (item.equalsIgnoreCase("Present")) {
+                    setText("✔ Present");
+                    setStyle("-fx-text-fill: #15803d; -fx-font-weight: bold;");
+                } else if (item.equalsIgnoreCase("Absent")) {
+                    setText("✖ Absent");
+                    setStyle("-fx-text-fill: #b91c1c; -fx-font-weight: bold;");
+                } else {
+                    setText("● " + item);
+                    setStyle("-fx-text-fill: #b45309; -fx-font-weight: bold;");
+                }
             }
-            syncStudentAttendanceFromLogs();
-            dailyLogTable.refresh();
-            Platform.runLater(() -> dailyLogTable.getSelectionModel().clearSelection());
         });
 
         dailyLogTable.setRowFactory(tv -> new TableRow<>() {
-            private final ChangeListener<String> statusListener = (obs, o, n) -> applyDailyRowStyle(this, n);
-
             @Override
             protected void updateItem(DailyLogEntry item, boolean empty) {
-                if (getItem() != null) {
-                    getItem().statusProperty().removeListener(statusListener);
-                }
                 super.updateItem(item, empty);
-                if (item == null || empty) {
-                    setStyle("");
-                    getStyleClass().removeAll("row-present", "row-absent", "row-excused");
-                } else {
-                    item.statusProperty().addListener(statusListener);
-                    applyDailyRowStyle(this, item.getStatus());
+                setStyle("");
+                getStyleClass().removeAll("row-present", "row-absent", "row-excused");
+                if (item != null && !empty && item.getStatus() != null) {
+                    String status = item.getStatus();
+                    if (status.equalsIgnoreCase("Present")) {
+                        getStyleClass().add("row-present");
+                    } else if (status.equalsIgnoreCase("Absent")) {
+                        getStyleClass().add("row-absent");
+                    } else if (status.equalsIgnoreCase("Excused") || status.equalsIgnoreCase("Excuse")) {
+                        getStyleClass().add("row-excused");
+                    }
                 }
             }
         });
 
-        filteredDailyLogs = new FilteredList<>(masterDailyLogs, b -> true);
-        dailyLogTable.setItems(filteredDailyLogs);
+        filteredDailyLogData = new FilteredList<>(masterDailyLogData, b -> true);
+        dailyLogTable.setItems(filteredDailyLogData);
         lockTableColumns(dailyLogTable, 0.06, 0.13, 0.19, 0.13, 0.21, 0.14, 0.136);
     }
 
-    private void applyDailyRowStyle(TableRow<DailyLogEntry> row, String status) {
-        row.setStyle("");
-        row.getStyleClass().removeAll("row-present", "row-absent", "row-excused");
-        if (status == null) return;
+    // ==================== TAB SWITCHING ====================
 
-        if (status.equalsIgnoreCase("Present")) {
-            row.getStyleClass().add("row-present");
-        } else if (status.equalsIgnoreCase("Absent")) {
-            row.getStyleClass().add("row-absent");
-        } else if (status.equalsIgnoreCase("Excused") || status.equalsIgnoreCase("Excuse")) {
-            row.getStyleClass().add("row-excused");
+    @FXML
+    public void switchToRosterTab() {
+        if (rosterSection != null) { rosterSection.setVisible(true); rosterSection.setManaged(true); }
+        if (attendanceSection != null) { attendanceSection.setVisible(false); attendanceSection.setManaged(false); }
+        if (tabRosterBtn != null) {
+            tabRosterBtn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent transparent #1b315e transparent; -fx-border-width: 0 0 3.5 0; -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 800; -fx-padding: 6px 8px; -fx-cursor: hand;");
+        }
+        if (tabAttendanceBtn != null) {
+            tabAttendanceBtn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent; -fx-border-width: 0 0 3.5 0; -fx-text-fill: #64748b; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 6px 8px; -fx-cursor: hand;");
         }
     }
 
     @FXML
-    public void applyDailyFilters() {
-        if (filteredDailyLogs == null) return;
+    public void switchToAttendanceTab() {
+        if (rosterSection != null) { rosterSection.setVisible(false); rosterSection.setManaged(false); }
+        if (attendanceSection != null) { attendanceSection.setVisible(true); attendanceSection.setManaged(true); }
+        if (tabAttendanceBtn != null) {
+            tabAttendanceBtn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent transparent #1b315e transparent; -fx-border-width: 0 0 3.5 0; -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 800; -fx-padding: 6px 8px; -fx-cursor: hand;");
+        }
+        if (tabRosterBtn != null) {
+            tabRosterBtn.setStyle("-fx-background-color: transparent; -fx-border-color: transparent; -fx-border-width: 0 0 3.5 0; -fx-text-fill: #64748b; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 6px 8px; -fx-cursor: hand;");
+        }
+        if (dailyLogTable != null) dailyLogTable.refresh();
+    }
 
-        LocalDate selectedDate = dailyDatePicker != null ? dailyDatePicker.getValue() : null;
-        String dateFilterStr = selectedDate != null ? selectedDate.toString() : "";
-        String keyword = (dailySearchField != null && dailySearchField.getText() != null)
-                ? dailySearchField.getText().trim().toLowerCase()
-                : "";
+    // ==================== NAVIGATION & ALLOCATION ====================
 
-        boolean pChecked = chkPresent != null && chkPresent.isSelected();
-        boolean aChecked = chkAbsent != null && chkAbsent.isSelected();
-        boolean eChecked = chkExcuse != null && chkExcuse.isSelected();
-        boolean anyStatusChecked = pChecked || aChecked || eChecked;
-
-        filteredDailyLogs.setPredicate(entry -> {
-            boolean matchesDate = dateFilterStr.isEmpty() || entry.getDate().equals(dateFilterStr);
-            boolean matchesSearch = keyword.isEmpty()
-                    || entry.getStudentName().toLowerCase().contains(keyword)
-                    || entry.getRollNo().toLowerCase().contains(keyword)
-                    || entry.getSubject().toLowerCase().contains(keyword);
-
-            boolean matchesStatus = true;
-            if (anyStatusChecked) {
-                String st = entry.getStatus() != null ? entry.getStatus().toLowerCase() : "";
-                matchesStatus = (pChecked && st.equals("present"))
-                        || (aChecked && st.equals("absent"))
-                        || (eChecked && (st.equals("excused") || st.equals("excuse")));
+    @FXML
+    public void handleBackToClasses(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("AdminClassesView.fxml"));
+            Parent classesView = loader.load();
+            StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
+            if (contentArea != null) {
+                contentArea.getChildren().setAll(classesView);
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-            return matchesDate && matchesSearch && matchesStatus;
+    @FXML
+    public void handleSaveAdminChanges() {
+        if (currentClassItem != null) {
+            if (assignTeacherCombo != null && assignTeacherCombo.getValue() != null) {
+                currentClassItem.lecturer = assignTeacherCombo.getValue();
+            }
+            if (scheduleField != null && scheduleField.getText() != null && !scheduleField.getText().isBlank()) {
+                currentClassItem.schedule = scheduleField.getText().trim();
+            }
+        }
+        // TODO (DB Integration): UPDATE course_offering / class_session in MySQL
+        showInfo("Changes Saved", "Lecturer assignment and schedule updated for " + currentClassCode + ".");
+    }
+
+    // ==================== STUDENT ROSTER ACTIONS ====================
+
+    @FXML
+    public void handleFilterStudents() {
+        if (filteredStudentData == null) return;
+        String selRoll = rollNoCombo != null ? rollNoCombo.getValue() : "All Roll Nos";
+        String selStanding = standingCombo != null ? standingCombo.getValue() : "All Standings";
+        String q = (searchField != null && searchField.getText() != null)
+                ? searchField.getText().trim().toLowerCase() : "";
+
+        filteredStudentData.setPredicate(s -> {
+            boolean matchRoll = selRoll == null || selRoll.equals("All Roll Nos") || s.getRollNo().equalsIgnoreCase(selRoll);
+            boolean matchStand = selStanding == null || selStanding.equals("All Standings") || s.getStanding().equalsIgnoreCase(selStanding);
+            boolean matchSearch = q.isEmpty()
+                    || s.getId().toLowerCase().contains(q)
+                    || s.getRollNo().toLowerCase().contains(q)
+                    || s.getName().toLowerCase().contains(q)
+                    || s.getEmail().toLowerCase().contains(q);
+            return matchRoll && matchStand && matchSearch;
         });
 
-        updateMetricsAndFooter();
+        updateStudentFooter();
+    }
+
+    @FXML
+    public void handleResetFilters() {
+        if (rollNoCombo != null) rollNoCombo.setValue("All Roll Nos");
+        if (standingCombo != null) standingCombo.setValue("All Standings");
+        if (searchField != null) searchField.clear();
+        handleFilterStudents();
+    }
+
+    @FXML
+    public void handleAdminAddStudent() {
+        Dialog<StudentRecord> dialog = new Dialog<>();
+        dialog.setTitle("Enroll Student");
+        dialog.setHeaderText("Add a student to " + currentClassCode);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(16));
+
+        TextField rollField = new TextField();
+        rollField.setPromptText("e.g. III-CEIT-9");
+        TextField nameField = new TextField();
+        nameField.setPromptText("Full Name");
+        TextField emailField = new TextField();
+        emailField.setPromptText("e.g. iiiceit9@ytu.edu.mm");
+        TextField gpaField = new TextField("3.50");
+
+        grid.addRow(0, new Label("Roll No:"), rollField);
+        grid.addRow(1, new Label("Student Name:"), nameField);
+        grid.addRow(2, new Label("YTU Email:"), emailField);
+        grid.addRow(3, new Label("GPA:"), gpaField);
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(btn -> {
+            if (btn == ButtonType.OK && !nameField.getText().isBlank()) {
+                double gpa = 3.50;
+                try { gpa = Double.parseDouble(gpaField.getText().trim()); } catch (Exception ignored) {}
+                String newId = String.format("STD-%03d", masterStudentData.size() + 1);
+                return new StudentRecord(newId, rollField.getText().trim(), nameField.getText().trim(),
+                        emailField.getText().trim(), gpa, "Active");
+            }
+            return null;
+        });
+
+        Optional<StudentRecord> res = dialog.showAndWait();
+        res.ifPresent(s -> {
+            masterStudentData.add(s);
+            updateStudentMetrics();
+            handleFilterStudents();
+        });
+    }
+
+    @FXML
+    public void handleModifyStudent() {
+        StudentRecord selected = studentTable != null ? studentTable.getSelectionModel().getSelectedItem() : null;
+        if (selected == null) {
+            showWarning("No Student Selected", "Please select a student row first.");
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Modify Student");
+        dialog.setHeaderText("Edit details for " + selected.getName());
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(16));
+
+        TextField nameField = new TextField(selected.getName());
+        TextField emailField = new TextField(selected.getEmail());
+        TextField gpaField = new TextField(String.valueOf(selected.getGpa()));
+        ComboBox<String> standBox = new ComboBox<>(FXCollections.observableArrayList("Active", "At Risk", "Inactive"));
+        standBox.setValue(selected.getStanding());
+
+        grid.addRow(0, new Label("Name:"), nameField);
+        grid.addRow(1, new Label("Email:"), emailField);
+        grid.addRow(2, new Label("GPA:"), gpaField);
+        grid.addRow(3, new Label("Standing:"), standBox);
+        dialog.getDialogPane().setContent(grid);
+
+        if (dialog.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            selected.setName(nameField.getText().trim());
+            selected.setEmail(emailField.getText().trim());
+            try { selected.setGpa(Double.parseDouble(gpaField.getText().trim())); } catch (Exception ignored) {}
+            selected.setStanding(standBox.getValue());
+            studentTable.refresh();
+            updateStudentMetrics();
+        }
+    }
+
+    @FXML
+    public void handleRemoveStudent() {
+        StudentRecord selected = studentTable != null ? studentTable.getSelectionModel().getSelectedItem() : null;
+        if (selected == null) {
+            showWarning("No Student Selected", "Please select a student row to remove.");
+            return;
+        }
+        masterStudentData.remove(selected);
+        updateStudentMetrics();
+        handleFilterStudents();
+    }
+
+    private void updateStudentMetrics() {
+        int total = masterStudentData.size();
+        long active = masterStudentData.stream().filter(s -> s.getStanding().equalsIgnoreCase("Active")).count();
+        long atRisk = masterStudentData.stream().filter(s -> s.getStanding().equalsIgnoreCase("At Risk")).count();
+        long inactive = masterStudentData.stream().filter(s -> s.getStanding().equalsIgnoreCase("Inactive")).count();
+
+        if (totalStudentsLabel != null) totalStudentsLabel.setText(String.valueOf(total));
+        if (activeStudentsLabel != null) activeStudentsLabel.setText(String.valueOf(active));
+        if (atRiskLabel != null) atRiskLabel.setText(String.valueOf(atRisk));
+        if (inactiveLabel != null) inactiveLabel.setText(String.valueOf(inactive));
+        updateStudentFooter();
+    }
+
+    private void updateStudentFooter() {
+        if (studentCountFooterLabel != null && filteredStudentData != null) {
+            int shown = filteredStudentData.size();
+            int total = masterStudentData.size();
+            studentCountFooterLabel.setText(shown == 0
+                    ? "Showing 0 of " + total + " students"
+                    : "Showing 1 - " + shown + " of " + total + " students");
+        }
+    }
+
+    // ==================== DAILY ATTENDANCE LOG ACTIONS ====================
+
+    @FXML
+    public void applyDailyFilters() {
+        if (filteredDailyLogData == null) return;
+        LocalDate selDate = dailyDatePicker != null ? dailyDatePicker.getValue() : null;
+        String dateStr = selDate != null ? selDate.toString() : "";
+        String q = (dailySearchField != null && dailySearchField.getText() != null)
+                ? dailySearchField.getText().trim().toLowerCase() : "";
+        boolean p = chkPresent != null && chkPresent.isSelected();
+        boolean a = chkAbsent != null && chkAbsent.isSelected();
+        boolean e = chkExcuse != null && chkExcuse.isSelected();
+        boolean any = p || a || e;
+
+        filteredDailyLogData.setPredicate(entry -> {
+            boolean matchDate = dateStr.isEmpty() || entry.getDate().equals(dateStr);
+            boolean matchSearch = q.isEmpty()
+                    || entry.getStudentName().toLowerCase().contains(q)
+                    || entry.getRollNo().toLowerCase().contains(q)
+                    || entry.getSubject().toLowerCase().contains(q);
+            boolean matchStatus = !any
+                    || (p && entry.getStatus().equalsIgnoreCase("Present"))
+                    || (a && entry.getStatus().equalsIgnoreCase("Absent"))
+                    || (e && (entry.getStatus().equalsIgnoreCase("Excused") || entry.getStatus().equalsIgnoreCase("Excuse")));
+            return matchDate && matchSearch && matchStatus;
+        });
+
+        if (dailyLogFooterLabel != null) {
+            int n = filteredDailyLogData.size();
+            dailyLogFooterLabel.setText("Showing " + n + " attendance record" + (n == 1 ? "" : "s"));
+        }
     }
 
     @FXML
@@ -427,378 +566,65 @@ public class AdminClassDetailController {
         if (chkPresent != null) chkPresent.setSelected(false);
         if (chkAbsent != null) chkAbsent.setSelected(false);
         if (chkExcuse != null) chkExcuse.setSelected(false);
-        if (filteredDailyLogs != null) filteredDailyLogs.setPredicate(b -> true);
-        updateMetricsAndFooter();
+        applyDailyFilters();
+    }
+
+    @FXML
+    public void handleToggleDailyStatus() {
+        DailyLogEntry selected = dailyLogTable != null
+                ? dailyLogTable.getSelectionModel().getSelectedItem()
+                : null;
+
+        if (selected == null) {
+            showWarning("No Row Selected", "Please select a student row in the Daily Attendance Log first.");
+            return;
+        }
+
+        String current = selected.getStatus() != null ? selected.getStatus() : "Present";
+        if (current.equalsIgnoreCase("Present")) {
+            selected.setStatus("Absent");
+            selected.setRemarks("Unexcused");
+        } else if (current.equalsIgnoreCase("Absent")) {
+            selected.setStatus("Excused");
+            selected.setRemarks("Medical Leave");
+        } else {
+            selected.setStatus("Present");
+            selected.setRemarks("On Time");
+        }
+
+        dailyLogTable.refresh();
     }
 
     @FXML
     public void handleResetDailyStatus() {
-        for (DailyLogEntry entry : masterDailyLogs) {
-            if (originalStatuses.containsKey(entry)) {
-                String orig = originalStatuses.get(entry);
-                entry.setStatus(orig);
-                entry.setRemarks("Present".equalsIgnoreCase(orig) ? "On Time"
-                        : ("Excused".equalsIgnoreCase(orig) ? "Medical / Approved" : "Unexcused"));
+        for (DailyLogEntry entry : masterDailyLogData) {
+            String key = entry.getRollNo() + "_" + entry.getDate();
+            if (originalDailyStatuses.containsKey(key)) {
+                entry.setStatus(originalDailyStatuses.get(key));
             }
         }
-        syncStudentAttendanceFromLogs();
         if (dailyLogTable != null) dailyLogTable.refresh();
     }
 
     @FXML
     public void handleMarkAllPresent() {
-        for (DailyLogEntry entry : filteredDailyLogs) {
+        for (DailyLogEntry entry : filteredDailyLogData) {
             entry.setStatus("Present");
             entry.setRemarks("On Time");
         }
-        syncStudentAttendanceFromLogs();
         if (dailyLogTable != null) dailyLogTable.refresh();
     }
 
     @FXML
     public void handleSaveDailyChanges() {
-        for (DailyLogEntry entry : masterDailyLogs) {
-            originalStatuses.put(entry, entry.getStatus());
+        for (DailyLogEntry entry : masterDailyLogData) {
+            originalDailyStatuses.put(entry.getRollNo() + "_" + entry.getDate(), entry.getStatus());
         }
-        syncStudentAttendanceFromLogs();
-
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Attendance Saved");
-        alert.setHeaderText(null);
-        alert.setContentText("Daily attendance logs for " + currentClassCode + " (" + currentSubjectName + ") have been saved.");
-        alert.showAndWait();
+        // TODO (DB Integration): Persist attendance records to `attendance` table
+        showInfo("Attendance Saved", "Daily attendance changes for " + currentClassCode + " have been saved!");
     }
 
-    // =========================================================================
-    // DATA INITIALIZATION & ADMIN ACTIONS
-    // =========================================================================
-
-    public void initClassData(String classCode) {
-        this.currentClassCode = classCode != null ? classCode : "IT201";
-        this.currentSubjectName = switch (this.currentClassCode) {
-            case "IT201" -> "Data Structures and Algorithms";
-            case "IT202" -> "Database Systems";
-            case "IT203" -> "Computer Networks";
-            case "IT204" -> "Web Technologies";
-            case "IT205" -> "Operating Systems";
-            case "IT206" -> "Software Engineering";
-            default -> "General Class";
-        };
-
-        if (classNameLabel != null) {
-            classNameLabel.setText("Admin Class Management (" + this.currentClassCode + ") - " + this.currentSubjectName);
-        }
-        if (scheduleField != null) {
-            scheduleField.setText("Tue P6–7, Fri P1–2");
-        }
-
-        loadSampleStudents();
-        loadSampleDailyLogs(this.currentSubjectName);
-        applyDailyFilters();
-    }
-
-    private void loadSampleStudents() {
-        masterStudents.setAll(
-            new StudentModel("256730", "III-CEIT-1", "Aung Thura", "aungthura@gmail.com", 92, 3.6),
-            new StudentModel("256731", "III-CEIT-2", "Su Myat Mya", "sumyat@gmail.com", 82, 3.6),
-            new StudentModel("256732", "III-CEIT-3", "Min Khant", "minkhant@gmail.com", 74, 2.4),
-            new StudentModel("256733", "III-CEIT-4", "Hnin Wai", "hninwai@gmail.com", 95, 3.9),
-            new StudentModel("256734", "III-CEIT-5", "Ko Thant", "kothant@gmail.com", 48, 2.1),
-            new StudentModel("256735", "III-CEIT-6", "Zaw Hein", "zawhein@gmail.com", 98, 4.0),
-            new StudentModel("256736", "III-CEIT-7", "May Thu", "maythu@gmail.com", 68, 3.2),
-            new StudentModel("256737", "III-CEIT-8", "Aimon M", "aimonm@gmail.com", 50, 1.8),
-            new StudentModel("256738", "III-CEIT-9", "Kyaw Zin", "kyawzin@gmail.com", 85, 3.4),
-            new StudentModel("256739", "III-CEIT-10", "Nandar Lin", "nandarlin@gmail.com", 91, 3.7)
-        );
-        refreshRollNoOptions();
-        updateMetricsAndFooter();
-    }
-
-    private void loadSampleDailyLogs(String subjectName) {
-        masterDailyLogs.clear();
-        originalStatuses.clear();
-        String dateStr = "2026-11-16";
-
-        for (int i = 0; i < masterStudents.size(); i++) {
-            StudentModel s = masterStudents.get(i);
-            String status;
-            String remarks;
-
-            if (s.getAttendancePercent() <= 50) {
-                status = "Absent";
-                remarks = "Unexcused";
-            } else if (s.getAttendancePercent() < 75) {
-                status = "Excused";
-                remarks = "Medical Leave";
-            } else {
-                status = "Present";
-                remarks = "On Time";
-            }
-
-            DailyLogEntry entry = new DailyLogEntry(
-                i + 1,
-                s.getRollNo(),
-                s.getName(),
-                dateStr,
-                subjectName,
-                status,
-                remarks
-            );
-            masterDailyLogs.add(entry);
-            originalStatuses.put(entry, status);
-        }
-    }
-
-    private void syncStudentAttendanceFromLogs() {
-        for (StudentModel student : masterStudents) {
-            for (DailyLogEntry entry : masterDailyLogs) {
-                if (entry.getRollNo().equalsIgnoreCase(student.getRollNo())) {
-                    String st = entry.getStatus();
-                    if ("Present".equalsIgnoreCase(st) && student.getAttendancePercent() < 75) {
-                        student.setAttendancePercent(80);
-                    } else if ("Absent".equalsIgnoreCase(st) && student.getAttendancePercent() >= 75) {
-                        student.setAttendancePercent(50);
-                    } else if ("Excused".equalsIgnoreCase(st) && student.getAttendancePercent() >= 75) {
-                        student.setAttendancePercent(70);
-                    }
-                }
-            }
-        }
-        updateMetricsAndFooter();
-    }
-
-    private void refreshRollNoOptions() {
-        if (rollNoCombo == null) return;
-        String previous = rollNoCombo.getValue();
-        ObservableList<String> rolls = FXCollections.observableArrayList("All Roll Nos");
-        for (StudentModel s : masterStudents) {
-            if (!rolls.contains(s.getRollNo())) {
-                rolls.add(s.getRollNo());
-            }
-        }
-        rollNoCombo.setItems(rolls);
-        rollNoCombo.setValue(previous != null && rolls.contains(previous) ? previous : "All Roll Nos");
-    }
-
-    private void updateMetricsAndFooter() {
-        int total = masterStudents.size();
-        int active = 0;
-        int atRisk = 0;
-        int inactive = 0;
-
-        for (StudentModel s : masterStudents) {
-            int att = s.getAttendancePercent();
-            if (att <= 50) {
-                inactive++;
-            } else if (att < 75) {
-                atRisk++;
-            } else {
-                active++;
-            }
-        }
-
-        if (totalStudentsLabel != null) totalStudentsLabel.setText(String.valueOf(total));
-        if (activeStudentsLabel != null) activeStudentsLabel.setText(String.valueOf(active));
-        if (atRiskLabel != null) atRiskLabel.setText(String.valueOf(atRisk));
-        if (inactiveLabel != null) inactiveLabel.setText(String.valueOf(inactive));
-
-        if (studentCountFooterLabel != null && filteredStudents != null) {
-            int shown = filteredStudents.size();
-            studentCountFooterLabel.setText(shown == 0
-                    ? "Showing 0 of " + total + " students"
-                    : "Showing 1 - " + shown + " of " + total + " students");
-        }
-
-        if (dailyLogFooterLabel != null && filteredDailyLogs != null) {
-            int logCount = filteredDailyLogs.size();
-            dailyLogFooterLabel.setText("Showing " + logCount + " attendance record" + (logCount == 1 ? "" : "s"));
-        }
-    }
-
-    @FXML
-    public void handleModifyStudent(ActionEvent event) {
-        StudentModel selected = studentTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("No Student Selected");
-            alert.setHeaderText(null);
-            alert.setContentText("Please select a student from the Student List table to modify.");
-            alert.showAndWait();
-            return;
-        }
-
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Modify Student Details");
-        dialog.setHeaderText("Edit student record for " + selected.getRollNo() + " (" + selected.getName() + ")");
-
-        TextField nameField = new TextField(selected.getName());
-        TextField emailField = new TextField(selected.getEmail());
-        TextField gpaField = new TextField(String.valueOf(selected.getGpa()));
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.addRow(0, new Label("Student Name:"), nameField);
-        grid.addRow(1, new Label("Email:"), emailField);
-        grid.addRow(2, new Label("GPA:"), gpaField);
-
-        dialog.getDialogPane().setContent(grid);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.OK) {
-                try {
-                    double parsedGpa = Double.parseDouble(gpaField.getText().trim());
-                    int idx = masterStudents.indexOf(selected);
-                    if (idx >= 0) {
-                        StudentModel updated = new StudentModel(
-                            selected.getId(),
-                            selected.getRollNo(),
-                            nameField.getText().trim(),
-                            emailField.getText().trim(),
-                            selected.getAttendancePercent(),
-                            parsedGpa
-                        );
-                        masterStudents.set(idx, updated);
-                        studentTable.refresh();
-                        applyStudentFilters();
-                    }
-                } catch (NumberFormatException ex) {
-                    Alert err = new Alert(Alert.AlertType.ERROR);
-                    err.setTitle("Invalid GPA");
-                    err.setHeaderText(null);
-                    err.setContentText("Please enter a valid numeric GPA (e.g., 3.5).");
-                    err.showAndWait();
-                }
-            }
-        });
-    }
-
-    @FXML
-    public void handleRemoveStudent(ActionEvent event) {
-        StudentModel selected = studentTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("No Student Selected");
-            alert.setHeaderText(null);
-            alert.setContentText("Please select a student from the Student List table to remove.");
-            alert.showAndWait();
-            return;
-        }
-
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "Remove " + selected.getName() + " (" + selected.getRollNo() + ") from this class?",
-                ButtonType.YES, ButtonType.NO);
-        confirm.setTitle("Confirm Removal");
-        confirm.setHeaderText(null);
-        confirm.showAndWait().ifPresent(res -> {
-            if (res == ButtonType.YES) {
-                masterStudents.remove(selected);
-                masterDailyLogs.removeIf(log -> log.getRollNo().equalsIgnoreCase(selected.getRollNo()));
-                refreshRollNoOptions();
-                updateMetricsAndFooter();
-            }
-        });
-    }
-
-    @FXML
-    public void handleSaveAdminChanges(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Admin Assignment Saved");
-        alert.setHeaderText(null);
-        alert.setContentText("Successfully assigned teacher (" + assignTeacherCombo.getValue() + ") and updated class schedule!");
-        alert.showAndWait();
-    }
-
-    @FXML
-    public void handleOpenCreateClassDialog(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Create New Class");
-        alert.setHeaderText("University Class Creation Wizard");
-        alert.setContentText("Admin Modal Wizard: Form to input Course Title, Code, Major, Year, Semester, and default Teacher allocation.");
-        alert.showAndWait();
-    }
-
-    @FXML
-    public void handleAdminAddStudent(ActionEvent event) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Enroll Student");
-        dialog.setHeaderText("Add New Student to Class");
-
-        int nextNum = masterStudents.size() + 1;
-        TextField idField = new TextField(String.valueOf(256730 + nextNum - 1));
-        TextField rollField = new TextField("III-CEIT-" + nextNum);
-        TextField nameField = new TextField();
-        nameField.setPromptText("e.g. Kyaw Swar");
-        TextField emailField = new TextField();
-        emailField.setPromptText("e.g. kyawswar@gmail.com");
-        TextField gpaField = new TextField("3.5");
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.addRow(0, new Label("Student ID:"), idField);
-        grid.addRow(1, new Label("Roll No:"), rollField);
-        grid.addRow(2, new Label("Student Name:"), nameField);
-        grid.addRow(3, new Label("Email:"), emailField);
-        grid.addRow(4, new Label("GPA:"), gpaField);
-
-        dialog.getDialogPane().setContent(grid);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.OK && !nameField.getText().trim().isEmpty()) {
-                try {
-                    double parsedGpa = Double.parseDouble(gpaField.getText().trim());
-                    StudentModel newStudent = new StudentModel(
-                        idField.getText().trim(),
-                        rollField.getText().trim(),
-                        nameField.getText().trim(),
-                        emailField.getText().trim(),
-                        90,
-                        parsedGpa
-                    );
-                    masterStudents.add(newStudent);
-
-                    DailyLogEntry logEntry = new DailyLogEntry(
-                        masterDailyLogs.size() + 1,
-                        newStudent.getRollNo(),
-                        newStudent.getName(),
-                        "2026-11-16",
-                        currentSubjectName,
-                        "Present",
-                        "On Time"
-                    );
-                    masterDailyLogs.add(logEntry);
-                    originalStatuses.put(logEntry, "Present");
-
-                    refreshRollNoOptions();
-                    updateMetricsAndFooter();
-                } catch (NumberFormatException ex) {
-                    Alert err = new Alert(Alert.AlertType.ERROR);
-                    err.setTitle("Invalid GPA");
-                    err.setHeaderText(null);
-                    err.setContentText("Please enter a valid numeric GPA (e.g., 3.5).");
-                    err.showAndWait();
-                }
-            }
-        });
-    }
-
-    @FXML
-    private void handleBackToClasses(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("AdminClassesView.fxml"));
-            Parent classesView = loader.load();
-
-            StackPane contentArea = (StackPane) classNameLabel.getScene().lookup("#contentArea");
-            if (contentArea != null) {
-                contentArea.getChildren().setAll(classesView);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    // ==================== HELPERS & MODELS ====================
 
     private void lockTableColumns(TableView<?> table, double... ratios) {
         if (table == null || table.getColumns().size() != ratios.length) return;
@@ -813,56 +639,55 @@ public class AdminClassDetailController {
         }
     }
 
-    // =========================================================================
-    // MODELS
-    // =========================================================================
+    private void showInfo(String title, String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
+    }
 
-    public static class StudentModel {
+    private void showWarning(String title, String msg) {
+        Alert a = new Alert(Alert.AlertType.WARNING);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
+    }
+
+    public static class StudentRecord {
         private final SimpleStringProperty id;
         private final SimpleStringProperty rollNo;
         private final SimpleStringProperty name;
         private final SimpleStringProperty email;
         private final SimpleDoubleProperty gpa;
-        private final SimpleStringProperty academicStanding;
-        private int attendancePercent;
+        private final SimpleStringProperty standing;
 
-        public StudentModel(String id, String rollNo, String name, String email, int attendancePercent, double gpa) {
+        public StudentRecord(String id, String rollNo, String name, String email, double gpa, String standing) {
             this.id = new SimpleStringProperty(id);
             this.rollNo = new SimpleStringProperty(rollNo);
             this.name = new SimpleStringProperty(name);
             this.email = new SimpleStringProperty(email);
-            this.attendancePercent = attendancePercent;
             this.gpa = new SimpleDoubleProperty(gpa);
-            this.academicStanding = new SimpleStringProperty(computeStandingFromGpa(gpa));
-        }
-
-        private static String computeStandingFromGpa(double gpa) {
-            if (gpa >= 3.8) return "Excellent";
-            if (gpa >= 3.0) return "Good";
-            if (gpa >= 2.0) return "Average";
-            return "Poor";
+            this.standing = new SimpleStringProperty(standing);
         }
 
         public String getId() { return id.get(); }
         public SimpleStringProperty idProperty() { return id; }
-
         public String getRollNo() { return rollNo.get(); }
         public SimpleStringProperty rollNoProperty() { return rollNo; }
-
         public String getName() { return name.get(); }
+        public void setName(String v) { name.set(v); }
         public SimpleStringProperty nameProperty() { return name; }
-
         public String getEmail() { return email.get(); }
+        public void setEmail(String v) { email.set(v); }
         public SimpleStringProperty emailProperty() { return email; }
-
         public double getGpa() { return gpa.get(); }
+        public void setGpa(double v) { gpa.set(v); }
         public SimpleDoubleProperty gpaProperty() { return gpa; }
-
-        public String getAcademicStanding() { return academicStanding.get(); }
-        public SimpleStringProperty academicStandingProperty() { return academicStanding; }
-
-        public int getAttendancePercent() { return attendancePercent; }
-        public void setAttendancePercent(int attendancePercent) { this.attendancePercent = attendancePercent; }
+        public String getStanding() { return standing.get(); }
+        public void setStanding(String v) { standing.set(v); }
+        public SimpleStringProperty standingProperty() { return standing; }
     }
 
     public static class DailyLogEntry {
@@ -874,8 +699,7 @@ public class AdminClassDetailController {
         private final SimpleStringProperty status;
         private final SimpleStringProperty remarks;
 
-        public DailyLogEntry(int no, String rollNo, String studentName, String date,
-                             String subject, String status, String remarks) {
+        public DailyLogEntry(int no, String rollNo, String studentName, String date, String subject, String status, String remarks) {
             this.no = new SimpleIntegerProperty(no);
             this.rollNo = new SimpleStringProperty(rollNo);
             this.studentName = new SimpleStringProperty(studentName);
@@ -887,25 +711,19 @@ public class AdminClassDetailController {
 
         public int getNo() { return no.get(); }
         public SimpleIntegerProperty noProperty() { return no; }
-
         public String getRollNo() { return rollNo.get(); }
         public SimpleStringProperty rollNoProperty() { return rollNo; }
-
         public String getStudentName() { return studentName.get(); }
         public SimpleStringProperty studentNameProperty() { return studentName; }
-
         public String getDate() { return date.get(); }
         public SimpleStringProperty dateProperty() { return date; }
-
         public String getSubject() { return subject.get(); }
         public SimpleStringProperty subjectProperty() { return subject; }
-
         public String getStatus() { return status.get(); }
-        public void setStatus(String val) { status.set(val); }
+        public void setStatus(String v) { status.set(v); }
         public SimpleStringProperty statusProperty() { return status; }
-
         public String getRemarks() { return remarks.get(); }
-        public void setRemarks(String val) { remarks.set(val); }
+        public void setRemarks(String v) { remarks.set(v); }
         public SimpleStringProperty remarksProperty() { return remarks; }
     }
 }

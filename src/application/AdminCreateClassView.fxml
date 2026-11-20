@@ -20,16 +20,16 @@
 
 <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.AdminCreateClassController">
    <content>
-      <VBox fx:id="rootPane" spacing="20.0" style="-fx-padding: 22px;">
+      <VBox fx:id="rootPane" minWidth="0.0" spacing="18.0" style="-fx-padding: 20px;">
          <children>
-            
+
             <!-- TOP BAR: Back Button & Administrator Account Pill -->
-            <HBox alignment="CENTER_RIGHT" spacing="15.0">
+            <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="12.0">
                <children>
-                  <Button mnemonicParsing="false" onAction="#handleBack" styleClass="secondary-button" text="← Back to Classes" />
+                  <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleBack" styleClass="secondary-button" text="← Back to Classes" />
                   <Region HBox.hgrow="ALWAYS" />
                   <Label style="-fx-font-size: 16px;" text="🔔" />
-                  <HBox alignment="CENTER" spacing="8.0" style="-fx-background-color: #ffffff; -fx-background-radius: 20px; -fx-padding: 6px 14px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 6, 0, 0, 2); -fx-border-color: #e2e8f0; -fx-border-radius: 20px;">
+                  <HBox alignment="CENTER" minWidth="-Infinity" spacing="8.0" style="-fx-background-color: #ffffff; -fx-background-radius: 20px; -fx-padding: 6px 12px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 6, 0, 0, 2); -fx-border-color: #e2e8f0; -fx-border-radius: 20px;">
                      <children>
                         <StackPane style="-fx-background-color: #f3e8ff; -fx-background-radius: 12px; -fx-min-width: 24px; -fx-min-height: 24px;">
                            <children>
@@ -49,15 +49,15 @@
             </HBox>
 
             <!-- PAGE TITLE & SUBTITLE -->
-            <VBox spacing="4.0">
+            <VBox minWidth="0.0" spacing="4.0">
                <children>
                   <Label styleClass="page-title" text="Create New Class" />
-                  <Label styleClass="page-subtitle" text="Register a new class, assign faculty, configure assessment weights, and auto-generate semester class sessions." />
+                  <Label styleClass="page-subtitle" text="Register a new class, customize its card icon, assign faculty, and auto-generate semester class sessions." wrapText="true" />
                </children>
             </VBox>
 
             <!-- SECTION A: ACADEMIC & COURSE DETAILS -->
-            <VBox spacing="14.0" styleClass="panel-card">
+            <VBox minWidth="0.0" spacing="14.0" styleClass="panel-card">
                <children>
                   <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-border-color: transparent transparent #e2e8f0 transparent; -fx-border-width: 0 0 1.5px 0; -fx-padding: 0 0 8px 0;">
                      <children>
@@ -65,18 +65,17 @@
                      </children>
                   </HBox>
 
-                  <GridPane hgap="16.0" vgap="12.0">
+                  <!-- ROW 1: Course Title & Course Code (Locked 50% / 50%) -->
+                  <GridPane hgap="14.0" minWidth="0.0">
                      <columnConstraints>
                         <ColumnConstraints percentWidth="50.0" />
                         <ColumnConstraints percentWidth="50.0" />
                      </columnConstraints>
                      <rowConstraints>
                         <RowConstraints minHeight="50.0" />
-                        <RowConstraints minHeight="50.0" />
                      </rowConstraints>
                      <children>
-                        <!-- Searchable Course Title Dropdown -->
-                        <VBox spacing="4.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
                            <children>
                               <HBox spacing="3.0">
                                  <children>
@@ -84,12 +83,11 @@
                                     <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
                                  </children>
                               </HBox>
-                              <ComboBox fx:id="courseTitleCombo" editable="true" maxWidth="Infinity" promptText="Select or search course..." styleClass="shaded-combo" />
+                              <ComboBox fx:id="courseTitleCombo" editable="true" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Select or search course..." styleClass="shaded-combo" />
                            </children>
                         </VBox>
 
-                        <!-- Course Code Field -->
-                        <VBox spacing="4.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
                            <children>
                               <HBox spacing="3.0">
                                  <children>
@@ -97,52 +95,98 @@
                                     <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
                                  </children>
                               </HBox>
-                              <TextField fx:id="courseCodeField" promptText="e.g. EM-4012" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
+                              <TextField fx:id="courseCodeField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. EM-4012" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </GridPane>
+
+                  <!-- ROW 2: Major, Semester & Academic Year (Locked 33.33% / 33.33% / 33.33%) -->
+                  <GridPane hgap="12.0" minWidth="0.0">
+                     <columnConstraints>
+                        <ColumnConstraints percentWidth="33.33" />
+                        <ColumnConstraints percentWidth="33.33" />
+                        <ColumnConstraints percentWidth="33.34" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="50.0" />
+                     </rowConstraints>
+                     <children>
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Major" />
+                              <ComboBox fx:id="majorCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Select Major" styleClass="shaded-combo" />
                            </children>
                         </VBox>
 
-                        <!-- Major, Semester & Academic Year Row -->
-                        <HBox spacing="12.0" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
                            <children>
-                              <VBox prefWidth="180.0" spacing="4.0" HBox.hgrow="ALWAYS">
+                              <HBox spacing="3.0">
                                  <children>
-                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Major" />
-                                    <ComboBox fx:id="majorCombo" maxWidth="Infinity" promptText="Select Major" styleClass="shaded-combo" />
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Semester" />
+                                    <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
                                  </children>
-                              </VBox>
-
-                              <VBox prefWidth="160.0" spacing="4.0" HBox.hgrow="ALWAYS">
-                                 <children>
-                                    <HBox spacing="3.0">
-                                       <children>
-                                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Semester" />
-                                          <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
-                                       </children>
-                                    </HBox>
-                                    <ComboBox fx:id="semesterCombo" maxWidth="Infinity" promptText="Select Semester" styleClass="shaded-combo" />
-                                 </children>
-                              </VBox>
-
-                              <VBox prefWidth="180.0" spacing="4.0" HBox.hgrow="ALWAYS">
-                                 <children>
-                                    <HBox spacing="3.0">
-                                       <children>
-                                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Academic Year" />
-                                          <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
-                                       </children>
-                                    </HBox>
-                                    <ComboBox fx:id="academicYearCombo" maxWidth="Infinity" promptText="Select Year" styleClass="shaded-combo" />
-                                 </children>
-                              </VBox>
+                              </HBox>
+                              <ComboBox fx:id="semesterCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Select Semester" styleClass="shaded-combo" />
                            </children>
-                        </HBox>
+                        </VBox>
+
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="2">
+                           <children>
+                              <HBox spacing="3.0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Academic Year" />
+                                    <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
+                                 </children>
+                              </HBox>
+                              <ComboBox fx:id="academicYearCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Select Year" styleClass="shaded-combo" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </GridPane>
+
+                  <!-- ROW 3: Card Symbol, Badge Color & Preview (Locked Equal Widths + Fixed Preview) -->
+                  <GridPane hgap="12.0" minWidth="0.0">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="47.0" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="47.0" />
+                        <ColumnConstraints halignment="CENTER" maxWidth="56.0" minWidth="56.0" prefWidth="56.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="52.0" />
+                     </rowConstraints>
+                     <children>
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Card Symbol (Pick or Type Custom)" />
+                              <ComboBox fx:id="iconSymbolCombo" editable="true" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. &lt;/&gt;, 💾, ⚙, 📘" styleClass="shaded-combo" />
+                           </children>
+                        </VBox>
+
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Badge Color" />
+                              <ComboBox fx:id="badgeColorCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Select Color" styleClass="shaded-combo" />
+                           </children>
+                        </VBox>
+
+                        <VBox alignment="CENTER" spacing="4.0" GridPane.columnIndex="2">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Preview" />
+                              <StackPane fx:id="iconPreviewPane" maxHeight="36.0" maxWidth="36.0" minHeight="36.0" minWidth="36.0" style="-fx-background-color: #2563eb; -fx-background-radius: 8px;">
+                                 <children>
+                                    <Label fx:id="iconPreviewLabel" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;" text="&lt;/&gt;" />
+                                 </children>
+                              </StackPane>
+                           </children>
+                        </VBox>
                      </children>
                   </GridPane>
                </children>
             </VBox>
 
             <!-- SECTION B: FACULTY, INTAKE & SESSION SETUP -->
-            <VBox spacing="14.0" styleClass="panel-card">
+            <VBox minWidth="0.0" spacing="14.0" styleClass="panel-card">
                <children>
                   <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-border-color: transparent transparent #e2e8f0 transparent; -fx-border-width: 0 0 1.5px 0; -fx-padding: 0 0 8px 0;">
                      <children>
@@ -150,24 +194,23 @@
                      </children>
                   </HBox>
 
-                  <GridPane hgap="20.0" vgap="10.0">
+                  <GridPane hgap="16.0" minWidth="0.0" vgap="10.0">
                      <columnConstraints>
-                        <ColumnConstraints percentWidth="36.0" />
-                        <ColumnConstraints percentWidth="64.0" />
+                        <ColumnConstraints percentWidth="34.0" />
+                        <ColumnConstraints percentWidth="66.0" />
                      </columnConstraints>
                      <rowConstraints>
                         <RowConstraints />
                         <RowConstraints />
                      </rowConstraints>
                      <children>
-                        <!-- ALIGNED COLUMN SUBHEADERS -->
                         <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" text="Faculty &amp; Intake" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                         <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" text="Auto-Generate Semester Schedule" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                        <!-- LEFT COLUMN: ASSIGNED TEACHER, MAX STUDENTS, START DATE, TOTAL SESSIONS -->
-                        <VBox spacing="12.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                        <!-- LEFT COLUMN -->
+                        <VBox minWidth="0.0" spacing="12.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
                            <children>
-                              <VBox spacing="4.0">
+                              <VBox minWidth="0.0" spacing="4.0">
                                  <children>
                                     <HBox spacing="3.0">
                                        <children>
@@ -175,11 +218,11 @@
                                           <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
                                        </children>
                                     </HBox>
-                                    <ComboBox fx:id="teacherCombo" maxWidth="Infinity" promptText="Assign Lecturer..." styleClass="shaded-combo" />
+                                    <ComboBox fx:id="teacherCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Assign Lecturer..." styleClass="shaded-combo" />
                                  </children>
                               </VBox>
 
-                              <VBox spacing="4.0">
+                              <VBox minWidth="0.0" spacing="4.0">
                                  <children>
                                     <HBox spacing="3.0">
                                        <children>
@@ -187,11 +230,11 @@
                                           <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
                                        </children>
                                     </HBox>
-                                    <TextField fx:id="maxStudentsField" promptText="e.g. 60" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
+                                    <TextField fx:id="maxStudentsField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. 60" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
                                  </children>
                               </VBox>
 
-                              <VBox spacing="4.0">
+                              <VBox minWidth="0.0" spacing="4.0">
                                  <children>
                                     <HBox spacing="3.0">
                                        <children>
@@ -199,11 +242,11 @@
                                           <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
                                        </children>
                                     </HBox>
-                                    <DatePicker fx:id="startDatePicker" maxWidth="Infinity" promptText="YYYY-MM-DD" styleClass="shaded-combo" />
+                                    <DatePicker fx:id="startDatePicker" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="YYYY-MM-DD" styleClass="shaded-combo" />
                                  </children>
                               </VBox>
 
-                              <VBox spacing="4.0">
+                              <VBox minWidth="0.0" spacing="4.0">
                                  <children>
                                     <HBox spacing="3.0">
                                        <children>
@@ -211,152 +254,92 @@
                                           <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
                                        </children>
                                     </HBox>
-                                    <TextField fx:id="totalSessionsField" promptText="e.g. 24" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
+                                    <TextField fx:id="totalSessionsField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. 24" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
                                     <Label style="-fx-font-size: 10.5px; -fx-text-fill: #64748b;" text="Total 50-minute periods taught across the semester." wrapText="true" />
                                  </children>
                               </VBox>
                            </children>
                         </VBox>
 
-                        <!-- RIGHT COLUMN: WEEKLY TIMETABLE SLOT BUILDER & GENERATED PREVIEW TABLE -->
-                        <VBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <!-- RIGHT COLUMN -->
+                        <VBox minWidth="0.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                            <children>
-                              <!-- Row 1: Day + Start Period + Duration (1 or 2 Periods) + Add Slot -->
-                              <HBox alignment="BOTTOM_LEFT" spacing="10.0">
+                              <!-- Locked Proportional Slot Picker Row -->
+                              <HBox alignment="BOTTOM_LEFT" minWidth="0.0" spacing="8.0">
                                  <children>
-                                    <VBox minWidth="115.0" prefWidth="130.0" spacing="4.0">
+                                    <GridPane hgap="8.0" minWidth="0.0" HBox.hgrow="ALWAYS">
+                                       <columnConstraints>
+                                          <ColumnConstraints percentWidth="25.0" />
+                                          <ColumnConstraints percentWidth="43.0" />
+                                          <ColumnConstraints percentWidth="32.0" />
+                                       </columnConstraints>
+                                       <rowConstraints>
+                                          <RowConstraints />
+                                       </rowConstraints>
                                        <children>
-                                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Day of Week" />
-                                          <ComboBox fx:id="slotDayCombo" maxWidth="Infinity" styleClass="shaded-combo" />
-                                       </children>
-                                    </VBox>
+                                          <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
+                                             <children>
+                                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Day of Week" />
+                                                <ComboBox fx:id="slotDayCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                             </children>
+                                          </VBox>
 
-                                    <VBox minWidth="155.0" spacing="4.0" HBox.hgrow="ALWAYS">
-                                       <children>
-                                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Start Period" />
-                                          <ComboBox fx:id="slotPeriodCombo" maxWidth="Infinity" styleClass="shaded-combo" />
-                                       </children>
-                                    </VBox>
+                                          <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
+                                             <children>
+                                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Start Period" />
+                                                <ComboBox fx:id="slotPeriodCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                             </children>
+                                          </VBox>
 
-                                    <VBox minWidth="150.0" prefWidth="165.0" spacing="4.0">
-                                       <children>
-                                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Length" />
-                                          <ComboBox fx:id="slotDurationCombo" maxWidth="Infinity" styleClass="shaded-combo" />
+                                          <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="2">
+                                             <children>
+                                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Length" />
+                                                <ComboBox fx:id="slotDurationCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                             </children>
+                                          </VBox>
                                        </children>
-                                    </VBox>
+                                    </GridPane>
 
-                                    <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleAddWeeklySlot" style="-fx-padding: 8px 14px;" styleClass="action-button" text="+ Add Slot" />
+                                    <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleAddWeeklySlot" style="-fx-padding: 8px 12px;" styleClass="action-button" text="+ Add Slot" />
                                  </children>
                               </HBox>
 
-                              <!-- Row 2: Active Weekly Timetable Slots Chips Container -->
-                              <VBox spacing="6.0" style="-fx-background-color: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%); -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-padding: 8px 12px;">
+                              <VBox minWidth="0.0" spacing="6.0" style="-fx-background-color: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%); -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-padding: 8px 12px;">
                                  <children>
-                                    <HBox alignment="CENTER_LEFT" spacing="6.0">
+                                    <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="6.0">
                                        <children>
-                                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Weekly Timetable Pattern" />
+                                          <Label minWidth="-Infinity" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Weekly Timetable Pattern" />
                                           <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
                                           <Region HBox.hgrow="ALWAYS" />
-                                          <Label style="-fx-font-size: 10.5px; -fx-text-fill: #64748b;" text="Supports different periods &amp; double blocks per day" />
+                                          <Label style="-fx-font-size: 10px; -fx-text-fill: #64748b;" text="Supports double blocks" />
                                        </children>
                                     </HBox>
-                                    <FlowPane fx:id="weeklySlotsPane" hgap="8.0" vgap="6.0" />
+                                    <FlowPane fx:id="weeklySlotsPane" hgap="8.0" minWidth="0.0" vgap="6.0" />
                                  </children>
                               </VBox>
 
-                              <!-- Row 3: Live Auto-Generated Session Dates Preview Table -->
-                              <VBox style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px;">
+                              <VBox minWidth="0.0" style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px;">
                                  <children>
-                                    <TableView fx:id="sessionTable" prefHeight="170.0" style="-fx-background-color: transparent;">
+                                    <TableView fx:id="sessionTable" minWidth="0.0" prefHeight="170.0" style="-fx-background-color: transparent;">
                                        <columnResizePolicy>
                                           <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                        </columnResizePolicy>
                                        <columns>
-                                          <TableColumn fx:id="colSessionNo" maxWidth="50.0" minWidth="42.0" prefWidth="45.0" reorderable="false" sortable="false" text="#" />
-                                          <TableColumn fx:id="colSessionDate" minWidth="100.0" prefWidth="110.0" reorderable="false" sortable="false" text="Date" />
-                                          <TableColumn fx:id="colSessionDay" maxWidth="70.0" minWidth="58.0" prefWidth="64.0" reorderable="false" sortable="false" text="Day" />
-                                          <TableColumn fx:id="colSessionPeriod" minWidth="140.0" prefWidth="165.0" reorderable="false" sortable="false" text="Period &amp; Time" />
-                                          <TableColumn fx:id="colSessionAction" minWidth="105.0" prefWidth="110.0" reorderable="false" sortable="false" text="Action" />
+                                          <TableColumn fx:id="colSessionNo" prefWidth="40.0" reorderable="false" sortable="false" text="#" />
+                                          <TableColumn fx:id="colSessionDate" prefWidth="95.0" reorderable="false" sortable="false" text="Date" />
+                                          <TableColumn fx:id="colSessionDay" prefWidth="55.0" reorderable="false" sortable="false" text="Day" />
+                                          <TableColumn fx:id="colSessionPeriod" prefWidth="150.0" reorderable="false" sortable="false" text="Period &amp; Time" />
+                                          <TableColumn fx:id="colSessionAction" prefWidth="90.0" reorderable="false" sortable="false" text="Action" />
                                        </columns>
                                     </TableView>
 
-                                    <HBox alignment="CENTER_LEFT" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0 transparent transparent transparent; -fx-border-width: 1px 0 0 0; -fx-padding: 7px 12px; -fx-background-radius: 0 0 6px 6px;">
+                                    <HBox alignment="CENTER_LEFT" minWidth="0.0" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0 transparent transparent transparent; -fx-border-width: 1px 0 0 0; -fx-padding: 7px 12px; -fx-background-radius: 0 0 6px 6px;">
                                        <children>
-                                          <Label fx:id="sessionSummaryLabel" style="-fx-font-size: 11px; -fx-text-fill: #475569; -fx-font-weight: bold;" text="Generated 24 sessions" />
+                                          <Label fx:id="sessionSummaryLabel" style="-fx-font-size: 11px; -fx-text-fill: #475569; -fx-font-weight: bold;" text="Generated 24 sessions" wrapText="true" />
                                        </children>
                                     </HBox>
                                  </children>
                               </VBox>
-                           </children>
-                        </VBox>
-                     </children>
-                  </GridPane>
-               </children>
-            </VBox>
-
-            <!-- SECTION C: EXAM & ASSESSMENT WEIGHTED DISTRIBUTION -->
-            <VBox spacing="14.0" styleClass="panel-card">
-               <children>
-                  <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-border-color: transparent transparent #e2e8f0 transparent; -fx-border-width: 0 0 1.5px 0; -fx-padding: 0 0 8px 0;">
-                     <children>
-                        <Label style="-fx-font-size: 19px; -fx-font-weight: 800; -fx-text-fill: #0f172a;" text="Exam &amp; Assessment Weightage Distribution" />
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="totalWeightageBadge" style="-fx-background-color: #dcfce7; -fx-text-fill: #15803d; -fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 12px; -fx-padding: 4px 12px;" text="Total Weightage: 100.0%" />
-                        <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleResetWeightage" style="-fx-font-size: 11px; -fx-padding: 5px 10px;" styleClass="secondary-button" text="↺ Reset Default" />
-                     </children>
-                  </HBox>
-
-                  <Label style="-fx-font-size: 11.5px; -fx-text-fill: #64748b;" text="Specify the grading weightage (%) for each assessment component. Total distribution must equal 100% (enter 0 if unused)." />
-
-                  <GridPane hgap="14.0" vgap="10.0">
-                     <columnConstraints>
-                        <ColumnConstraints percentWidth="20.0" />
-                        <ColumnConstraints percentWidth="20.0" />
-                        <ColumnConstraints percentWidth="20.0" />
-                        <ColumnConstraints percentWidth="20.0" />
-                        <ColumnConstraints percentWidth="20.0" />
-                     </columnConstraints>
-                     <rowConstraints>
-                        <RowConstraints />
-                     </rowConstraints>
-                     <children>
-                        <VBox spacing="4.0" GridPane.columnIndex="0">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Tutorial (%)" />
-                              <TextField fx:id="tutorialWeightField" promptText="e.g. 10" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
-                           </children>
-                        </VBox>
-
-                        <VBox spacing="4.0" GridPane.columnIndex="1">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Assignment (%)" />
-                              <TextField fx:id="assignmentWeightField" promptText="e.g. 10" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
-                           </children>
-                        </VBox>
-
-                        <VBox spacing="4.0" GridPane.columnIndex="2">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Lab Test (%)" />
-                              <TextField fx:id="labTestWeightField" promptText="e.g. 10" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
-                           </children>
-                        </VBox>
-
-                        <VBox spacing="4.0" GridPane.columnIndex="3">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Practical (%)" />
-                              <TextField fx:id="practicalWeightField" promptText="e.g. 10" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
-                           </children>
-                        </VBox>
-
-                        <VBox spacing="4.0" GridPane.columnIndex="4">
-                           <children>
-                              <HBox spacing="3.0">
-                                 <children>
-                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Final Exam (%)" />
-                                    <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
-                                 </children>
-                              </HBox>
-                              <TextField fx:id="finalExamWeightField" promptText="e.g. 60" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
                            </children>
                         </VBox>
                      </children>
@@ -365,7 +348,7 @@
             </VBox>
 
             <!-- FOOTER ACTION BUTTONS -->
-            <HBox alignment="CENTER_RIGHT" spacing="12.0" style="-fx-padding: 6px 0 0 0;">
+            <HBox alignment="CENTER_RIGHT" minWidth="0.0" spacing="12.0" style="-fx-padding: 6px 0 0 0;">
                <children>
                   <Button mnemonicParsing="false" onAction="#handleCancel" prefHeight="38.0" prefWidth="95.0" styleClass="secondary-button" text="Cancel" />
                   <Button mnemonicParsing="false" onAction="#handleCreate" styleClass="primary-submit-btn" text="Create &amp; Publish Class" />

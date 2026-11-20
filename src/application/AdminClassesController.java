@@ -1,6 +1,9 @@
 package application;
 
+import javafx.application.Platform;
+
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -24,6 +27,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javafx.collections.transformation.FilteredList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.ComboBoxTableCell;
+import javafx.util.StringConverter;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+
 public class AdminClassesController {
 
     @FXML private VBox rootPane;
@@ -40,16 +58,49 @@ public class AdminClassesController {
     @FXML private HBox paginationControlsBox;
     @FXML private Label adminClassesDeptLabel;
     
+    @FXML private HBox tabClassListBox;
+    @FXML private Label tabClassListLabel;
+    @FXML private HBox tabDailyLogBox;
+    @FXML private Label tabDailyLogLabel;
+    @FXML private VBox classListSection;
+    @FXML private VBox dailyLogSection;
+
+    @FXML private DatePicker dailyDatePicker;
+    @FXML private TextField dailySearchField;
+    @FXML private CheckBox chkPresent;
+    @FXML private CheckBox chkAbsent;
+    @FXML private CheckBox chkExcuse;
+    @FXML private Label dailyLogFooterLabel;
+
+    @FXML private TableView<ClassDetailController.DailyLogEntry> dailyLogTable;
+    @FXML private TableColumn<ClassDetailController.DailyLogEntry, Integer> colNoLog;
+    @FXML private TableColumn<ClassDetailController.DailyLogEntry, String> colRollLog;
+    @FXML private TableColumn<ClassDetailController.DailyLogEntry, String> colNameLog;
+    @FXML private TableColumn<ClassDetailController.DailyLogEntry, String> colDateLog;
+    @FXML private TableColumn<ClassDetailController.DailyLogEntry, String> colSubjLog;
+    @FXML private TableColumn<ClassDetailController.DailyLogEntry, String> colStatusLog;
+    @FXML private TableColumn<ClassDetailController.DailyLogEntry, String> colRemarksLog;
+
+    private final ObservableList<ClassDetailController.DailyLogEntry> masterDailyLogData = FXCollections.observableArrayList();
+    private FilteredList<ClassDetailController.DailyLogEntry> filteredDailyLogData;
+    private final Map<String, String> originalDailyStatuses = new HashMap<>();
+    
     private static final int ITEMS_PER_PAGE = 6;
     private int currentPage = 1;
 
-    private final ObservableList<ClassItem> masterClassData = FXCollections.observableArrayList();
-    private List<ClassItem> filteredClassData = new ArrayList<>();
+    // Points directly to the shared list used by Lecturer & Create Class
+    private final ObservableList<ClassesController.ClassItem> masterClassData = ClassesController.SHARED_CLASS_DATA;
+    private List<ClassesController.ClassItem> filteredClassData = new ArrayList<>();
 
     @FXML
     public void initialize() {
         initDropdowns();
-        initSampleClassData();
+        ClassesController.initSampleClassData();
+
+        // Live listener: automatically re-renders when a new class is created & published
+        ClassesController.SHARED_CLASS_DATA.addListener(
+            (ListChangeListener<ClassesController.ClassItem>) change -> Platform.runLater(this::applyFilter)
+        );
 
         if (academicYearCombo != null) {
             academicYearCombo.valueProperty().addListener((obs, o, n) -> applyFilter());
@@ -65,46 +116,29 @@ public class AdminClassesController {
         }
 
         applyFilter();
+        setupDailyLogTab(true);
     }
 
     private void initDropdowns() {
         if (academicYearCombo != null) {
-            academicYearCombo.setItems(FXCollections.observableArrayList("All Years", "First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year"));
+            academicYearCombo.setItems(FXCollections.observableArrayList(
+                "All Years", "First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year"
+            ));
             academicYearCombo.getSelectionModel().selectFirst();
         }
         if (semesterCombo != null) {
-            semesterCombo.setItems(FXCollections.observableArrayList("All Semesters", "First Semester", "Second Semester"));
+            semesterCombo.setItems(FXCollections.observableArrayList(
+                "All Semesters", "First Semester", "Second Semester"
+            ));
             semesterCombo.getSelectionModel().selectFirst();
         }
     }
 
-    private void initSampleClassData() {
-        masterClassData.add(new ClassItem("IT201", "Data Structures and Algorithms", "CEIT", "Second Year", "First Semester", "Year 2 - Class 2A", "56 students", "Mon, Wed 12:00 - 15:00", "Dr. Hla Myint", "#2563eb", "</>"));
-        masterClassData.add(new ClassItem("IT202", "Database Systems", "CEIT", "Second Year", "First Semester", "Year 2 - Class 3A", "52 students", "Tue, Thu 10:00 - 12:00", "Dr. Aung Naing", "#7c3aed", "💾"));
-        masterClassData.add(new ClassItem("IT203", "Computer Networks", "CEIT", "Second Year", "First Semester", "Year 2 - Class 2A", "48 students", "Mon, Wed 12:00 - 15:00", "Dr. Su Su", "#0284c7", "🌐"));
-        masterClassData.add(new ClassItem("IT204", "Web Technologies", "CEIT", "Second Year", "First Semester", "Year 2 - Class 2A", "48 students", "Tue, Thu 13:00 - 15:00", "Prof. Kyaw Zin", "#9333ea", "🖥"));
-        masterClassData.add(new ClassItem("IT205", "Operating Systems", "CEIT", "Second Year", "First Semester", "Year 2 - Class 3A", "60 students", "Fri 09:00 - 12:00", "Dr. Hla Myint", "#dc2626", "⚙"));
-        masterClassData.add(new ClassItem("IT206", "Software Engineering", "CEIT", "Second Year", "First Semester", "Year 2 - Class 3A", "48 students", "Fri 12:00 - 16:00", "Dr. Aung Naing", "#16a34a", "<*>"));
-
-        masterClassData.add(new ClassItem("CE301", "Structural Mechanics", "CE", "Third Year", "First Semester", "Year 3 - Class 1A", "45 students", "Mon, Wed 09:00 - 11:00", "Dr. Tin Maung", "#ea580c", "🏗"));
-        masterClassData.add(new ClassItem("ME201", "Thermodynamics", "ME", "Second Year", "First Semester", "Year 2 - Class 1B", "50 students", "Tue, Thu 08:30 - 10:30", "Dr. Myo Tint", "#0891b2", "🔥"));
-        masterClassData.add(new ClassItem("EC401", "Digital Signal Processing", "EC", "Fourth Year", "Second Semester", "Year 4 - Class 1A", "40 students", "Mon, Fri 13:00 - 15:00", "Dr. Nilar Thein", "#4f46e5", "📡"));
-        masterClassData.add(new ClassItem("EP302", "Power Transmission Systems", "EP", "Third Year", "Second Semester", "Year 3 - Class 2B", "54 students", "Wed, Thu 10:00 - 12:00", "Dr. Soe Win", "#d97706", "⚡"));
-        masterClassData.add(new ClassItem("MC202", "Robotics & Kinematics", "MC", "Second Year", "First Semester", "Year 2 - Class 1A", "38 students", "Tue, Fri 14:00 - 16:00", "Dr. Zayar Tun", "#059669", "🤖"));
-        masterClassData.add(new ClassItem("ChE301", "Chemical Reaction Eng.", "ChE", "Third Year", "Second Semester", "Year 3 - Class 1A", "42 students", "Mon, Thu 11:00 - 13:00", "Dr. Mar Mar", "#db2777", "🧪"));
-    }
-
     @FXML
     public void handleResetFilters(ActionEvent event) {
-        if (academicYearCombo != null) {
-            academicYearCombo.setValue("All Years");
-        }
-        if (semesterCombo != null) {
-            semesterCombo.setValue("All Semesters");
-        }
-        if (searchField != null) {
-            searchField.clear();
-        }
+        if (academicYearCombo != null) academicYearCombo.setValue("All Years");
+        if (semesterCombo != null) semesterCombo.setValue("All Semesters");
+        if (searchField != null) searchField.clear();
         applyFilter();
     }
 
@@ -162,7 +196,7 @@ public class AdminClassesController {
             int col = relativeIndex % 3;
             int row = relativeIndex / 3;
 
-            ClassItem item = filteredClassData.get(i);
+            ClassesController.ClassItem item = filteredClassData.get(i);
             VBox card = createClassCard(item);
             cardsGrid.add(card, col, row);
         }
@@ -223,62 +257,8 @@ public class AdminClassesController {
         paginationControlsBox.getChildren().add(nextBtn);
     }
 
-    private VBox createClassCard(ClassItem item) {
-        VBox card = new VBox(10.0);
-        card.getStyleClass().add("panel-card");
-
-        HBox topHBox = new HBox(10.0);
-        topHBox.setAlignment(Pos.CENTER_LEFT);
-
-        StackPane iconPane = new StackPane();
-        iconPane.setStyle("-fx-background-color: " + item.badgeColor + "; -fx-background-radius: 8px; -fx-padding: 8px; -fx-min-width: 36px; -fx-min-height: 36px;");
-        Label iconLabel = new Label(item.icon);
-        iconLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;");
-        iconPane.getChildren().add(iconLabel);
-
-        VBox titleBox = new VBox();
-        Label codeLabel = new Label(item.code);
-        codeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1e293b;");
-        Label subLabel = new Label(item.title);
-        subLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-        titleBox.getChildren().addAll(codeLabel, subLabel);
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        Label dotsLabel = new Label("⋮");
-        dotsLabel.setStyle("-fx-text-fill: #94a3b8; -fx-font-weight: bold;");
-
-        topHBox.getChildren().addAll(iconPane, titleBox, spacer, dotsLabel);
-
-        VBox detailsBox = new VBox(4.0);
-        Label deptLabel = new Label("🏛  " + item.department);
-        deptLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #475569;");
-        Label classLabel = new Label("🎓  " + item.className);
-        classLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #475569;");
-        Label stdLabel = new Label("👥  " + item.studentCount);
-        stdLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #475569;");
-        Label scheduleLabel = new Label("🕒  " + item.schedule);
-        scheduleLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #475569;");
-        Label lectLabel = new Label("👤  " + item.lecturer + " (Assigned)");
-        lectLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #475569;");
-        detailsBox.getChildren().addAll(deptLabel, classLabel, stdLabel, scheduleLabel, lectLabel);
-
-        HBox btnHBox = new HBox(8.0);
-        btnHBox.setAlignment(Pos.CENTER_RIGHT);
-
-        Button editBtn = new Button("Edit");
-        editBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-size: 11px; -fx-background-radius: 6px; -fx-padding: 5px 10px; -fx-cursor: hand;");
-
-        Button viewBtn = new Button("Manage Class");
-        viewBtn.getStyleClass().add("view-class-button");
-        viewBtn.setUserData(item.code);
-        viewBtn.setOnAction(this::handleViewClass);
-
-        btnHBox.getChildren().addAll(editBtn, viewBtn);
-
-        card.getChildren().addAll(topHBox, new Separator(), detailsBox, btnHBox);
-        return card;
+    private VBox createClassCard(ClassesController.ClassItem item) {
+        return ClassCardFactory.createCard(item, true, this::handleViewClass, null);
     }
 
     @FXML
@@ -287,7 +267,7 @@ public class AdminClassesController {
         String classCode = (String) clickedButton.getUserData();
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("AdminClassDetailView.fxml"));
+        	FXMLLoader loader = new FXMLLoader(getClass().getResource("AdminClassDetailView.fxml"));
             Parent detailView = loader.load();
 
             AdminClassDetailController detailController = loader.getController();
@@ -304,36 +284,209 @@ public class AdminClassesController {
             e.printStackTrace();
         }
     }
+    
+    @FXML
+    public void switchToClassListTab() {
+        if (classListSection != null) { classListSection.setVisible(true); classListSection.setManaged(true); }
+        if (dailyLogSection != null) { dailyLogSection.setVisible(false); dailyLogSection.setManaged(false); }
+        if (tabClassListBox != null) tabClassListBox.setStyle("-fx-border-color: transparent transparent #1b315e transparent; -fx-border-width: 0 0 3.5 0; -fx-padding: 0 6px 6px 2px; -fx-cursor: hand;");
+        if (tabClassListLabel != null) tabClassListLabel.setStyle("-fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 800;");
+        if (tabDailyLogBox != null) tabDailyLogBox.setStyle("-fx-border-color: transparent; -fx-border-width: 0 0 3.5 0; -fx-padding: 0 6px 6px 2px; -fx-cursor: hand;");
+        if (tabDailyLogLabel != null) tabDailyLogLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 14px; -fx-font-weight: bold;");
+    }
 
-    public static class ClassItem {
-        String code;
-        String title;
-        String major;
-        String year;
-        String semester;
-        String department;
-        String className;
-        String studentCount;
-        String schedule;
-        String lecturer;
-        String badgeColor;
-        String icon;
+    @FXML
+    public void switchToDailyLogTab() {
+        if (classListSection != null) { classListSection.setVisible(false); classListSection.setManaged(false); }
+        if (dailyLogSection != null) { dailyLogSection.setVisible(true); dailyLogSection.setManaged(true); }
+        if (tabDailyLogBox != null) tabDailyLogBox.setStyle("-fx-border-color: transparent transparent #1b315e transparent; -fx-border-width: 0 0 3.5 0; -fx-padding: 0 6px 6px 2px; -fx-cursor: hand;");
+        if (tabDailyLogLabel != null) tabDailyLogLabel.setStyle("-fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 800;");
+        if (tabClassListBox != null) tabClassListBox.setStyle("-fx-border-color: transparent; -fx-border-width: 0 0 3.5 0; -fx-padding: 0 6px 6px 2px; -fx-cursor: hand;");
+        if (tabClassListLabel != null) tabClassListLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 14px; -fx-font-weight: bold;");
+        if (dailyLogTable != null) dailyLogTable.refresh();
+    }
 
-        public ClassItem(String code, String title, String major, String year, String semester,
-                         String className, String studentCount, String schedule, String lecturer,
-                         String badgeColor, String icon) {
-            this.code = code;
-            this.title = title;
-            this.major = major;
-            this.year = year;
-            this.semester = semester;
-            this.department = major.equalsIgnoreCase("CEIT") ? "Computer Engineering & IT" : major + " Engineering";
-            this.className = className;
-            this.studentCount = studentCount;
-            this.schedule = schedule;
-            this.lecturer = lecturer;
-            this.badgeColor = badgeColor;
-            this.icon = icon;
+    private void setupDailyLogTab(boolean isAdminEditable) {
+        if (dailyDatePicker != null) {
+            dailyDatePicker.setConverter(new StringConverter<>() {
+                private final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                @Override public String toString(LocalDate d) { return d != null ? fmt.format(d) : ""; }
+                @Override public LocalDate fromString(String s) {
+                    try { return (s != null && !s.isBlank()) ? LocalDate.parse(s, fmt) : null; }
+                    catch (Exception e) { return null; }
+                }
+            });
+            dailyDatePicker.setValue(LocalDate.of(2026, 11, 16));
         }
+
+        if (dailyLogTable == null) return;
+        dailyLogTable.setEditable(false);
+
+        colNoLog.setCellValueFactory(c -> c.getValue().noProperty().asObject());
+        colRollLog.setCellValueFactory(c -> c.getValue().rollNoProperty());
+        colNameLog.setCellValueFactory(c -> c.getValue().studentNameProperty());
+        colDateLog.setCellValueFactory(c -> c.getValue().dateProperty());
+        colSubjLog.setCellValueFactory(c -> c.getValue().subjectProperty());
+        colRemarksLog.setCellValueFactory(c -> c.getValue().remarksProperty());
+        colStatusLog.setCellValueFactory(c -> c.getValue().statusProperty());
+
+        colStatusLog.setCellFactory(tc -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                styleStatusCell(this, item, empty);
+            }
+        });
+
+        dailyLogTable.setRowFactory(tv -> new TableRow<>() {
+            @Override
+            protected void updateItem(ClassDetailController.DailyLogEntry item, boolean empty) {
+                super.updateItem(item, empty);
+                getStyleClass().removeAll("row-present", "row-absent", "row-excused");
+                if (item != null && !empty && item.getStatus() != null) {
+                    String st = item.getStatus().toLowerCase();
+                    if (st.equals("present")) getStyleClass().add("row-present");
+                    else if (st.equals("absent")) getStyleClass().add("row-absent");
+                    else getStyleClass().add("row-excused");
+                }
+            }
+        });
+
+        // Seed sample daily log rows (TODO DB Integration: load from `attendance` + `class_session`)
+        masterDailyLogData.setAll(
+            new ClassDetailController.DailyLogEntry(1, "III-CEIT-1", "Aung Thura", "2026-11-16", "Data Structures and Algorithms", "Present", "On Time"),
+            new ClassDetailController.DailyLogEntry(2, "III-CEIT-2", "Su Myat Mya", "2026-11-16", "Data Structures and Algorithms", "Present", "On Time"),
+            new ClassDetailController.DailyLogEntry(3, "III-CEIT-3", "Min Khant", "2026-11-16", "Database Systems", "Excused", "Medical Leave"),
+            new ClassDetailController.DailyLogEntry(4, "III-CEIT-4", "Hnin Wai", "2026-11-16", "Computer Networks", "Present", "On Time"),
+            new ClassDetailController.DailyLogEntry(5, "III-CEIT-5", "Ko Thant", "2026-11-16", "Operating Systems", "Absent", "Unexcused"),
+            new ClassDetailController.DailyLogEntry(6, "III-CEIT-6", "Zaw Hein", "2026-11-16", "Software Engineering", "Present", "On Time")
+        );
+        for (ClassDetailController.DailyLogEntry e : masterDailyLogData) {
+            originalDailyStatuses.put(e.getRollNo() + "_" + e.getDate(), e.getStatus());
+        }
+
+        filteredDailyLogData = new FilteredList<>(masterDailyLogData, b -> true);
+        dailyLogTable.setItems(filteredDailyLogData);
+        applyDailyFilters();
+    }
+
+    private void styleStatusCell(TableCell<ClassDetailController.DailyLogEntry, String> cell, String item, boolean empty) {
+        if (empty || item == null) {
+            cell.setText(null);
+            cell.setGraphic(null);
+        } else if (item.equalsIgnoreCase("Present")) {
+            cell.setText("✔ Present");
+            cell.setStyle("-fx-text-fill: #15803d; -fx-font-weight: bold;");
+        } else if (item.equalsIgnoreCase("Absent")) {
+            cell.setText("✖ Absent");
+            cell.setStyle("-fx-text-fill: #b91c1c; -fx-font-weight: bold;");
+        } else {
+            cell.setText("● " + item);
+            cell.setStyle("-fx-text-fill: #b45309; -fx-font-weight: bold;");
+        }
+    }
+
+    @FXML
+    public void applyDailyFilters() {
+        if (filteredDailyLogData == null) return;
+        LocalDate selDate = dailyDatePicker != null ? dailyDatePicker.getValue() : null;
+        String dateStr = selDate != null ? selDate.toString() : "";
+        String q = (dailySearchField != null && dailySearchField.getText() != null)
+                ? dailySearchField.getText().trim().toLowerCase() : "";
+        boolean p = chkPresent != null && chkPresent.isSelected();
+        boolean a = chkAbsent != null && chkAbsent.isSelected();
+        boolean e = chkExcuse != null && chkExcuse.isSelected();
+        boolean any = p || a || e;
+
+        filteredDailyLogData.setPredicate(entry -> {
+            boolean matchDate = dateStr.isEmpty() || entry.getDate().equals(dateStr);
+            boolean matchSearch = q.isEmpty()
+                    || entry.getStudentName().toLowerCase().contains(q)
+                    || entry.getRollNo().toLowerCase().contains(q)
+                    || entry.getSubject().toLowerCase().contains(q);
+            boolean matchStatus = !any
+                    || (p && entry.getStatus().equalsIgnoreCase("Present"))
+                    || (a && entry.getStatus().equalsIgnoreCase("Absent"))
+                    || (e && (entry.getStatus().equalsIgnoreCase("Excused") || entry.getStatus().equalsIgnoreCase("Excuse")));
+            return matchDate && matchSearch && matchStatus;
+        });
+
+        if (dailyLogFooterLabel != null) {
+            int n = filteredDailyLogData.size();
+            dailyLogFooterLabel.setText("Showing " + n + " attendance record" + (n == 1 ? "" : "s"));
+        }
+    }
+
+    @FXML
+    public void handleResetDailyFilters() {
+        if (dailyDatePicker != null) dailyDatePicker.setValue(null);
+        if (dailySearchField != null) dailySearchField.clear();
+        if (chkPresent != null) chkPresent.setSelected(false);
+        if (chkAbsent != null) chkAbsent.setSelected(false);
+        if (chkExcuse != null) chkExcuse.setSelected(false);
+        applyDailyFilters();
+    }
+    
+    @FXML
+    public void handleResetDailyStatus() {
+        for (ClassDetailController.DailyLogEntry entry : masterDailyLogData) {
+            String key = entry.getRollNo() + "_" + entry.getDate();
+            if (originalDailyStatuses.containsKey(key)) entry.setStatus(originalDailyStatuses.get(key));
+        }
+        if (dailyLogTable != null) dailyLogTable.refresh();
+    }
+
+    @FXML
+    public void handleMarkAllPresent() {
+        for (ClassDetailController.DailyLogEntry entry : filteredDailyLogData) {
+            entry.setStatus("Present");
+        }
+        if (dailyLogTable != null) dailyLogTable.refresh();
+    }
+
+    @FXML
+    public void handleSaveDailyChanges() {
+        for (ClassDetailController.DailyLogEntry entry : masterDailyLogData) {
+            originalDailyStatuses.put(entry.getRollNo() + "_" + entry.getDate(), entry.getStatus());
+        }
+        // TODO (DB Integration): Persist updated attendance statuses to the database.
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Attendance Saved");
+        alert.setHeaderText(null);
+        alert.setContentText("Daily attendance changes have been saved!");
+        alert.showAndWait();
+    }
+    @FXML
+    public void handleToggleDailyStatus() {
+        ClassDetailController.DailyLogEntry selected = dailyLogTable != null
+                ? dailyLogTable.getSelectionModel().getSelectedItem()
+                : null;
+
+        if (selected == null) {
+            Alert warn = new Alert(Alert.AlertType.WARNING);
+            warn.setTitle("No Row Selected");
+            warn.setHeaderText(null);
+            warn.setContentText("Please select a student row in the Daily Attendance Log first.");
+            warn.showAndWait();
+            return;
+        }
+
+        String current = selected.getStatus() != null ? selected.getStatus() : "Present";
+        String nextStatus;
+        String nextRemarks;
+        if (current.equalsIgnoreCase("Present")) {
+            nextStatus = "Absent";
+            nextRemarks = "Unexcused";
+        } else if (current.equalsIgnoreCase("Absent")) {
+            nextStatus = "Excused";
+            nextRemarks = "Medical Leave";
+        } else {
+            nextStatus = "Present";
+            nextRemarks = "On Time";
+        }
+
+        selected.setStatus(nextStatus);
+        selected.setRemarks(nextRemarks);
+        dailyLogTable.refresh();
     }
 }

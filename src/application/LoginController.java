@@ -20,6 +20,9 @@ import java.io.IOException;
 
 public class LoginController {
 
+    private static final String ADMIN_EMAIL = "admin.master@ytu.edu.mm";
+    private static final String ADMIN_PASSWORD = "ytu@admin123";
+
     @FXML private ImageView logoImageView;
     @FXML private Button roleTeacherBtn;
     @FXML private Button roleAdminBtn;
@@ -99,13 +102,23 @@ public class LoginController {
             visiblePasswordField.setVisible(true);
             passwordField.setVisible(false);
             eyeIconLabel.setText("👁‍🗨");
-            eyeIconLabel.setStyle("-fx-text-fill: #2563eb; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;");
+            eyeIconLabel.setStyle("-fx-text-fill: #2563eb; -fx-font-size: 15px; -fx-cursor: hand;");
+            Platform.runLater(() -> {
+                visiblePasswordField.requestFocus();
+                visiblePasswordField.deselect();
+                visiblePasswordField.positionCaret(visiblePasswordField.getText().length());
+            });
         } else {
             passwordField.setText(visiblePasswordField.getText());
             passwordField.setVisible(true);
             visiblePasswordField.setVisible(false);
             eyeIconLabel.setText("👁");
-            eyeIconLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;");
+            eyeIconLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand;");
+            Platform.runLater(() -> {
+                passwordField.requestFocus();
+                passwordField.deselect();
+                passwordField.positionCaret(passwordField.getText().length());
+            });
         }
     }
 
@@ -117,39 +130,97 @@ public class LoginController {
             visibleConfirmPasswordField.setVisible(true);
             confirmPasswordField.setVisible(false);
             confirmEyeIconLabel.setText("👁‍🗨");
-            confirmEyeIconLabel.setStyle("-fx-text-fill: #2563eb; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;");
+            confirmEyeIconLabel.setStyle("-fx-text-fill: #2563eb; -fx-font-size: 15px; -fx-cursor: hand;");
+            Platform.runLater(() -> {
+                visibleConfirmPasswordField.requestFocus();
+                visibleConfirmPasswordField.deselect();
+                visibleConfirmPasswordField.positionCaret(visibleConfirmPasswordField.getText().length());
+            });
         } else {
             confirmPasswordField.setText(visibleConfirmPasswordField.getText());
             confirmPasswordField.setVisible(true);
             visibleConfirmPasswordField.setVisible(false);
             confirmEyeIconLabel.setText("👁");
-            confirmEyeIconLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;");
+            confirmEyeIconLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand;");
+            Platform.runLater(() -> {
+                confirmPasswordField.requestFocus();
+                confirmPasswordField.deselect();
+                confirmPasswordField.positionCaret(confirmPasswordField.getText().length());
+            });
         }
     }
 
     @FXML
     public void handleLogin(ActionEvent event) {
-        String pass = isPasswordVisible ? visiblePasswordField.getText() : passwordField.getText();
-        String confirmPass = isConfirmPasswordVisible ? visibleConfirmPasswordField.getText() : confirmPasswordField.getText();
+        String user = (usernameField != null && usernameField.getText() != null)
+                ? usernameField.getText().trim()
+                : "";
+        String email = (emailField != null && emailField.getText() != null)
+                ? emailField.getText().trim()
+                : "";
+        String pass = isPasswordVisible
+                ? (visiblePasswordField != null ? visiblePasswordField.getText() : "")
+                : (passwordField != null ? passwordField.getText() : "");
+        String confirmPass = isConfirmPasswordVisible
+                ? (visibleConfirmPasswordField != null ? visibleConfirmPasswordField.getText() : "")
+                : (confirmPasswordField != null ? confirmPasswordField.getText() : "");
 
-        // Validate matching passwords if Confirm Password was entered
         if (confirmPass != null && !confirmPass.isEmpty() && !confirmPass.equals(pass)) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Password Mismatch");
-            alert.setHeaderText(null);
-            alert.setContentText("Password and Confirm Password do not match.");
-            alert.showAndWait();
+            showWarning("Password Mismatch", "Password and Confirm Password do not match.");
             return;
         }
 
-        try {
-            if ("Teacher".equals(selectedRole)) {
-            	// Assign department & profile for both Teacher and Admin logins
-                assignSessionByUsername();
+        if (!email.isEmpty() && !email.toLowerCase().endsWith("@ytu.edu.mm")) {
+            showWarning("Invalid YTU Email", "Please use an official YTU email ending with @ytu.edu.mm.");
+            return;
+        }
+
+        boolean hasAnyInput = !user.isEmpty() || !email.isEmpty() || !pass.isEmpty();
+
+        if ("Admin".equals(selectedRole)) {
+            if (hasAnyInput) {
+                boolean emailMatches = email.isEmpty() || email.equalsIgnoreCase(ADMIN_EMAIL);
+                boolean passMatches = pass.isEmpty() || pass.equals(ADMIN_PASSWORD);
+                if (!emailMatches || !passMatches) {
+                    showWarning("Invalid Admin Credentials",
+                            "Use " + ADMIN_EMAIL + " and your assigned Admin password (or leave fields blank for quick demo login).");
+                    return;
+                }
             }
+            assignAdminDepartmentOnly(user, email);
+        } else {
+            if (hasAnyInput) {
+                TeacherDirectoryStore.TeacherAccount matched = TeacherDirectoryStore.findByCredentials(
+                        !email.isEmpty() ? email : user
+                );
 
-            String targetFxml = selectedRole.equals("Admin") ? "AdminMainLayout.fxml" : "MainLayout.fxml";
+                if (matched != null) {
+                    if (!email.isEmpty() && !matched.email.equalsIgnoreCase(email)) {
+                        showWarning("Email Mismatch",
+                                "Expected YTU email for " + matched.fullName + ": " + matched.email);
+                        return;
+                    }
+                    if (!pass.isEmpty() && !matched.password.equals(pass)) {
+                        showWarning("Incorrect Password",
+                                "The password entered for " + matched.fullName + " does not match.");
+                        return;
+                    }
+                    UserSession.lecturerName = matched.fullName;
+                    UserSession.setDepartmentByCode(matched.deptCode);
+                } else {
+                    assignSessionByUsername(user, email);
+                }
+            } else {
+                UserSession.lecturerName = "Dr. Hla Myint";
+                UserSession.setDepartmentByCode("CEIT");
+            }
+        }
 
+        // TODO (DB Integration): Authenticate against user_account + teacher + department tables
+        // and populate UserSession.lecturerName and UserSession.setDepartmentByCode(deptCode).
+
+        try {
+            String targetFxml = "Admin".equals(selectedRole) ? "AdminMainLayout.fxml" : "MainLayout.fxml";
             Stage stage = (Stage) usernameField.getScene().getWindow();
 
             boolean wasMaximized = stage.isMaximized();
@@ -160,74 +231,98 @@ public class LoginController {
             Parent root = loader.load();
 
             Scene scene = new Scene(root, currentWidth > 0 ? currentWidth : 1024, currentHeight > 0 ? currentHeight : 700);
-
+            TableSelectionHelper.installOnScene(scene);
             if (getClass().getResource("style.css") != null) {
                 scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
             }
 
             stage.setScene(scene);
-            stage.setTitle("YTU Student Information Management System - " + (selectedRole.equals("Admin") ? "System Administrator" : "Lecturer"));
+            stage.setTitle("YTU Student Information Management System - "
+                    + ("Admin".equals(selectedRole) ? "System Administrator" : "Lecturer"));
             stage.show();
 
             if (wasMaximized) {
                 Platform.runLater(() -> stage.setMaximized(true));
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void assignSessionByUsername() {
-        String user = (usernameField != null && usernameField.getText() != null)
-                ? usernameField.getText().trim().toLowerCase()
-                : "";
+    private void assignSessionByUsername(String user, String email) {
+        String combined = ((user != null ? user : "") + " " + (email != null ? email : "")).trim().toLowerCase();
 
-        if (user.contains("ceit")) {
+        if (combined.contains("ceit")) {
             UserSession.lecturerName = "Dr. Hla Myint";
             UserSession.setDepartmentByCode("CEIT");
-        } else if (user.contains("mech")) {
-            UserSession.lecturerName = "Dr. Su Su";
+        } else if (combined.contains("mech")) {
+            UserSession.lecturerName = "Tae Takemi";
             UserSession.setDepartmentByCode("Mech");
-        } else if (user.contains("mce")) {
+        } else if (combined.contains("mce")) {
             UserSession.lecturerName = "Dr. Myo Tint";
             UserSession.setDepartmentByCode("McE");
-        } else if (user.contains("che")) {
+        } else if (combined.contains("che")) {
             UserSession.lecturerName = "Dr. Khin Marlar";
             UserSession.setDepartmentByCode("ChE");
-        } else if (user.contains("tex")) {
+        } else if (combined.contains("tex")) {
             UserSession.lecturerName = "Daw Thiri Nandar";
             UserSession.setDepartmentByCode("Tex");
-        } else if (user.contains("tele")) {
+        } else if (combined.contains("tele")) {
             UserSession.lecturerName = "U Zaw Min";
             UserSession.setDepartmentByCode("Tele");
-        } else if (user.contains("met")) {
+        } else if (combined.contains("met")) {
             UserSession.lecturerName = "Dr. Aye Aye Mon";
             UserSession.setDepartmentByCode("Met");
-        } else if (user.contains("arch")) {
+        } else if (combined.contains("arch")) {
             UserSession.lecturerName = "U Kyaw Swar";
             UserSession.setDepartmentByCode("Arch");
-        } else if (user.contains("ep")) {
+        } else if (combined.contains("ep")) {
             UserSession.lecturerName = "Prof. Kyaw Zin";
             UserSession.setDepartmentByCode("EP");
-        } else if (user.contains("ec")) {
+        } else if (combined.contains("ec")) {
             UserSession.lecturerName = "Dr. Tin Maung";
             UserSession.setDepartmentByCode("EC");
-        } else if (user.contains("mn")) {
+        } else if (combined.contains("mn")) {
             UserSession.lecturerName = "U Than Htike";
             UserSession.setDepartmentByCode("Mn");
-        } else if (user.contains("pe")) {
+        } else if (combined.contains("pe")) {
             UserSession.lecturerName = "Dr. Min Thu";
             UserSession.setDepartmentByCode("PE");
-        } else if (user.contains("fe")) {
+        } else if (combined.contains("fe")) {
             UserSession.lecturerName = "Daw Ei Ei Phyo";
             UserSession.setDepartmentByCode("FE");
-        } else if (user.equals("c") || user.startsWith("c_") || user.contains("civil")) {
+        } else if (combined.equals("c") || combined.startsWith("c_") || combined.contains("civil")) {
             UserSession.lecturerName = "Dr. Aung Naing";
             UserSession.setDepartmentByCode("C");
         } else {
             UserSession.lecturerName = "Dr. Hla Myint";
             UserSession.setDepartmentByCode("CEIT");
         }
+    }
+    
+    private void assignAdminDepartmentOnly(String user, String email) {
+        String combined = ((user != null ? user : "") + " " + (email != null ? email : "")).trim().toLowerCase();
+        if (combined.contains("mech")) UserSession.setDepartmentByCode("Mech");
+        else if (combined.contains("mce")) UserSession.setDepartmentByCode("McE");
+        else if (combined.contains("che")) UserSession.setDepartmentByCode("ChE");
+        else if (combined.contains("tex")) UserSession.setDepartmentByCode("Tex");
+        else if (combined.contains("tele")) UserSession.setDepartmentByCode("Tele");
+        else if (combined.contains("met")) UserSession.setDepartmentByCode("Met");
+        else if (combined.contains("arch")) UserSession.setDepartmentByCode("Arch");
+        else if (combined.contains("ep")) UserSession.setDepartmentByCode("EP");
+        else if (combined.contains("ec")) UserSession.setDepartmentByCode("EC");
+        else if (combined.contains("mn")) UserSession.setDepartmentByCode("Mn");
+        else if (combined.contains("pe")) UserSession.setDepartmentByCode("PE");
+        else if (combined.contains("fe")) UserSession.setDepartmentByCode("FE");
+        else if (combined.equals("c") || combined.startsWith("c_") || combined.contains("civil")) UserSession.setDepartmentByCode("C");
+        else UserSession.setDepartmentByCode("CEIT");
+    }
+
+    private void showWarning(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

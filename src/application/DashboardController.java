@@ -25,7 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DashboardController {
-
+	
+	private String loggedInLecturer;
+	@FXML private Label profileNameLabel;
     @FXML
     private BarChart<String, Number> performanceChart;
 
@@ -40,6 +42,9 @@ public class DashboardController {
     
     @FXML private Label welcomeTitleLabel;
     @FXML private Label departmentBadgeLabel;
+    
+    
+    
     @FXML
     public void initialize() {
         initPerformanceChart();
@@ -50,7 +55,10 @@ public class DashboardController {
         if (departmentBadgeLabel != null) {
             departmentBadgeLabel.setText("🏛️ Department: " + UserSession.getFormattedDepartment());
         }
-        
+        if (profileNameLabel != null) {
+            profileNameLabel.setText("Lecturer (" + UserSession.lecturerName + ")");
+        }
+        this.loggedInLecturer = UserSession.lecturerName;
     }
 
     private void initMyCoursesBlocks() {
@@ -70,10 +78,16 @@ public class DashboardController {
         myCoursesContainer.getChildren().clear();
 
         String activeDept = UserSession.departmentCode;
+        String activeLecturer = UserSession.lecturerName;
         int count = 0;
 
         for (ClassItem item : ClassesController.SHARED_CLASS_DATA) {
             if (activeDept != null && !activeDept.isEmpty() && !item.major.equalsIgnoreCase(activeDept)) {
+                continue;
+            }
+            String cleanLecturer = item.lecturer.replace(" (Assigned)", "").trim();
+            if (activeLecturer != null && !activeLecturer.isEmpty()
+                    && !cleanLecturer.equalsIgnoreCase(activeLecturer.trim())) {
                 continue;
             }
 

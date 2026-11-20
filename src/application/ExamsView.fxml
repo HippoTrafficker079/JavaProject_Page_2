@@ -36,7 +36,7 @@
                         <VBox alignment="CENTER_LEFT" spacing="1.0">
                            <children>
                               <Label style="-fx-font-size: 9px; -fx-text-fill: #16a34a; -fx-font-weight: bold;" text="● LOGGED IN AS" />
-                              <Label style="-fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-font-size: 12px;" text="Lecturer (Dr. Hla Myint)" />
+                              <Label fx:id="profileNameLabel" style="-fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-font-size: 12px;" text="Lecturer (Dr. Hla Myint)" />
                            </children>
                         </VBox>
                         <Label style="-fx-text-fill: #64748b; -fx-font-size: 10px;" text="▼" />

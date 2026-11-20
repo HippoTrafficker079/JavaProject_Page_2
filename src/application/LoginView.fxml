@@ -87,7 +87,7 @@
                                     <TextField fx:id="visiblePasswordField" promptText="Password" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 14px; -fx-text-fill: #1e293b; -fx-prompt-text-fill: #94a3b8; -fx-padding: 10px 0;" visible="false" />
                                  </children>
                               </StackPane>
-                              <Label fx:id="eyeIconLabel" onMouseClicked="#togglePasswordVisibility" style="-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;" text="👁" />
+                              <Label fx:id="eyeIconLabel" alignment="CENTER" maxWidth="24.0" minWidth="24.0" onMouseClicked="#togglePasswordVisibility" prefWidth="24.0" style="-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand;" text="👁" />
                            </children>
                         </HBox>
 
@@ -101,7 +101,7 @@
                                     <TextField fx:id="visibleConfirmPasswordField" promptText="Confirm Password" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 14px; -fx-text-fill: #1e293b; -fx-prompt-text-fill: #94a3b8; -fx-padding: 10px 0;" visible="false" />
                                  </children>
                               </StackPane>
-                              <Label fx:id="confirmEyeIconLabel" onMouseClicked="#toggleConfirmPasswordVisibility" style="-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand; -fx-padding: 0 0 0 6px;" text="👁" />
+                              <Label fx:id="confirmEyeIconLabel" alignment="CENTER" maxWidth="24.0" minWidth="24.0" onMouseClicked="#toggleConfirmPasswordVisibility" prefWidth="24.0" style="-fx-text-fill: #64748b; -fx-font-size: 15px; -fx-cursor: hand;" text="👁" />
                            </children>
                         </HBox>
                      </children>
