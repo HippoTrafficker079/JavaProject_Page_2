@@ -40,13 +40,14 @@ public class ClassDetailController {
     @FXML private TextField searchField;
     @FXML private Label footerCountLabel;
     @FXML private ComboBox<String> standingFilterCombo;
-    
+
     @FXML private TableView<StudentModel> studentTable;
     @FXML private TableColumn<StudentModel, String> colId;
     @FXML private TableColumn<StudentModel, String> colRollNo;
     @FXML private TableColumn<StudentModel, String> colName;
     @FXML private TableColumn<StudentModel, String> colEmail;
     @FXML private TableColumn<StudentModel, Double> colGpa;
+    @FXML private TableColumn<StudentModel, String> colAcademicStanding;
 
     // Tab 2: Daily Attendance Log Controls & Table (Read-Only for Lecturer)
     @FXML private DatePicker dailyDatePicker;
@@ -64,8 +65,7 @@ public class ClassDetailController {
     @FXML private TableColumn<DailyLogEntry, String> colSubjLog;
     @FXML private TableColumn<DailyLogEntry, String> colStatusLog;
     @FXML private TableColumn<DailyLogEntry, String> colRemarksLog;
-    @FXML private TableColumn<StudentModel, String> colAcademicStanding;
-    
+
     private final ObservableList<StudentModel> masterStudentData = FXCollections.observableArrayList();
     private FilteredList<StudentModel> filteredRosterData;
 
@@ -183,7 +183,6 @@ public class ClassDetailController {
             standingFilterCombo.setValue("All Standings");
         }
 
-        // No auto-filter listeners here — filters run only when Filter or Reset is clicked
         filteredRosterData = new FilteredList<>(masterStudentData, b -> true);
         if (studentTable != null) {
             SortedList<StudentModel> sorted = new SortedList<>(filteredRosterData);
@@ -192,7 +191,7 @@ public class ClassDetailController {
             lockTableColumns(studentTable, 0.10, 0.14, 0.21, 0.26, 0.09, 0.196);
         }
     }
-    
+
     @FXML
     public void handleFilter() {
         if (filteredRosterData == null) return;
@@ -365,33 +364,37 @@ public class ClassDetailController {
     // DATA INITIALIZATION & METRICS
     // =========================================================================
 
-    public void initClassData(String classCode) {
-        this.currentClassCode = classCode != null ? classCode : "IT201";
+    public void initClassData(String classKeyOrCode) {
+        String lookup = (classKeyOrCode != null && !classKeyOrCode.isBlank()) ? classKeyOrCode.trim() : "IT201";
 
-        // Resolve real subject title from SHARED_CLASS_DATA (works for newly created classes too)
         ClassesController.ClassItem matched = ClassesController.SHARED_CLASS_DATA.stream()
-                .filter(c -> c.code.equalsIgnoreCase(this.currentClassCode))
+                .filter(c -> c.getOfferingKey().equalsIgnoreCase(lookup) || c.code.equalsIgnoreCase(lookup))
                 .findFirst()
                 .orElse(null);
 
+        this.currentClassCode = (matched != null) ? matched.code : lookup;
         this.currentSubjectName = (matched != null) ? matched.title : "General Class";
+        String offeringKey = (matched != null) ? matched.getOfferingKey() : lookup;
+        String majorLabel = (matched != null) ? " · " + matched.major : "";
 
         if (classNameLabel != null) {
-            classNameLabel.setText("Class Details (" + this.currentClassCode + ") - " + this.currentSubjectName);
+            classNameLabel.setText("Class Details (" + this.currentClassCode + majorLabel + ") - " + this.currentSubjectName);
         }
 
-        // Load auto-assigned students if this class was created via Create New Class
-        if (ClassRosterStore.hasRoster(this.currentClassCode)) {
+        // Load auto-assigned students if this offering was created via Create New Class
+        if (ClassRosterStore.hasRoster(offeringKey)) {
             masterStudentData.clear();
-            for (ClassRosterStore.RosterRecord r : ClassRosterStore.getRoster(this.currentClassCode)) {
+            for (ClassRosterStore.RosterRecord r : ClassRosterStore.getRoster(offeringKey)) {
                 masterStudentData.add(new StudentModel(r.id, r.rollNo, r.name, r.email, r.attendancePercent, r.gpa));
             }
             masterDailyLogData.clear();
-            for (ClassRosterStore.DailyLogRecord l : ClassRosterStore.getDailyLogs(this.currentClassCode)) {
+            for (ClassRosterStore.DailyLogRecord l : ClassRosterStore.getDailyLogs(offeringKey)) {
                 masterDailyLogData.add(new DailyLogEntry(l.no, l.rollNo, l.studentName, l.date, l.subject, l.status, l.remarks));
             }
             if (!masterDailyLogData.isEmpty() && dailyDatePicker != null) {
-                dailyDatePicker.setValue(LocalDate.parse(masterDailyLogData.get(0).getDate()));
+                try {
+                    dailyDatePicker.setValue(LocalDate.parse(masterDailyLogData.get(0).getDate()));
+                } catch (Exception ignored) {}
             }
             refreshRollNoCombo();
             updateMetricsAndFooters();
