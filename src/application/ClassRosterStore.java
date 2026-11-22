@@ -50,20 +50,12 @@ public class ClassRosterStore {
     private static final Map<String, List<RosterRecord>> ROSTER_BY_CLASS = new HashMap<>();
     private static final Map<String, List<DailyLogRecord>> DAILY_LOGS_BY_CLASS = new HashMap<>();
 
-    public static String buildKey(String courseCode, String major, String academicYear, String semester) {
-        String c = courseCode == null ? "" : courseCode.trim().toUpperCase();
-        String m = major == null ? "" : major.trim().toUpperCase();
-        String y = academicYear == null ? "" : academicYear.trim().toUpperCase();
-        String s = semester == null ? "" : semester.trim().toUpperCase();
-        return c + "|" + m + "|" + y + "|" + s;
-    }
-
     /**
      * Called right after Admin clicks "Create & Publish Class".
      * Automatically assigns all students matching (major, academicYear, semester)
-     * into this class offering's Student List and Daily Attendance Log.
+     * into this class's Student List and Daily Attendance Log.
      *
-     * @return The number of students auto-assigned to this class offering.
+     * @return The number of students auto-assigned to this class.
      */
     public static int autoAssignStudentsForNewClass(
             String courseCode,
@@ -101,8 +93,7 @@ public class ClassRosterStore {
         };
         double[] mockGpas = {3.6, 3.8, 2.5, 3.9, 2.1, 4.0, 3.2, 3.4};
 
-        String offeringKey = buildKey(courseCode, major, academicYear, semester);
-        int baseId = 260001 + Math.abs(offeringKey.hashCode() % 900);
+        int baseId = 260001 + Math.abs(courseCode.hashCode() % 900);
         for (int i = 0; i < mockNames.length; i++) {
             String rollNo = yearPrefix + "-" + deptPrefix + "-" + (i + 1);
             assignedStudents.add(new RosterRecord(
@@ -110,13 +101,14 @@ public class ClassRosterStore {
                 rollNo,
                 mockNames[i][0],
                 mockNames[i][1],
-                100,
+                100, // Newly created class starts with 100% attendance
                 mockGpas[i]
             ));
         }
 
-        ROSTER_BY_CLASS.put(offeringKey, assignedStudents);
+        ROSTER_BY_CLASS.put(courseCode, assignedStudents);
 
+        // Initialize Daily Attendance Log rows for all auto-assigned students
         List<DailyLogRecord> initialLogs = new ArrayList<>();
         String dateStr = (firstSessionDate != null) ? firstSessionDate.toString() : LocalDate.now().toString();
         for (int i = 0; i < assignedStudents.size(); i++) {
@@ -131,25 +123,23 @@ public class ClassRosterStore {
                 "Auto-enrolled (" + semester + ")"
             ));
         }
-        DAILY_LOGS_BY_CLASS.put(offeringKey, initialLogs);
+        DAILY_LOGS_BY_CLASS.put(courseCode, initialLogs);
 
         return assignedStudents.size();
     }
 
-    public static boolean hasRoster(String key) {
-        return key != null && ROSTER_BY_CLASS.containsKey(key.trim().toUpperCase());
+    public static boolean hasRoster(String courseCode) {
+        return ROSTER_BY_CLASS.containsKey(courseCode);
     }
 
-    public static List<RosterRecord> getRoster(String key) {
-        // TODO (DB Integration): Query enrolled students for offering_id from DB if not cached.
-        if (key == null) return new ArrayList<>();
-        return ROSTER_BY_CLASS.getOrDefault(key.trim().toUpperCase(), new ArrayList<>());
+    public static List<RosterRecord> getRoster(String courseCode) {
+        // TODO (DB Integration): Query enrolled students for courseCode from DB if not cached.
+        return ROSTER_BY_CLASS.getOrDefault(courseCode, new ArrayList<>());
     }
 
-    public static List<DailyLogRecord> getDailyLogs(String key) {
-        // TODO (DB Integration): Query daily attendance logs for offering_id from DB if not cached.
-        if (key == null) return new ArrayList<>();
-        return DAILY_LOGS_BY_CLASS.getOrDefault(key.trim().toUpperCase(), new ArrayList<>());
+    public static List<DailyLogRecord> getDailyLogs(String courseCode) {
+        // TODO (DB Integration): Query daily attendance logs for courseCode from DB if not cached.
+        return DAILY_LOGS_BY_CLASS.getOrDefault(courseCode, new ArrayList<>());
     }
 
     private static String toRomanYear(String academicYear) {

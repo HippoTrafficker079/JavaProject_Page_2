@@ -1,6 +1,5 @@
 package application;
 
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -11,19 +10,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.skin.ComboBoxListViewSkin;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -45,8 +32,9 @@ public class AdminCreateClassController {
 
     @FXML private VBox rootPane;
 
-    // Academic & Course Details (courseCodeField removed — auto-resolved from CourseCatalogStore)
+    // Academic & Course Details
     @FXML private ComboBox<String> courseTitleCombo;
+    @FXML private TextField courseCodeField;
     @FXML private ComboBox<String> majorCombo;
     @FXML private ComboBox<String> semesterCombo;
     @FXML private ComboBox<String> academicYearCombo;
@@ -78,12 +66,10 @@ public class AdminCreateClassController {
     @FXML private TableColumn<SessionRow, String> colSessionAction;
     @FXML private Label sessionSummaryLabel;
 
+    private final Map<String, CoursePreset> courseCatalog = new LinkedHashMap<>();
     private final Map<String, String> colorPalette = new LinkedHashMap<>();
     private final List<WeeklySlot> weeklySlots = new ArrayList<>();
     private final ObservableList<SessionRow> generatedSessions = FXCollections.observableArrayList();
-    private final ObservableList<String> courseBackingItems = FXCollections.observableArrayList();
-    private boolean isUpdatingCourse = false;
-    private boolean isSyncingSessionCount = false;
 
     private static final String[] PERIOD_START_TIMES = {
         "", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM",
@@ -94,21 +80,21 @@ public class AdminCreateClassController {
         "", "8:50 AM", "9:50 AM", "10:50 AM", "11:50 AM",
         "12:50 PM", "1:50 PM", "2:50 PM", "3:50 PM", "4:50 PM"
     };
-
+    
     private static final String[] PERIOD_START_24H = {
-        "", "08:00", "09:00", "10:00", "11:00",
-        "12:00", "13:00", "14:00", "15:00", "16:00"
-    };
+    	    "", "08:00", "09:00", "10:00", "11:00",
+    	    "12:00", "13:00", "14:00", "15:00", "16:00"
+    	};
 
     private static final String[] PERIOD_END_24H = {
-        "", "08:50", "09:50", "10:50", "11:50",
-        "12:50", "13:50", "14:50", "15:50", "16:50"
+    	    "", "08:50", "09:50", "10:50", "11:50",
+    	    "12:50", "13:50", "14:50", "15:50", "16:50"
     };
 
     @FXML
     public void initialize() {
+        initCourseCatalog();
         initDropdowns();
-        initSearchableCourseCombo();
         initIconAndColorControls();
         initSessionTable();
 
@@ -119,11 +105,7 @@ public class AdminCreateClassController {
 
         if (totalSessionsField != null) {
             totalSessionsField.setText("24");
-            totalSessionsField.textProperty().addListener((obs, o, n) -> {
-                if (!isSyncingSessionCount) {
-                    regenerateSessions();
-                }
-            });
+            totalSessionsField.textProperty().addListener((obs, o, n) -> regenerateSessions());
         }
 
         weeklySlots.add(new WeeklySlot(DayOfWeek.TUESDAY, 6, 2));
@@ -185,135 +167,70 @@ public class AdminCreateClassController {
         return colorPalette.getOrDefault(selected, "#2563eb");
     }
 
-    private void initSearchableCourseCombo() {
-        if (courseTitleCombo == null) return;
+    private void initCourseCatalog() {
+        addCoursePreset("EM-4012", "Engineering Mathematics IV", "CEIT");
+        addCoursePreset("CEIT-4021", "Advanced Java Programming", "CEIT");
+        addCoursePreset("CEIT-4051", "Data Structure and Algorithms", "CEIT");
+        addCoursePreset("CEIT-4002", "Digital Communications", "CEIT");
+        addCoursePreset("CEIT-4041", "Database Management System", "CEIT");
+        addCoursePreset("E-4031", "English IV", "CEIT");
+        addCoursePreset("CEIT-3101", "Advanced Database Systems", "CEIT");
+        addCoursePreset("ME-3101", "Thermodynamics II", "Mech");
+        addCoursePreset("EC-3101", "Digital Signal Processing", "EC");
+        addCoursePreset("C-301", "Structural Mechanics", "C");
+        addCoursePreset("EP-302", "Power Transmission Systems", "EP");
 
-        courseBackingItems.setAll(CourseCatalogStore.getActiveCourseLabels());
-        courseTitleCombo.setItems(courseBackingItems);
+        if (courseTitleCombo != null) {
+            ObservableList<String> allTitles = FXCollections.observableArrayList(courseCatalog.keySet());
+            courseTitleCombo.setItems(allTitles);
 
-        TextField editor = courseTitleCombo.getEditor();
-        if (editor == null) return;
-
-        // When opening the dropdown after a selection (or when blank), show all active courses
-        courseTitleCombo.setOnShowing(e -> {
-            if (isUpdatingCourse) return;
-            String text = editor.getText() != null ? editor.getText().trim() : "";
-            boolean isSelectedCourse =
-                    (courseTitleCombo.getValue() != null && courseTitleCombo.getValue().equals(text))
-                    || CourseCatalogStore.findByLabelOrCode(text) != null;
-
-            if (text.isEmpty() || isSelectedCourse) {
-                isUpdatingCourse = true;
-                List<String> allActive = CourseCatalogStore.getActiveCourseLabels();
-                if (courseBackingItems.size() != allActive.size()) {
-                    courseBackingItems.setAll(allActive);
+            courseTitleCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null && courseCatalog.containsKey(newVal)) {
+                    CoursePreset preset = courseCatalog.get(newVal);
+                    if (courseCodeField != null) courseCodeField.setText(preset.courseCode);
+                    if (majorCombo != null) majorCombo.setValue(preset.deptCode);
                 }
-                if (isSelectedCourse) {
-                    courseTitleCombo.getSelectionModel().select(text);
-                    editor.setText(text);
-                } else {
-                    courseTitleCombo.getSelectionModel().clearSelection();
-                }
-                isUpdatingCourse = false;
+            });
+
+            if (courseTitleCombo.getEditor() != null) {
+                courseTitleCombo.getEditor().textProperty().addListener((obs, oldText, newText) -> {
+                    if (courseTitleCombo.getValue() != null && courseTitleCombo.getValue().equals(newText)) {
+                        return;
+                    }
+                    String q = newText == null ? "" : newText.trim().toLowerCase();
+                    ObservableList<String> matches = FXCollections.observableArrayList(
+                        courseCatalog.keySet().stream()
+                            .filter(name -> q.isEmpty() || name.toLowerCase().contains(q))
+                            .collect(Collectors.toList())
+                    );
+                    courseTitleCombo.setItems(matches);
+                    if (!matches.isEmpty() && !courseTitleCombo.isShowing() && courseTitleCombo.isFocused()) {
+                        courseTitleCombo.show();
+                    }
+                });
             }
-        });
-
-        // Backspace once on any selected course clears it straight to blank
-        editor.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.BACK_SPACE) {
-                String text = editor.getText() != null ? editor.getText() : "";
-                boolean isSelectedCourse =
-                        (courseTitleCombo.getValue() != null && courseTitleCombo.getValue().equals(text))
-                        || CourseCatalogStore.findByLabelOrCode(text) != null;
-
-                if (!text.isEmpty() && isSelectedCourse) {
-                    event.consume();
-                    isUpdatingCourse = true;
-                    courseTitleCombo.hide();
-                    courseTitleCombo.getSelectionModel().clearSelection();
-                    courseTitleCombo.setValue(null);
-                    courseBackingItems.setAll(CourseCatalogStore.getActiveCourseLabels());
-                    courseTitleCombo.getSelectionModel().clearSelection();
-                    editor.clear();
-                    isUpdatingCourse = false;
-
-                    Platform.runLater(() -> {
-                        if (courseTitleCombo.isFocused() || editor.isFocused()) {
-                            courseTitleCombo.show();
-                        }
-                    });
-                }
-            }
-        });
-
-        courseTitleCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (isUpdatingCourse || newVal == null) return;
-            CourseCatalogStore.CourseItem course = CourseCatalogStore.findByLabelOrCode(newVal);
-            if (course != null && majorCombo != null && majorCombo.getItems().contains(course.deptCode)) {
-                majorCombo.setValue(course.deptCode);
-            }
-        });
-
-        // Live search while typing (mutates backing list without replacing it)
-        editor.textProperty().addListener((obs, oldText, newText) -> {
-            if (isUpdatingCourse) return;
-
-            String selected = courseTitleCombo.getSelectionModel().getSelectedItem();
-            if (selected != null && selected.equals(newText)) {
-                return;
-            }
-
-            isUpdatingCourse = true;
-            String typed = newText == null ? "" : newText;
-            String q = typed.trim().toLowerCase();
-
-            List<String> matches = CourseCatalogStore.getActiveCourseLabels().stream()
-                    .filter(label -> q.isEmpty() || label.toLowerCase().contains(q))
-                    .collect(Collectors.toList());
-
-            courseTitleCombo.getSelectionModel().clearSelection();
-            courseBackingItems.setAll(matches);
-            courseTitleCombo.getSelectionModel().clearSelection();
-
-            if (!typed.equals(editor.getText())) {
-                editor.setText(typed);
-                editor.positionCaret(typed.length());
-            }
-            isUpdatingCourse = false;
-
-            if (!matches.isEmpty() && !courseTitleCombo.isShowing() && (courseTitleCombo.isFocused() || editor.isFocused())) {
-                courseTitleCombo.show();
-            }
-        });
-
-        lockComboPopupWidth(courseTitleCombo);
+        }
     }
 
-    private void lockComboPopupWidth(ComboBox<String> combo) {
-        if (combo == null) return;
-
-        Runnable bindWidth = () -> {
-            if (combo.getSkin() instanceof ComboBoxListViewSkin<?> skin
-                    && skin.getPopupContent() instanceof ListView<?> listView) {
-                if (!listView.prefWidthProperty().isBound()) {
-                    listView.minWidthProperty().bind(combo.widthProperty());
-                    listView.prefWidthProperty().bind(combo.widthProperty());
-                    listView.maxWidthProperty().bind(combo.widthProperty());
-                }
-            }
-        };
-
-        combo.skinProperty().addListener((obs, oldSkin, newSkin) -> bindWidth.run());
-        combo.addEventHandler(ComboBox.ON_SHOWING, e -> bindWidth.run());
+    private void addCoursePreset(String code, String name, String dept) {
+        courseCatalog.put(name, new CoursePreset(code, name, dept));
     }
 
     private void initDropdowns() {
-        if (majorCombo != null) {
+    	if (majorCombo != null) {
             majorCombo.setItems(FXCollections.observableArrayList(
                 "CEIT", "C", "Mech", "EC", "EP", "McE", "ChE", "Tex", "Mn", "PE", "Arch", "Tele", "Met", "FE"
             ));
             String defaultDept = UserSession.departmentCode != null ? UserSession.departmentCode : "CEIT";
             majorCombo.setValue(defaultDept);
+
+            majorCombo.valueProperty().addListener((obs, oldDept, newDept) -> {
+                if (teacherCombo != null && newDept != null) {
+                    teacherCombo.setItems(FXCollections.observableArrayList(
+                        TeacherDirectoryStore.getTeacherNamesByDept(newDept)
+                    ));
+                }
+            });
         }
 
         if (semesterCombo != null) {
@@ -328,10 +245,10 @@ public class AdminCreateClassController {
             academicYearCombo.setValue("Second Year");
         }
 
-        // Load all faculty across departments so cross-major teaching is supported
         if (teacherCombo != null) {
+            String initialDept = (majorCombo != null && majorCombo.getValue() != null) ? majorCombo.getValue() : "CEIT";
             teacherCombo.setItems(FXCollections.observableArrayList(
-                TeacherDirectoryStore.getTeacherNamesByDept(null)
+                TeacherDirectoryStore.getTeacherNamesByDept(initialDept)
             ));
         }
 
@@ -484,13 +401,6 @@ public class AdminCreateClassController {
                     SessionRow row = getTableView().getItems().get(getIndex());
                     generatedSessions.remove(row);
                     renumberSessions();
-
-                    // Drop Total Sessions field to match remaining rows without regenerating
-                    if (totalSessionsField != null) {
-                        isSyncingSessionCount = true;
-                        totalSessionsField.setText(String.valueOf(generatedSessions.size()));
-                        isSyncingSessionCount = false;
-                    }
                     updateSummaryLabel();
                 });
             }
@@ -592,17 +502,8 @@ public class AdminCreateClassController {
 
     @FXML
     private void handleCreate(ActionEvent event) {
-        String selectedCourseText = getComboText(courseTitleCombo);
-        CourseCatalogStore.CourseItem course = CourseCatalogStore.findByLabelOrCode(selectedCourseText);
-
-        if (course == null) {
-            showAlert(Alert.AlertType.WARNING, "Invalid Course",
-                    "Please select a registered course from the searchable Course / Subject dropdown (or register it first in Create New Course).");
-            return;
-        }
-
-        String courseCode = course.courseCode;
-        String courseTitle = course.courseName;
+        String courseTitle = getComboText(courseTitleCombo);
+        String courseCode = getSafeText(courseCodeField).toUpperCase();
         String major = majorCombo != null && majorCombo.getValue() != null ? majorCombo.getValue() : "CEIT";
         String semester = semesterCombo != null && semesterCombo.getValue() != null ? semesterCombo.getValue() : "First Semester";
         String year = academicYearCombo != null && academicYearCombo.getValue() != null ? academicYearCombo.getValue() : "Second Year";
@@ -615,9 +516,9 @@ public class AdminCreateClassController {
         if (customSymbol.isEmpty()) customSymbol = "📘";
         String badgeColor = resolveSelectedColorHex();
 
-        if (teacher == null || maxStudentsStr.isEmpty() || totalSessionsStr.isEmpty() || startDate == null) {
+        if (courseTitle.isEmpty() || courseCode.isEmpty() || teacher == null || maxStudentsStr.isEmpty() || totalSessionsStr.isEmpty() || startDate == null) {
             showAlert(Alert.AlertType.WARNING, "Missing Required Fields",
-                    "Please complete all required fields marked with * (Course, Assigned Teacher, Max Students, Start Date, and Total Sessions).");
+                    "Please complete all required fields marked with * (Course Title, Course Code, Assigned Teacher, Max Students, Start Date, and Total Sessions).");
             return;
         }
 
@@ -641,21 +542,10 @@ public class AdminCreateClassController {
             return;
         }
 
-        if (generatedSessions.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "No Class Sessions",
-                    "There are 0 sessions in the schedule table. Please generate at least 1 session before publishing.");
-            return;
-        }
-
-        if (generatedSessions.size() != totalSessions) {
-            showAlert(Alert.AlertType.WARNING, "Session Count Conflict",
-                    "Total Sessions is set to " + totalSessions + ", but the schedule table currently has "
-                    + generatedSessions.size() + " sessions. Please adjust Total Sessions or regenerate the schedule.");
-            return;
-        }
-
-        // Auto-assign matching (major, year, semester) students to this offering's Roster & Daily Log
-        LocalDate firstDate = LocalDate.parse(generatedSessions.get(0).getDate());
+        // Auto-assign matching (major, year, semester) students to Roster & Daily Attendance Log
+        LocalDate firstDate = !generatedSessions.isEmpty()
+                ? LocalDate.parse(generatedSessions.get(0).getDate())
+                : startDate;
         int enrolledCount = ClassRosterStore.autoAssignStudentsForNewClass(
                 courseCode, courseTitle, major, year, semester, firstDate
         );
@@ -668,12 +558,12 @@ public class AdminCreateClassController {
                 .collect(Collectors.joining(" | "));
         String shortSection = buildSectionLabel(year);
 
+        // Ensure shared list is initialized, then publish to BOTH Admin & Lecturer views live
         ClassesController.initSampleClassData();
-
-        // =========================================================================
+     // =========================================================================
         // TODO (DB Integration — Matches schema.sql):
-        // 1. Lookup course_id from `course` WHERE course_code = courseCode.
-        // 2. Lookup teacher_id from `teacher` WHERE full_name = teacher.
+        // 1. Insert or lookup course in `course` (course_code, course_name, dept_id).
+        // 2. Lookup `teacher_id` from `teacher` WHERE full_name = teacher.
         // 3. Insert into `course_offering` (teacher_id, course_id, year, total_sessions, term).
         // 4. Batch-insert `generatedSessions` into `class_session` (offering_id, session_date, period).
         // =========================================================================
@@ -798,11 +688,23 @@ public class AdminCreateClassController {
             String timeSpan = PERIOD_START_TIMES[startPeriod] + " – " + PERIOD_END_TIMES[endPeriod];
             return dayShort + " · " + formatPeriods() + " (" + timeSpan + ")";
         }
-
+        
         String toBadgeSchedule() {
             String dayShort = day.getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
             int endPeriod = startPeriod + duration - 1;
             return dayShort + " " + PERIOD_START_24H[startPeriod] + " - " + PERIOD_END_24H[endPeriod];
+        }
+    }
+
+    private static class CoursePreset {
+        final String courseCode;
+        final String courseName;
+        final String deptCode;
+
+        CoursePreset(String courseCode, String courseName, String deptCode) {
+            this.courseCode = courseCode;
+            this.courseName = courseName;
+            this.deptCode = deptCode;
         }
     }
 

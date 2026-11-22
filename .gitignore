@@ -2,10 +2,3 @@
 *.class
 .DS_Store
 Thumbs.db
-
-/bin/
-*.class
-.DS_Store
-Thumbs.db
-.vscode/
-.settings/

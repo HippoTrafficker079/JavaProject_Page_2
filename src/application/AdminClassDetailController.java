@@ -90,7 +90,6 @@ public class AdminClassDetailController {
     private String currentClassCode = "IT201";
     private String currentCourseTitle = "Data Structures and Algorithms";
     private String currentMajor = "CEIT";
-    private String currentOfferingKey = "";
     private ClassesController.ClassItem currentClassItem;
 
     private final ObservableList<StudentRecord> masterStudentData = FXCollections.observableArrayList();
@@ -107,31 +106,26 @@ public class AdminClassDetailController {
         switchToRosterTab();
     }
 
-    public void initClassData(String classKeyOrCode) {
-        String lookup = (classKeyOrCode != null && !classKeyOrCode.isBlank()) ? classKeyOrCode.trim() : "IT201";
+    public void initClassData(String classCode) {
+        this.currentClassCode = (classCode != null && !classCode.isBlank()) ? classCode : "IT201";
 
+        // Locate matching ClassItem in shared list
         currentClassItem = ClassesController.SHARED_CLASS_DATA.stream()
-                .filter(c -> c.getOfferingKey().equalsIgnoreCase(lookup) || c.code.equalsIgnoreCase(lookup))
+                .filter(c -> c.code.equalsIgnoreCase(this.currentClassCode))
                 .findFirst()
                 .orElse(null);
 
         if (currentClassItem != null) {
-            this.currentClassCode = currentClassItem.code;
-            this.currentCourseTitle = currentClassItem.title;
-            this.currentMajor = currentClassItem.major;
-            this.currentOfferingKey = currentClassItem.getOfferingKey();
-        } else {
-            this.currentClassCode = lookup;
-            this.currentOfferingKey = lookup;
+            currentCourseTitle = currentClassItem.title;
+            currentMajor = currentClassItem.major;
         }
 
         if (classNameLabel != null) {
-            classNameLabel.setText("Admin Class Management (" + currentClassCode + " · " + currentMajor + ")");
+            classNameLabel.setText("Admin Class Management (" + currentClassCode + ")");
         }
 
-        // Load all faculty across departments so cross-major reassignment is supported
         if (assignTeacherCombo != null) {
-            List<String> teachers = TeacherDirectoryStore.getTeacherNamesByDept(null);
+            List<String> teachers = TeacherDirectoryStore.getTeacherNamesByDept(currentMajor);
             assignTeacherCombo.setItems(FXCollections.observableArrayList(teachers));
             if (currentClassItem != null && currentClassItem.lecturer != null) {
                 String cleanLecturer = currentClassItem.lecturer.replace(" (Assigned)", "").trim();
@@ -152,63 +146,19 @@ public class AdminClassDetailController {
     }
 
     private void loadSampleRosterAndAttendance() {
-        masterStudentData.clear();
-        masterDailyLogData.clear();
-        originalDailyStatuses.clear();
+        String prefix = "III-" + (currentMajor != null ? currentMajor.toUpperCase() : "CEIT") + "-";
+        String emailPrefix = "iii" + (currentMajor != null ? currentMajor.toLowerCase() : "ceit");
 
-        // Load auto-assigned students & daily logs if this offering was created via Create New Class
-        if (ClassRosterStore.hasRoster(currentOfferingKey)) {
-            for (ClassRosterStore.RosterRecord r : ClassRosterStore.getRoster(currentOfferingKey)) {
-                String standing = r.gpa >= 3.0 ? "Active" : (r.gpa >= 2.2 ? "At Risk" : "Inactive");
-                masterStudentData.add(new StudentRecord(r.id, r.rollNo, r.name, r.email, r.gpa, standing));
-            }
-
-            for (ClassRosterStore.DailyLogRecord l : ClassRosterStore.getDailyLogs(currentOfferingKey)) {
-                DailyLogEntry entry = new DailyLogEntry(
-                        l.no, l.rollNo, l.studentName, l.date, l.subject, l.status, l.remarks
-                );
-                masterDailyLogData.add(entry);
-                originalDailyStatuses.put(entry.getRollNo() + "_" + entry.getDate(), entry.getStatus());
-            }
-
-            if (!masterDailyLogData.isEmpty() && dailyDatePicker != null) {
-                try {
-                    dailyDatePicker.setValue(LocalDate.parse(masterDailyLogData.get(0).getDate()));
-                } catch (Exception ignored) {}
-            }
-        } else {
-            // Default sample roster for pre-seeded classes
-            String prefix = "III-" + (currentMajor != null ? currentMajor.toUpperCase() : "CEIT") + "-";
-            String emailPrefix = "iii" + (currentMajor != null ? currentMajor.toLowerCase() : "ceit");
-
-            masterStudentData.setAll(
-                new StudentRecord("STD-001", prefix + "1", "Aung Thura",  emailPrefix + "1@ytu.edu.mm", 3.85, "Active"),
-                new StudentRecord("STD-002", prefix + "2", "Su Myat Mya", emailPrefix + "2@ytu.edu.mm", 3.72, "Active"),
-                new StudentRecord("STD-003", prefix + "3", "Min Khant",   emailPrefix + "3@ytu.edu.mm", 3.40, "Active"),
-                new StudentRecord("STD-004", prefix + "4", "Hnin Wai",    emailPrefix + "4@ytu.edu.mm", 3.65, "Active"),
-                new StudentRecord("STD-005", prefix + "5", "Ko Thant",    emailPrefix + "5@ytu.edu.mm", 2.45, "At Risk"),
-                new StudentRecord("STD-006", prefix + "6", "Zaw Hein",    emailPrefix + "6@ytu.edu.mm", 3.90, "Active"),
-                new StudentRecord("STD-007", prefix + "7", "May Thu",     emailPrefix + "7@ytu.edu.mm", 2.10, "Inactive"),
-                new StudentRecord("STD-008", prefix + "8", "Kyaw Zin",    emailPrefix + "8@ytu.edu.mm", 2.60, "At Risk")
-            );
-
-            String logDate = (dailyDatePicker != null && dailyDatePicker.getValue() != null)
-                    ? dailyDatePicker.getValue().toString()
-                    : "2026-11-16";
-
-            int rowNum = 1;
-            for (StudentRecord s : masterStudentData) {
-                String status = "Present";
-                String remarks = "On Time";
-                if (rowNum == 3) { status = "Excused"; remarks = "Medical Leave"; }
-                else if (rowNum == 5) { status = "Absent"; remarks = "Unexcused"; }
-
-                DailyLogEntry entry = new DailyLogEntry(rowNum, s.getRollNo(), s.getName(), logDate, currentCourseTitle, status, remarks);
-                masterDailyLogData.add(entry);
-                originalDailyStatuses.put(entry.getRollNo() + "_" + entry.getDate(), status);
-                rowNum++;
-            }
-        }
+        masterStudentData.setAll(
+            new StudentRecord("STD-001", prefix + "1", "Aung Thura",  emailPrefix + "1@ytu.edu.mm", 3.85, "Active"),
+            new StudentRecord("STD-002", prefix + "2", "Su Myat Mya", emailPrefix + "2@ytu.edu.mm", 3.72, "Active"),
+            new StudentRecord("STD-003", prefix + "3", "Min Khant",   emailPrefix + "3@ytu.edu.mm", 3.40, "Active"),
+            new StudentRecord("STD-004", prefix + "4", "Hnin Wai",    emailPrefix + "4@ytu.edu.mm", 3.65, "Active"),
+            new StudentRecord("STD-005", prefix + "5", "Ko Thant",    emailPrefix + "5@ytu.edu.mm", 2.45, "At Risk"),
+            new StudentRecord("STD-006", prefix + "6", "Zaw Hein",    emailPrefix + "6@ytu.edu.mm", 3.90, "Active"),
+            new StudentRecord("STD-007", prefix + "7", "May Thu",     emailPrefix + "7@ytu.edu.mm", 2.10, "Inactive"),
+            new StudentRecord("STD-008", prefix + "8", "Kyaw Zin",    emailPrefix + "8@ytu.edu.mm", 2.60, "At Risk")
+        );
 
         if (rollNoCombo != null) {
             ObservableList<String> rollOptions = FXCollections.observableArrayList("All Roll Nos");
@@ -222,6 +172,26 @@ public class AdminClassDetailController {
         if (standingCombo != null) {
             standingCombo.setItems(FXCollections.observableArrayList("All Standings", "Active", "At Risk", "Inactive"));
             standingCombo.setValue("All Standings");
+        }
+
+        // Populate Daily Attendance Log entries for this class
+        masterDailyLogData.clear();
+        originalDailyStatuses.clear();
+        String logDate = (dailyDatePicker != null && dailyDatePicker.getValue() != null)
+                ? dailyDatePicker.getValue().toString()
+                : "2026-11-16";
+
+        int rowNum = 1;
+        for (StudentRecord s : masterStudentData) {
+            String status = "Present";
+            String remarks = "On Time";
+            if (rowNum == 3) { status = "Excused"; remarks = "Medical Leave"; }
+            else if (rowNum == 5) { status = "Absent"; remarks = "Unexcused"; }
+
+            DailyLogEntry entry = new DailyLogEntry(rowNum, s.getRollNo(), s.getName(), logDate, currentCourseTitle, status, remarks);
+            masterDailyLogData.add(entry);
+            originalDailyStatuses.put(entry.getRollNo() + "_" + entry.getDate(), status);
+            rowNum++;
         }
 
         updateStudentMetrics();
@@ -401,7 +371,7 @@ public class AdminClassDetailController {
             }
         }
         // TODO (DB Integration): UPDATE course_offering / class_session in MySQL
-        showInfo("Changes Saved", "Lecturer assignment and schedule updated for " + currentClassCode + " (" + currentMajor + ").");
+        showInfo("Changes Saved", "Lecturer assignment and schedule updated for " + currentClassCode + ".");
     }
 
     // ==================== STUDENT ROSTER ACTIONS ====================
@@ -440,7 +410,7 @@ public class AdminClassDetailController {
     public void handleAdminAddStudent() {
         Dialog<StudentRecord> dialog = new Dialog<>();
         dialog.setTitle("Enroll Student");
-        dialog.setHeaderText("Add a student to " + currentClassCode + " (" + currentMajor + ")");
+        dialog.setHeaderText("Add a student to " + currentClassCode);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
         GridPane grid = new GridPane();
@@ -449,11 +419,11 @@ public class AdminClassDetailController {
         grid.setPadding(new Insets(16));
 
         TextField rollField = new TextField();
-        rollField.setPromptText("e.g. III-" + currentMajor + "-9");
+        rollField.setPromptText("e.g. III-CEIT-9");
         TextField nameField = new TextField();
         nameField.setPromptText("Full Name");
         TextField emailField = new TextField();
-        emailField.setPromptText("e.g. student@ytu.edu.mm");
+        emailField.setPromptText("e.g. iiiceit9@ytu.edu.mm");
         TextField gpaField = new TextField("3.50");
 
         grid.addRow(0, new Label("Roll No:"), rollField);
@@ -651,7 +621,7 @@ public class AdminClassDetailController {
             originalDailyStatuses.put(entry.getRollNo() + "_" + entry.getDate(), entry.getStatus());
         }
         // TODO (DB Integration): Persist attendance records to `attendance` table
-        showInfo("Attendance Saved", "Daily attendance changes for " + currentClassCode + " (" + currentMajor + ") have been saved!");
+        showInfo("Attendance Saved", "Daily attendance changes for " + currentClassCode + " have been saved!");
     }
 
     // ==================== HELPERS & MODELS ====================

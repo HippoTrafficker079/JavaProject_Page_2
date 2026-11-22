@@ -52,7 +52,7 @@
             <VBox minWidth="0.0" spacing="4.0">
                <children>
                   <Label styleClass="page-title" text="Create New Class" />
-                  <Label styleClass="page-subtitle" text="Select a registered course, assign target major/year/semester to auto-enroll matching students, customize its card icon, and generate semester sessions." wrapText="true" />
+                  <Label styleClass="page-subtitle" text="Register a new class, customize its card icon, assign faculty, and auto-generate semester class sessions." wrapText="true" />
                </children>
             </VBox>
 
@@ -65,20 +65,43 @@
                      </children>
                   </HBox>
 
-                  <!-- ROW 1: Searchable Course / Subject (Course Code removed; auto-resolved from CourseCatalogStore) -->
-                  <VBox minWidth="0.0" spacing="4.0">
+                  <!-- ROW 1: Course Title & Course Code (Locked 50% / 50%) -->
+                  <GridPane hgap="14.0" minWidth="0.0">
+                     <columnConstraints>
+                        <ColumnConstraints percentWidth="50.0" />
+                        <ColumnConstraints percentWidth="50.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="50.0" />
+                     </rowConstraints>
                      <children>
-                        <HBox spacing="3.0">
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
                            <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course / Subject (Select from Registered Courses)" />
-                              <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
+                              <HBox spacing="3.0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course Title" />
+                                    <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
+                                 </children>
+                              </HBox>
+                              <ComboBox fx:id="courseTitleCombo" editable="true" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Select or search course..." styleClass="shaded-combo" />
                            </children>
-                        </HBox>
-                        <ComboBox fx:id="courseTitleCombo" editable="true" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Select or search registered course..." styleClass="shaded-combo" />
-                     </children>
-                  </VBox>
+                        </VBox>
 
-                  <!-- ROW 2: Major, Semester & Academic Year (Locked 33.33% / 33.33% / 33.34%) -->
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
+                           <children>
+                              <HBox spacing="3.0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course Code" />
+                                    <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
+                                 </children>
+                              </HBox>
+                              <TextField fx:id="courseCodeField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. EM-4012" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </GridPane>
+
+                  <!-- ROW 2: Major, Semester & Academic Year (Locked 33.33% / 33.33% / 33.33%) -->
                   <GridPane hgap="12.0" minWidth="0.0">
                      <columnConstraints>
                         <ColumnConstraints percentWidth="33.33" />
@@ -91,7 +114,7 @@
                      <children>
                         <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
                            <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Target Major (Auto-Enrolls Students)" />
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Major" />
                               <ComboBox fx:id="majorCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Select Major" styleClass="shaded-combo" />
                            </children>
                         </VBox>
@@ -122,7 +145,7 @@
                      </children>
                   </GridPane>
 
-                  <!-- ROW 3: Card Symbol, Badge Color & Preview -->
+                  <!-- ROW 3: Card Symbol, Badge Color & Preview (Locked Equal Widths + Fixed Preview) -->
                   <GridPane hgap="12.0" minWidth="0.0">
                      <columnConstraints>
                         <ColumnConstraints hgrow="ALWAYS" percentWidth="47.0" />
@@ -241,6 +264,7 @@
                         <!-- RIGHT COLUMN -->
                         <VBox minWidth="0.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                            <children>
+                              <!-- Locked Proportional Slot Picker Row -->
                               <HBox alignment="BOTTOM_LEFT" minWidth="0.0" spacing="8.0">
                                  <children>
                                     <GridPane hgap="8.0" minWidth="0.0" HBox.hgrow="ALWAYS">
@@ -287,7 +311,7 @@
                                           <Label minWidth="-Infinity" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Weekly Timetable Pattern" />
                                           <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
                                           <Region HBox.hgrow="ALWAYS" />
-                                          <Label style="-fx-font-size: 10px; -fx-text-fill: #64748b;" text="Supports double/triple/quad blocks" />
+                                          <Label style="-fx-font-size: 10px; -fx-text-fill: #64748b;" text="Supports double blocks" />
                                        </children>
                                     </HBox>
                                     <FlowPane fx:id="weeklySlotsPane" hgap="8.0" minWidth="0.0" vgap="6.0" />
