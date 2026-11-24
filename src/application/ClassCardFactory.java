@@ -131,15 +131,16 @@ public class ClassCardFactory {
 
         timetableBox.getChildren().addAll(ttHeader, pillsScroll);
 
-        // Push footer buttons neatly to the bottom inside the 350px card
         Region verticalSpacer = new Region();
         VBox.setVgrow(verticalSpacer, Priority.ALWAYS);
 
-        // 4. ACTION BUTTONS (Always stays inside the card border)
+        // 4. ACTION BUTTONS (Passes unique offeringKey so cross-major offerings stay separate)
         HBox btnHBox = new HBox(8.0);
         btnHBox.setAlignment(Pos.CENTER_RIGHT);
         btnHBox.setMinHeight(32.0);
         btnHBox.setPrefHeight(32.0);
+
+        String offeringKey = item.getOfferingKey();
 
         if (isAdminView) {
             Button editBtn = new Button("Edit");
@@ -147,7 +148,7 @@ public class ClassCardFactory {
                 "-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-size: 12px; " +
                 "-fx-font-weight: bold; -fx-background-radius: 6px; -fx-padding: 6px 13px; -fx-cursor: hand;"
             );
-            editBtn.setUserData(item.code);
+            editBtn.setUserData(offeringKey);
             if (onEditAction != null) {
                 editBtn.setOnAction(onEditAction);
             }
@@ -157,7 +158,7 @@ public class ClassCardFactory {
         Button primaryBtn = new Button(isAdminView ? "Manage Class" : "View Class");
         primaryBtn.getStyleClass().add("view-class-button");
         primaryBtn.setStyle("-fx-font-size: 12px; -fx-padding: 6px 14px;");
-        primaryBtn.setUserData(item.code);
+        primaryBtn.setUserData(offeringKey);
         if (onPrimaryAction != null) {
             primaryBtn.setOnAction(onPrimaryAction);
         }
@@ -176,7 +177,6 @@ public class ClassCardFactory {
             return flow;
         }
 
-        // Case 1: Pipe-separated multi-day schedule (e.g. "Tue 13:00 - 14:50 | Wed 13:00 - 16:50 | Fri 08:00 - 09:50")
         if (schedule.contains("|")) {
             for (String segment : schedule.split("\\|")) {
                 String trimmed = segment.trim();
@@ -193,7 +193,6 @@ public class ClassCardFactory {
             return flow;
         }
 
-        // Case 2: Shared time across days (e.g. "Mon, Wed 08:00 - 09:50")
         Matcher m = SHARED_TIME_PATTERN.matcher(schedule.trim());
         if (m.matches()) {
             String[] days = m.group(1).split(",");
@@ -207,7 +206,6 @@ public class ClassCardFactory {
             return flow;
         }
 
-        // Case 3: Fallback
         String clean = schedule.split("·")[0].trim();
         for (String part : clean.split(",")) {
             String trimmed = part.trim();
@@ -245,12 +243,12 @@ public class ClassCardFactory {
 
     private static String getDayColor(String day) {
         return switch (day.toUpperCase()) {
-            case "MON" -> "#0284c7"; // Sky Blue
-            case "TUE" -> "#2563eb"; // Royal Blue
-            case "WED" -> "#7c3aed"; // Purple
-            case "THU" -> "#0d9488"; // Teal
-            case "FRI" -> "#ea580c"; // Orange
-            default    -> "#475569"; // Slate
+            case "MON" -> "#0284c7";
+            case "TUE" -> "#2563eb";
+            case "WED" -> "#7c3aed";
+            case "THU" -> "#0d9488";
+            case "FRI" -> "#ea580c";
+            default    -> "#475569";
         };
     }
 

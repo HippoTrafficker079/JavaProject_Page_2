@@ -747,7 +747,9 @@ INSERT INTO
         offering_id,
         teacher_id,
         course_id,
-        year,
+        create_dept_id,
+        academic_year,
+        `year`,
         total_sessions,
         term
     )
@@ -755,7 +757,9 @@ VALUES (
         1,
         1,
         1,
+        1,
         2026,
+        'Second Year',
         10,
         'First Semester'
     ), -- Advanced DB (Taught by Sadayo Kawakami)
@@ -763,7 +767,9 @@ VALUES (
         2,
         2,
         2,
+        1,
         2026,
+        'Third Year',
         10,
         'First Semester'
     ), -- Java OOP (Taught by Sojiro Sakura)
@@ -771,7 +777,9 @@ VALUES (
         3,
         3,
         3,
+        1,
         2026,
+        'Fourth Year',
         10,
         'First Semester'
     );
@@ -942,14 +950,12 @@ INSERT INTO
         title,
         assessment_type,
         max_marks,
-        weightage_percent
     )
 VALUES (
         1,
         1,
         'Database Lab Test 1',
         'LAB_TEST',
-        20.00,
         20.00
     ),
     (
@@ -957,15 +963,13 @@ VALUES (
         1,
         'Final Examination',
         'FINAL',
-        100.00,
-        80.00
+        100.00
     ),
     (
         3,
         2,
         'Java Midterm Project',
         'ASSIGNMENT',
-        50.00,
         50.00
     );
 

@@ -1,5 +1,6 @@
 package application;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -10,13 +11,27 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.skin.ComboBoxListViewSkin;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
@@ -28,73 +43,105 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import application.dao.CourseDAO;
+import application.dao.CourseOfferingDAO;
+import application.dao.DatabaseConnector;
+import application.dao.DepartmentDAO;
+import application.dao.CourseOfferingDAO.SessionInput;
+
 public class AdminCreateClassController {
 
-    @FXML private VBox rootPane;
+    @FXML
+    private VBox rootPane;
 
-    // Academic & Course Details
-    @FXML private ComboBox<String> courseTitleCombo;
-    @FXML private TextField courseCodeField;
-    @FXML private ComboBox<String> majorCombo;
-    @FXML private ComboBox<String> semesterCombo;
-    @FXML private ComboBox<String> academicYearCombo;
+    // Academic & Course Details (courseCodeField removed — auto-resolved from
+    // CourseCatalogStore)
+    @FXML
+    private ComboBox<String> courseTitleCombo;
+    @FXML
+    private ComboBox<String> majorCombo;
+    @FXML
+    private ComboBox<String> semesterCombo;
+    @FXML
+    private ComboBox<String> academicYearCombo;
 
     // Custom Card Symbol & Badge Color + Live Preview
-    @FXML private ComboBox<String> iconSymbolCombo;
-    @FXML private ComboBox<String> badgeColorCombo;
-    @FXML private StackPane iconPreviewPane;
-    @FXML private Label iconPreviewLabel;
+    @FXML
+    private ComboBox<String> iconSymbolCombo;
+    @FXML
+    private ComboBox<String> badgeColorCombo;
+    @FXML
+    private StackPane iconPreviewPane;
+    @FXML
+    private Label iconPreviewLabel;
 
     // Faculty, Intake, Start Date & Total Sessions
-    @FXML private ComboBox<String> teacherCombo;
-    @FXML private TextField maxStudentsField;
-    @FXML private DatePicker startDatePicker;
-    @FXML private TextField totalSessionsField;
+    @FXML
+    private ComboBox<String> teacherCombo;
+    @FXML
+    private TextField maxStudentsField;
+    @FXML
+    private DatePicker startDatePicker;
+    @FXML
+    private TextField totalSessionsField;
 
     // Weekly Timetable Slot Builder
-    @FXML private ComboBox<String> slotDayCombo;
-    @FXML private ComboBox<String> slotPeriodCombo;
-    @FXML private ComboBox<String> slotDurationCombo;
-    @FXML private FlowPane weeklySlotsPane;
+    @FXML
+    private ComboBox<String> slotDayCombo;
+    @FXML
+    private ComboBox<String> slotPeriodCombo;
+    @FXML
+    private ComboBox<String> slotDurationCombo;
+    @FXML
+    private FlowPane weeklySlotsPane;
 
     // Live Generated Session Preview Table
-    @FXML private TableView<SessionRow> sessionTable;
-    @FXML private TableColumn<SessionRow, String> colSessionNo;
-    @FXML private TableColumn<SessionRow, String> colSessionDate;
-    @FXML private TableColumn<SessionRow, String> colSessionDay;
-    @FXML private TableColumn<SessionRow, String> colSessionPeriod;
-    @FXML private TableColumn<SessionRow, String> colSessionAction;
-    @FXML private Label sessionSummaryLabel;
+    @FXML
+    private TableView<SessionRow> sessionTable;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionNo;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionDate;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionDay;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionPeriod;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionAction;
+    @FXML
+    private Label sessionSummaryLabel;
 
-    private final Map<String, CoursePreset> courseCatalog = new LinkedHashMap<>();
     private final Map<String, String> colorPalette = new LinkedHashMap<>();
     private final List<WeeklySlot> weeklySlots = new ArrayList<>();
     private final ObservableList<SessionRow> generatedSessions = FXCollections.observableArrayList();
+    private final ObservableList<String> courseBackingItems = FXCollections.observableArrayList();
+    private boolean isUpdatingCourse = false;
+    private boolean isSyncingSessionCount = false;
 
     private static final String[] PERIOD_START_TIMES = {
-        "", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM",
-        "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"
+            "", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM",
+            "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"
     };
 
     private static final String[] PERIOD_END_TIMES = {
-        "", "8:50 AM", "9:50 AM", "10:50 AM", "11:50 AM",
-        "12:50 PM", "1:50 PM", "2:50 PM", "3:50 PM", "4:50 PM"
+            "", "8:50 AM", "9:50 AM", "10:50 AM", "11:50 AM",
+            "12:50 PM", "1:50 PM", "2:50 PM", "3:50 PM", "4:50 PM"
     };
-    
+
     private static final String[] PERIOD_START_24H = {
-    	    "", "08:00", "09:00", "10:00", "11:00",
-    	    "12:00", "13:00", "14:00", "15:00", "16:00"
-    	};
+            "", "08:00", "09:00", "10:00", "11:00",
+            "12:00", "13:00", "14:00", "15:00", "16:00"
+    };
 
     private static final String[] PERIOD_END_24H = {
-    	    "", "08:50", "09:50", "10:50", "11:50",
-    	    "12:50", "13:50", "14:50", "15:50", "16:50"
+            "", "08:50", "09:50", "10:50", "11:50",
+            "12:50", "13:50", "14:50", "15:50", "16:50"
     };
 
     @FXML
     public void initialize() {
-        initCourseCatalog();
         initDropdowns();
+        initSearchableCourseCombo();
         initIconAndColorControls();
         initSessionTable();
 
@@ -105,7 +152,11 @@ public class AdminCreateClassController {
 
         if (totalSessionsField != null) {
             totalSessionsField.setText("24");
-            totalSessionsField.textProperty().addListener((obs, o, n) -> regenerateSessions());
+            totalSessionsField.textProperty().addListener((obs, o, n) -> {
+                if (!isSyncingSessionCount) {
+                    regenerateSessions();
+                }
+            });
         }
 
         weeklySlots.add(new WeeklySlot(DayOfWeek.TUESDAY, 6, 2));
@@ -131,8 +182,8 @@ public class AdminCreateClassController {
 
         if (iconSymbolCombo != null) {
             iconSymbolCombo.setItems(FXCollections.observableArrayList(
-                "</>", "💾", "🌐", "🖥", "⚙", "<*>", "📘", "☕", "🔌", "🧠", "🔒", "☁", "🏗", "🔥", "📡", "⚡", "🤖", "🧪"
-            ));
+                    "</>", "💾", "🌐", "🖥", "⚙", "<*>", "📘", "☕", "🔌", "🧠", "🔒", "☁", "🏗", "🔥", "📡", "⚡", "🤖",
+                    "🧪"));
             iconSymbolCombo.setValue("</>");
             iconSymbolCombo.valueProperty().addListener((obs, o, n) -> updateIconPreview());
             if (iconSymbolCombo.getEditor() != null) {
@@ -151,7 +202,8 @@ public class AdminCreateClassController {
 
     private void updateIconPreview() {
         String sym = getComboText(iconSymbolCombo);
-        if (sym.isEmpty()) sym = "📘";
+        if (sym.isEmpty())
+            sym = "📘";
         String colorHex = resolveSelectedColorHex();
 
         if (iconPreviewLabel != null) {
@@ -167,70 +219,141 @@ public class AdminCreateClassController {
         return colorPalette.getOrDefault(selected, "#2563eb");
     }
 
-    private void initCourseCatalog() {
-        addCoursePreset("EM-4012", "Engineering Mathematics IV", "CEIT");
-        addCoursePreset("CEIT-4021", "Advanced Java Programming", "CEIT");
-        addCoursePreset("CEIT-4051", "Data Structure and Algorithms", "CEIT");
-        addCoursePreset("CEIT-4002", "Digital Communications", "CEIT");
-        addCoursePreset("CEIT-4041", "Database Management System", "CEIT");
-        addCoursePreset("E-4031", "English IV", "CEIT");
-        addCoursePreset("CEIT-3101", "Advanced Database Systems", "CEIT");
-        addCoursePreset("ME-3101", "Thermodynamics II", "Mech");
-        addCoursePreset("EC-3101", "Digital Signal Processing", "EC");
-        addCoursePreset("C-301", "Structural Mechanics", "C");
-        addCoursePreset("EP-302", "Power Transmission Systems", "EP");
+    private void initSearchableCourseCombo() {
+        if (courseTitleCombo == null)
+            return;
 
-        if (courseTitleCombo != null) {
-            ObservableList<String> allTitles = FXCollections.observableArrayList(courseCatalog.keySet());
-            courseTitleCombo.setItems(allTitles);
+        courseBackingItems.setAll(CourseCatalogStore.getActiveCourseLabels());
+        courseTitleCombo.setItems(courseBackingItems);
 
-            courseTitleCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null && courseCatalog.containsKey(newVal)) {
-                    CoursePreset preset = courseCatalog.get(newVal);
-                    if (courseCodeField != null) courseCodeField.setText(preset.courseCode);
-                    if (majorCombo != null) majorCombo.setValue(preset.deptCode);
+        TextField editor = courseTitleCombo.getEditor();
+        if (editor == null)
+            return;
+
+        // When opening the dropdown after a selection (or when blank), show all active
+        // courses
+        courseTitleCombo.setOnShowing(e -> {
+            if (isUpdatingCourse)
+                return;
+            String text = editor.getText() != null ? editor.getText().trim() : "";
+            boolean isSelectedCourse = (courseTitleCombo.getValue() != null && courseTitleCombo.getValue().equals(text))
+                    || CourseCatalogStore.findByLabelOrCode(text) != null;
+
+            if (text.isEmpty() || isSelectedCourse) {
+                isUpdatingCourse = true;
+                List<String> allActive = CourseCatalogStore.getActiveCourseLabels();
+                if (courseBackingItems.size() != allActive.size()) {
+                    courseBackingItems.setAll(allActive);
                 }
-            });
-
-            if (courseTitleCombo.getEditor() != null) {
-                courseTitleCombo.getEditor().textProperty().addListener((obs, oldText, newText) -> {
-                    if (courseTitleCombo.getValue() != null && courseTitleCombo.getValue().equals(newText)) {
-                        return;
-                    }
-                    String q = newText == null ? "" : newText.trim().toLowerCase();
-                    ObservableList<String> matches = FXCollections.observableArrayList(
-                        courseCatalog.keySet().stream()
-                            .filter(name -> q.isEmpty() || name.toLowerCase().contains(q))
-                            .collect(Collectors.toList())
-                    );
-                    courseTitleCombo.setItems(matches);
-                    if (!matches.isEmpty() && !courseTitleCombo.isShowing() && courseTitleCombo.isFocused()) {
-                        courseTitleCombo.show();
-                    }
-                });
+                if (isSelectedCourse) {
+                    courseTitleCombo.getSelectionModel().select(text);
+                    editor.setText(text);
+                } else {
+                    courseTitleCombo.getSelectionModel().clearSelection();
+                }
+                isUpdatingCourse = false;
             }
-        }
+        });
+
+        // Backspace once on any selected course clears it straight to blank
+        editor.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.BACK_SPACE) {
+                String text = editor.getText() != null ? editor.getText() : "";
+                boolean isSelectedCourse = (courseTitleCombo.getValue() != null
+                        && courseTitleCombo.getValue().equals(text))
+                        || CourseCatalogStore.findByLabelOrCode(text) != null;
+
+                if (!text.isEmpty() && isSelectedCourse) {
+                    event.consume();
+                    isUpdatingCourse = true;
+                    courseTitleCombo.hide();
+                    courseTitleCombo.getSelectionModel().clearSelection();
+                    courseTitleCombo.setValue(null);
+                    courseBackingItems.setAll(CourseCatalogStore.getActiveCourseLabels());
+                    courseTitleCombo.getSelectionModel().clearSelection();
+                    editor.clear();
+                    isUpdatingCourse = false;
+
+                    Platform.runLater(() -> {
+                        if (courseTitleCombo.isFocused() || editor.isFocused()) {
+                            courseTitleCombo.show();
+                        }
+                    });
+                }
+            }
+        });
+
+        courseTitleCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (isUpdatingCourse || newVal == null)
+                return;
+            CourseCatalogStore.CourseItem course = CourseCatalogStore.findByLabelOrCode(newVal);
+            if (course != null && majorCombo != null && majorCombo.getItems().contains(course.deptCode)) {
+                majorCombo.setValue(course.deptCode);
+            }
+        });
+
+        // Live search while typing (mutates backing list without replacing it)
+        editor.textProperty().addListener((obs, oldText, newText) -> {
+            if (isUpdatingCourse)
+                return;
+
+            String selected = courseTitleCombo.getSelectionModel().getSelectedItem();
+            if (selected != null && selected.equals(newText)) {
+                return;
+            }
+
+            isUpdatingCourse = true;
+            String typed = newText == null ? "" : newText;
+            String q = typed.trim().toLowerCase();
+
+            List<String> matches = CourseCatalogStore.getActiveCourseLabels().stream()
+                    .filter(label -> q.isEmpty() || label.toLowerCase().contains(q))
+                    .collect(Collectors.toList());
+
+            courseTitleCombo.getSelectionModel().clearSelection();
+            courseBackingItems.setAll(matches);
+            courseTitleCombo.getSelectionModel().clearSelection();
+
+            if (!typed.equals(editor.getText())) {
+                editor.setText(typed);
+                editor.positionCaret(typed.length());
+            }
+            isUpdatingCourse = false;
+
+            if (!matches.isEmpty() && !courseTitleCombo.isShowing()
+                    && (courseTitleCombo.isFocused() || editor.isFocused())) {
+                courseTitleCombo.show();
+            }
+        });
+
+        lockComboPopupWidth(courseTitleCombo);
     }
 
-    private void addCoursePreset(String code, String name, String dept) {
-        courseCatalog.put(name, new CoursePreset(code, name, dept));
+    private void lockComboPopupWidth(ComboBox<String> combo) {
+        if (combo == null)
+            return;
+
+        Runnable bindWidth = () -> {
+            if (combo.getSkin() instanceof ComboBoxListViewSkin<?> skin
+                    && skin.getPopupContent() instanceof ListView<?> listView) {
+                if (!listView.prefWidthProperty().isBound()) {
+                    listView.minWidthProperty().bind(combo.widthProperty());
+                    listView.prefWidthProperty().bind(combo.widthProperty());
+                    listView.maxWidthProperty().bind(combo.widthProperty());
+                }
+            }
+        };
+
+        combo.skinProperty().addListener((obs, oldSkin, newSkin) -> bindWidth.run());
+        combo.addEventHandler(ComboBox.ON_SHOWING, e -> bindWidth.run());
     }
 
     private void initDropdowns() {
-    	if (majorCombo != null) {
+        if (majorCombo != null) {
             majorCombo.setItems(FXCollections.observableArrayList(
-                "CEIT", "C", "Mech", "EC", "EP", "McE", "ChE", "Tex", "Mn", "PE", "Arch", "Tele", "Met", "FE"
-            ));
+                    "CEIT", "C", "Mech", "EC", "EP", "McE", "ChE", "Tex", "Mn", "PE", "Arch", "Tele", "Met", "FE"));
             String defaultDept = UserSession.departmentCode != null ? UserSession.departmentCode : "CEIT";
             majorCombo.setValue(defaultDept);
-
-            majorCombo.valueProperty().addListener((obs, oldDept, newDept) -> {
-                if (teacherCombo != null && newDept != null) {
-                    teacherCombo.setItems(FXCollections.observableArrayList(
-                        TeacherDirectoryStore.getTeacherNamesByDept(newDept)
-                    ));
-                }
-            });
         }
 
         if (semesterCombo != null) {
@@ -240,47 +363,42 @@ public class AdminCreateClassController {
 
         if (academicYearCombo != null) {
             academicYearCombo.setItems(FXCollections.observableArrayList(
-                "First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year"
-            ));
+                    "First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year"));
             academicYearCombo.setValue("Second Year");
         }
 
+        // Load all faculty across departments so cross-major teaching is supported
         if (teacherCombo != null) {
-            String initialDept = (majorCombo != null && majorCombo.getValue() != null) ? majorCombo.getValue() : "CEIT";
             teacherCombo.setItems(FXCollections.observableArrayList(
-                TeacherDirectoryStore.getTeacherNamesByDept(initialDept)
-            ));
+                    TeacherDirectoryStore.getTeacherNamesByDept(null)));
         }
 
         if (slotDayCombo != null) {
             slotDayCombo.setItems(FXCollections.observableArrayList(
-                "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"
-            ));
+                    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"));
             slotDayCombo.setValue("Tuesday");
         }
 
         if (slotPeriodCombo != null) {
             slotPeriodCombo.setItems(FXCollections.observableArrayList(
-                "Period 1 (8:00 – 8:50 AM)",
-                "Period 2 (9:00 – 9:50 AM)",
-                "Period 3 (10:00 – 10:50 AM)",
-                "Period 4 (11:00 – 11:50 AM)",
-                "Period 5 (12:00 – 12:50 PM)",
-                "Period 6 (1:00 – 1:50 PM)",
-                "Period 7 (2:00 – 2:50 PM)",
-                "Period 8 (3:00 – 3:50 PM)",
-                "Period 9 (4:00 – 4:50 PM)"
-            ));
+                    "Period 1 (8:00 – 8:50 AM)",
+                    "Period 2 (9:00 – 9:50 AM)",
+                    "Period 3 (10:00 – 10:50 AM)",
+                    "Period 4 (11:00 – 11:50 AM)",
+                    "Period 5 (12:00 – 12:50 PM)",
+                    "Period 6 (1:00 – 1:50 PM)",
+                    "Period 7 (2:00 – 2:50 PM)",
+                    "Period 8 (3:00 – 3:50 PM)",
+                    "Period 9 (4:00 – 4:50 PM)"));
             slotPeriodCombo.setValue("Period 6 (1:00 – 1:50 PM)");
         }
 
         if (slotDurationCombo != null) {
             slotDurationCombo.setItems(FXCollections.observableArrayList(
-                "1 Period (Single)",
-                "2 Periods (Double)",
-                "3 Periods (Triple)",
-                "4 Periods (Quad)"
-            ));
+                    "1 Period (Single)",
+                    "2 Periods (Double)",
+                    "3 Periods (Triple)",
+                    "4 Periods (Quad)"));
             slotDurationCombo.setValue("2 Periods (Double)");
         }
     }
@@ -291,7 +409,8 @@ public class AdminCreateClassController {
         String periodStr = slotPeriodCombo != null ? slotPeriodCombo.getValue() : null;
         String durationStr = slotDurationCombo != null ? slotDurationCombo.getValue() : "1 Period (Single)";
 
-        if (dayName == null || periodStr == null) return;
+        if (dayName == null || periodStr == null)
+            return;
 
         DayOfWeek day = DayOfWeek.valueOf(dayName.toUpperCase(Locale.ENGLISH));
         int startPeriod = extractPeriodNumber(periodStr);
@@ -300,7 +419,7 @@ public class AdminCreateClassController {
         if (startPeriod + duration - 1 > 9) {
             showAlert(Alert.AlertType.WARNING, "Exceeds Daily Periods",
                     "Period 9 is the final period of the day, so a " + duration
-                    + "-period block cannot start at Period " + startPeriod + ".");
+                            + "-period block cannot start at Period " + startPeriod + ".");
             return;
         }
 
@@ -325,7 +444,8 @@ public class AdminCreateClassController {
     }
 
     private int extractDurationCount(String durationText) {
-        if (durationText == null || durationText.isEmpty()) return 1;
+        if (durationText == null || durationText.isEmpty())
+            return 1;
         char firstChar = durationText.trim().charAt(0);
         if (Character.isDigit(firstChar)) {
             int val = Character.getNumericValue(firstChar);
@@ -335,11 +455,13 @@ public class AdminCreateClassController {
     }
 
     private void renderWeeklySlotChips() {
-        if (weeklySlotsPane == null) return;
+        if (weeklySlotsPane == null)
+            return;
         weeklySlotsPane.getChildren().clear();
 
         if (weeklySlots.isEmpty()) {
-            Label emptyLbl = new Label("No weekly slots added yet. Pick a Day, Start Period, and Length above, then click + Add Slot.");
+            Label emptyLbl = new Label(
+                    "No weekly slots added yet. Pick a Day, Start Period, and Length above, then click + Add Slot.");
             emptyLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-style: italic;");
             weeklySlotsPane.getChildren().add(emptyLbl);
             return;
@@ -349,18 +471,16 @@ public class AdminCreateClassController {
             HBox chip = new HBox(6.0);
             chip.setAlignment(Pos.CENTER_LEFT);
             chip.setStyle(
-                "-fx-background-color: #dbeafe; -fx-border-color: #93c5fd; " +
-                "-fx-border-radius: 14px; -fx-background-radius: 14px; -fx-padding: 4px 10px;"
-            );
+                    "-fx-background-color: #dbeafe; -fx-border-color: #93c5fd; " +
+                            "-fx-border-radius: 14px; -fx-background-radius: 14px; -fx-padding: 4px 10px;");
 
             Label textLbl = new Label(slot.toChipLabel());
             textLbl.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;");
 
             Button closeBtn = new Button("✕");
             closeBtn.setStyle(
-                "-fx-background-color: transparent; -fx-text-fill: #1d4ed8; -fx-font-size: 10px; " +
-                "-fx-font-weight: bold; -fx-padding: 0 2px; -fx-cursor: hand;"
-            );
+                    "-fx-background-color: transparent; -fx-text-fill: #1d4ed8; -fx-font-size: 10px; " +
+                            "-fx-font-weight: bold; -fx-padding: 0 2px; -fx-cursor: hand;");
             closeBtn.setOnAction(e -> {
                 weeklySlots.remove(slot);
                 renderWeeklySlotChips();
@@ -373,7 +493,8 @@ public class AdminCreateClassController {
     }
 
     private void initSessionTable() {
-        if (sessionTable == null) return;
+        if (sessionTable == null)
+            return;
 
         colSessionNo.setCellValueFactory(c -> c.getValue().sessionNoProperty());
         colSessionDate.setCellValueFactory(c -> c.getValue().dateProperty());
@@ -386,21 +507,25 @@ public class AdminCreateClassController {
             {
                 removeBtn.setMinWidth(Button.USE_PREF_SIZE);
                 removeBtn.setStyle(
-                    "-fx-background-color: transparent; -fx-text-fill: #475569; " +
-                    "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"
-                );
+                        "-fx-background-color: transparent; -fx-text-fill: #475569; " +
+                                "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;");
                 removeBtn.setOnMouseEntered(e -> removeBtn.setStyle(
-                    "-fx-background-color: #fee2e2; -fx-text-fill: #e11d48; -fx-background-radius: 5px; " +
-                    "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"
-                ));
+                        "-fx-background-color: #fee2e2; -fx-text-fill: #e11d48; -fx-background-radius: 5px; " +
+                                "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"));
                 removeBtn.setOnMouseExited(e -> removeBtn.setStyle(
-                    "-fx-background-color: transparent; -fx-text-fill: #475569; " +
-                    "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"
-                ));
+                        "-fx-background-color: transparent; -fx-text-fill: #475569; " +
+                                "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"));
                 removeBtn.setOnAction(e -> {
                     SessionRow row = getTableView().getItems().get(getIndex());
                     generatedSessions.remove(row);
                     renumberSessions();
+
+                    // Drop Total Sessions field to match remaining rows without regenerating
+                    if (totalSessionsField != null) {
+                        isSyncingSessionCount = true;
+                        totalSessionsField.setText(String.valueOf(generatedSessions.size()));
+                        isSyncingSessionCount = false;
+                    }
                     updateSummaryLabel();
                 });
             }
@@ -442,16 +567,17 @@ public class AdminCreateClassController {
                     String dayShort = dow.getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
                     String dateStr = currentDate.toString();
 
-                    for (int offset = 0; offset < slot.duration && generatedSessions.size() < cappedSessions; offset++) {
+                    for (int offset = 0; offset < slot.duration
+                            && generatedSessions.size() < cappedSessions; offset++) {
                         int p = slot.startPeriod + offset;
-                        String periodDisplay = "Period " + p + " (" + PERIOD_START_TIMES[p] + " – " + PERIOD_END_TIMES[p] + ")";
+                        String periodDisplay = "Period " + p + " (" + PERIOD_START_TIMES[p] + " – "
+                                + PERIOD_END_TIMES[p] + ")";
                         generatedSessions.add(new SessionRow(
-                            String.valueOf(sessionCounter++),
-                            dateStr,
-                            dayShort,
-                            p,
-                            periodDisplay
-                        ));
+                                String.valueOf(sessionCounter++),
+                                dateStr,
+                                dayShort,
+                                p,
+                                periodDisplay));
                     }
                 }
             }
@@ -468,7 +594,8 @@ public class AdminCreateClassController {
     }
 
     private void updateSummaryLabel() {
-        if (sessionSummaryLabel == null) return;
+        if (sessionSummaryLabel == null)
+            return;
 
         if (weeklySlots.isEmpty()) {
             sessionSummaryLabel.setText("Add at least one Weekly Timetable Slot above to generate class sessions.");
@@ -485,8 +612,8 @@ public class AdminCreateClassController {
             String firstDate = generatedSessions.get(0).getDate();
             String lastDate = generatedSessions.get(generatedSessions.size() - 1).getDate();
             sessionSummaryLabel.setText(
-                "Generated " + generatedSessions.size() + " period sessions (" + patternSummary + " · " + firstDate + " → " + lastDate + ")"
-            );
+                    "Generated " + generatedSessions.size() + " period sessions (" + patternSummary + " · " + firstDate
+                            + " → " + lastDate + ")");
         }
     }
 
@@ -502,23 +629,37 @@ public class AdminCreateClassController {
 
     @FXML
     private void handleCreate(ActionEvent event) {
-        String courseTitle = getComboText(courseTitleCombo);
-        String courseCode = getSafeText(courseCodeField).toUpperCase();
+        String selectedCourseText = getComboText(courseTitleCombo);
+        CourseCatalogStore.CourseItem course = CourseCatalogStore.findByLabelOrCode(selectedCourseText);
+
+        if (course == null) {
+            showAlert(Alert.AlertType.WARNING, "Invalid Course",
+                    "Please select a registered course from the searchable Course / Subject dropdown (or register it first in Create New Course).");
+            return;
+        }
+
+        String courseCode = course.courseCode;
+        String courseTitle = course.courseName;
         String major = majorCombo != null && majorCombo.getValue() != null ? majorCombo.getValue() : "CEIT";
-        String semester = semesterCombo != null && semesterCombo.getValue() != null ? semesterCombo.getValue() : "First Semester";
-        String year = academicYearCombo != null && academicYearCombo.getValue() != null ? academicYearCombo.getValue() : "Second Year";
+        // List<String> multiMajor = new ArrayList<>(); --If targetDept supports
+        // multiMajor
+        String semester = semesterCombo != null && semesterCombo.getValue() != null ? semesterCombo.getValue()
+                : "First Semester";
+        String year = academicYearCombo != null && academicYearCombo.getValue() != null ? academicYearCombo.getValue()
+                : "Second Year";
         String teacher = teacherCombo != null ? teacherCombo.getValue() : null;
         String maxStudentsStr = getSafeText(maxStudentsField);
         String totalSessionsStr = getSafeText(totalSessionsField);
         LocalDate startDate = startDatePicker != null ? startDatePicker.getValue() : null;
 
         String customSymbol = getComboText(iconSymbolCombo);
-        if (customSymbol.isEmpty()) customSymbol = "📘";
+        if (customSymbol.isEmpty())
+            customSymbol = "📘";
         String badgeColor = resolveSelectedColorHex();
 
-        if (courseTitle.isEmpty() || courseCode.isEmpty() || teacher == null || maxStudentsStr.isEmpty() || totalSessionsStr.isEmpty() || startDate == null) {
+        if (teacher == null || maxStudentsStr.isEmpty() || totalSessionsStr.isEmpty() || startDate == null) {
             showAlert(Alert.AlertType.WARNING, "Missing Required Fields",
-                    "Please complete all required fields marked with * (Course Title, Course Code, Assigned Teacher, Max Students, Start Date, and Total Sessions).");
+                    "Please complete all required fields marked with * (Course, Assigned Teacher, Max Students, Start Date, and Total Sessions).");
             return;
         }
 
@@ -542,13 +683,23 @@ public class AdminCreateClassController {
             return;
         }
 
-        // Auto-assign matching (major, year, semester) students to Roster & Daily Attendance Log
-        LocalDate firstDate = !generatedSessions.isEmpty()
-                ? LocalDate.parse(generatedSessions.get(0).getDate())
-                : startDate;
-        int enrolledCount = ClassRosterStore.autoAssignStudentsForNewClass(
-                courseCode, courseTitle, major, year, semester, firstDate
-        );
+        if (generatedSessions.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "No Class Sessions",
+                    "There are 0 sessions in the schedule table. Please generate at least 1 session before publishing.");
+            return;
+        }
+
+        if (generatedSessions.size() != totalSessions) {
+            showAlert(Alert.AlertType.WARNING, "Session Count Conflict",
+                    "Total Sessions is set to " + totalSessions + ", but the schedule table currently has "
+                            + generatedSessions.size()
+                            + " sessions. Please adjust Total Sessions or regenerate the schedule.");
+            return;
+        }
+
+        // Auto-assign matching (major, year, semester) students to this offering's
+        // Roster & Daily Log
+        LocalDate firstDate = LocalDate.parse(generatedSessions.get(0).getDate());
 
         String patternSummary = weeklySlots.stream()
                 .map(WeeklySlot::toShortSummary)
@@ -558,36 +709,78 @@ public class AdminCreateClassController {
                 .collect(Collectors.joining(" | "));
         String shortSection = buildSectionLabel(year);
 
-        // Ensure shared list is initialized, then publish to BOTH Admin & Lecturer views live
         ClassesController.initSampleClassData();
-     // =========================================================================
-        // TODO (DB Integration — Matches schema.sql):
-        // 1. Insert or lookup course in `course` (course_code, course_name, dept_id).
-        // 2. Lookup `teacher_id` from `teacher` WHERE full_name = teacher.
-        // 3. Insert into `course_offering` (teacher_id, course_id, year, total_sessions, term).
-        // 4. Batch-insert `generatedSessions` into `class_session` (offering_id, session_date, period).
-        // =========================================================================
-        ClassesController.SHARED_CLASS_DATA.add(0, new ClassesController.ClassItem(
-            courseCode,
-            courseTitle,
-            major,
-            year,
-            semester,
-            shortSection,
-            enrolledCount + " / " + capacity + " students",
-            scheduleSummary,
-            teacher,
-            badgeColor,
-            customSymbol
-        ));
+        int offeringId = -1;
+        try (Connection conn = DatabaseConnector.getConnection()) {
+            CourseOfferingDAO courseOfferingDAO = new CourseOfferingDAO();
+            DepartmentDAO departmentDAO = new DepartmentDAO();
+            CourseDAO courseDAO = new CourseDAO();
+            int userDeptId = departmentDAO.getDeptIdByUserId(UserSession.userId);
+            List<Integer> targetDeptIds = new ArrayList<>();
+            // =========================================================================
+            // if (multiMajor != null && !multiMajor.isEmpty()) {
+            // try (Connection conn = DatabaseConnector.getConnection()) {
+            // for (String eachMajor : multiMajor) {
+            // if (eachMajor == null || eachMajor.isBlank())
+            // continue;
+            // int majorId = departmentDAO.getDeptIdByNameAndDept(conn, null, eachMajor);
+            // targetDeptIds.add(majorId);
+            // }
+            // } catch (SQLException e) {
+            // e.printStackTrace();
+            // }
+            // }
+            // =========================================================================
+            int teacherDeptId = departmentDAO.getDeptIdByTeacherName(conn, teacher);
+            int targetDeptId = departmentDAO.getDeptIdByNameAndDept(conn, major, major);
+            targetDeptIds.add(targetDeptId);
+            int courseId = courseDAO.getCourseIdByNameAndDept(conn, courseTitle, userDeptId);
+            List<SessionInput> sessions = new ArrayList<>();
 
-        showAlert(Alert.AlertType.INFORMATION, "Class Created & Published",
-                String.format(Locale.ENGLISH,
-                    "Class (%s - %s) has been published to both Admin and Lecturer views!\n"
-                    + "Timetable: %s (Starting %s, %d sessions)\n"
-                    + "Auto-Assigned Students: %d students (%s · %s · %s)",
-                    courseCode, courseTitle, patternSummary, startDate, generatedSessions.size(),
-                    enrolledCount, major, year, semester));
+            for (SessionRow row : generatedSessions) {
+                LocalDate sessionDate = LocalDate.parse(row.getDate().trim());
+                int period = row.getPeriodNumber();
+                sessions.add(new SessionInput(sessionDate, period));
+            }
+
+            offeringId = courseOfferingDAO.createCourseOffering(teacher, teacherDeptId, targetDeptIds, courseId,
+                    userDeptId, year, semester, startDate, capacity,
+                    totalSessions, customSymbol, badgeColor, sessions, null, null, null,
+                    null, null);
+            if (offeringId > 0) {
+                int enrolledCount = courseOfferingDAO.getTotalEnrolledStudents(conn, offeringId);
+
+                ClassesController.SHARED_CLASS_DATA.add(0, new ClassesController.ClassItem(
+                        courseCode,
+                        courseTitle,
+                        major,
+                        year,
+                        semester,
+                        shortSection,
+                        enrolledCount + " / " + capacity + " students",
+                        scheduleSummary,
+                        teacher,
+                        badgeColor,
+                        customSymbol));
+
+                showAlert(Alert.AlertType.INFORMATION, "Class Created & Published",
+                        String.format(Locale.ENGLISH,
+                                "Class (%s - %s) has been published to both Admin and Lecturer views!\n"
+                                        + "Timetable: %s (Starting %s, %d sessions)\n"
+                                        + "Auto-Assigned Students: %d students (%s · %s · %s)",
+                                courseCode, courseTitle, patternSummary, startDate, generatedSessions.size(),
+                                enrolledCount, major, year, semester));
+
+                navigateBackToClasses(event);
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Class Creation Failed",
+                        "Could not create the class offering. No offering ID was returned.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Database Error",
+                    "Failed to create class offering: " + e.getMessage());
+        }
 
         navigateBackToClasses(event);
     }
@@ -612,8 +805,10 @@ public class AdminCreateClassController {
     }
 
     private String getComboText(ComboBox<String> combo) {
-        if (combo == null) return "";
-        if (combo.isEditable() && combo.getEditor() != null && combo.getEditor().getText() != null && !combo.getEditor().getText().trim().isEmpty()) {
+        if (combo == null)
+            return "";
+        if (combo.isEditable() && combo.getEditor() != null && combo.getEditor().getText() != null
+                && !combo.getEditor().getText().trim().isEmpty()) {
             return combo.getEditor().getText().trim();
         }
         if (combo.getValue() != null && !combo.getValue().trim().isEmpty()) {
@@ -623,7 +818,8 @@ public class AdminCreateClassController {
     }
 
     private int extractPeriodNumber(String periodText) {
-        if (periodText == null) return 1;
+        if (periodText == null)
+            return 1;
         for (char ch : periodText.toCharArray()) {
             if (Character.isDigit(ch)) {
                 return Character.getNumericValue(ch);
@@ -643,12 +839,12 @@ public class AdminCreateClassController {
 
     private String buildSectionLabel(String year) {
         return switch (year) {
-            case "First Year"  -> "Year 1 - Class 1A";
+            case "First Year" -> "Year 1 - Class 1A";
             case "Second Year" -> "Year 2 - Class 2A";
-            case "Third Year"  -> "Year 3 - Class 3A";
+            case "Third Year" -> "Year 3 - Class 3A";
             case "Fourth Year" -> "Year 4 - Class 4A";
-            case "Fifth Year"  -> "Year 5 - Class 5A";
-            default            -> year + " - Class A";
+            case "Fifth Year" -> "Year 5 - Class 5A";
+            default -> year + " - Class A";
         };
     }
 
@@ -688,23 +884,11 @@ public class AdminCreateClassController {
             String timeSpan = PERIOD_START_TIMES[startPeriod] + " – " + PERIOD_END_TIMES[endPeriod];
             return dayShort + " · " + formatPeriods() + " (" + timeSpan + ")";
         }
-        
+
         String toBadgeSchedule() {
             String dayShort = day.getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
             int endPeriod = startPeriod + duration - 1;
             return dayShort + " " + PERIOD_START_24H[startPeriod] + " - " + PERIOD_END_24H[endPeriod];
-        }
-    }
-
-    private static class CoursePreset {
-        final String courseCode;
-        final String courseName;
-        final String deptCode;
-
-        CoursePreset(String courseCode, String courseName, String deptCode) {
-            this.courseCode = courseCode;
-            this.courseName = courseName;
-            this.deptCode = deptCode;
         }
     }
 
@@ -723,24 +907,50 @@ public class AdminCreateClassController {
             this.periodLabel = new SimpleStringProperty(periodLabel);
         }
 
-        public String getSessionNo() { return sessionNo.get(); }
-        public void setSessionNo(String val) { sessionNo.set(val); }
-        public StringProperty sessionNoProperty() { return sessionNo; }
+        public String getSessionNo() {
+            return sessionNo.get();
+        }
 
-        public String getDate() { return date.get(); }
-        public StringProperty dateProperty() { return date; }
+        public void setSessionNo(String val) {
+            sessionNo.set(val);
+        }
 
-        public String getDay() { return day.get(); }
-        public StringProperty dayProperty() { return day; }
+        public StringProperty sessionNoProperty() {
+            return sessionNo;
+        }
 
-        public int getPeriodNumber() { return periodNumber; }
+        public String getDate() {
+            return date.get();
+        }
 
-        public String getPeriodLabel() { return periodLabel.get(); }
-        public StringProperty periodLabelProperty() { return periodLabel; }
+        public StringProperty dateProperty() {
+            return date;
+        }
+
+        public String getDay() {
+            return day.get();
+        }
+
+        public StringProperty dayProperty() {
+            return day;
+        }
+
+        public int getPeriodNumber() {
+            return periodNumber;
+        }
+
+        public String getPeriodLabel() {
+            return periodLabel.get();
+        }
+
+        public StringProperty periodLabelProperty() {
+            return periodLabel;
+        }
     }
 
     private void lockTableColumns(TableView<?> table, double... ratios) {
-        if (table == null || table.getColumns().size() != ratios.length) return;
+        if (table == null || table.getColumns().size() != ratios.length)
+            return;
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         for (int i = 0; i < ratios.length; i++) {
             TableColumn<?, ?> col = table.getColumns().get(i);
