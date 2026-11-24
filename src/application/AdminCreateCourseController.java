@@ -26,9 +26,14 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import application.dao.CourseDAO;
+import application.dao.DatabaseConnector;
+import application.dao.DepartmentDAO;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
@@ -36,28 +41,46 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.skin.ComboBoxListViewSkin;
 
 public class AdminCreateCourseController {
-	private final ObservableList<String> prereqBackingItems = FXCollections.observableArrayList();
-	private boolean isUpdatingPrereq = false;
-	
-    @FXML private VBox rootPane;
-    @FXML private TextField courseCodeField;
-    @FXML private TextField courseNameField;
-    @FXML private ComboBox<String> deptCombo;
-    @FXML private ComboBox<String> courseTypeCombo;
-    @FXML private TextField creditField;
-    @FXML private CheckBox isActiveCheck;
 
-    @FXML private ComboBox<String> prerequisiteCombo;
-    @FXML private FlowPane prerequisitesPane;
+    private final ObservableList<String> prereqBackingItems = FXCollections.observableArrayList();
+    private boolean isUpdatingPrereq = false;
 
-    @FXML private TableView<CourseCatalogStore.CourseItem> courseTable;
-    @FXML private TableColumn<CourseCatalogStore.CourseItem, String> colCode;
-    @FXML private TableColumn<CourseCatalogStore.CourseItem, String> colName;
-    @FXML private TableColumn<CourseCatalogStore.CourseItem, String> colDept;
-    @FXML private TableColumn<CourseCatalogStore.CourseItem, String> colType;
-    @FXML private TableColumn<CourseCatalogStore.CourseItem, Double> colCredit;
-    @FXML private TableColumn<CourseCatalogStore.CourseItem, String> colStatus;
-    @FXML private TableColumn<CourseCatalogStore.CourseItem, String> colPrereqs;
+    @FXML
+    private VBox rootPane;
+    @FXML
+    private TextField courseCodeField;
+    @FXML
+    private TextField courseNameField;
+    @FXML
+    private ComboBox<String> deptCombo;
+    @FXML
+    private ComboBox<String> courseTypeCombo;
+    @FXML
+    private TextField creditField;
+    @FXML
+    private CheckBox isActiveCheck;
+
+    @FXML
+    private ComboBox<String> prerequisiteCombo;
+    @FXML
+    private FlowPane prerequisitesPane;
+
+    @FXML
+    private TableView<CourseCatalogStore.CourseItem> courseTable;
+    @FXML
+    private TableColumn<CourseCatalogStore.CourseItem, String> colCode;
+    @FXML
+    private TableColumn<CourseCatalogStore.CourseItem, String> colName;
+    @FXML
+    private TableColumn<CourseCatalogStore.CourseItem, String> colDept;
+    @FXML
+    private TableColumn<CourseCatalogStore.CourseItem, String> colType;
+    @FXML
+    private TableColumn<CourseCatalogStore.CourseItem, Double> colCredit;
+    @FXML
+    private TableColumn<CourseCatalogStore.CourseItem, String> colStatus;
+    @FXML
+    private TableColumn<CourseCatalogStore.CourseItem, String> colPrereqs;
 
     private final List<String> selectedPrerequisites = new ArrayList<>();
     private FilteredList<String> filteredPrereqItems;
@@ -67,8 +90,7 @@ public class AdminCreateCourseController {
     public void initialize() {
         if (deptCombo != null) {
             deptCombo.setItems(FXCollections.observableArrayList(
-                "CEIT", "C", "Mech", "EP", "EC", "McE", "ChE", "Tex", "Mn", "PE", "Arch", "Tele", "Met", "FE"
-            ));
+                    "CEIT", "C", "Mech", "EP", "EC", "McE", "ChE", "Tex", "Mn", "PE", "Arch", "Tele", "Met", "FE"));
             deptCombo.setValue(UserSession.departmentCode != null ? UserSession.departmentCode : "CEIT");
         }
 
@@ -83,18 +105,21 @@ public class AdminCreateCourseController {
     }
 
     private void setupSearchablePrerequisiteCombo() {
-        if (prerequisiteCombo == null) return;
+        if (prerequisiteCombo == null)
+            return;
 
         prereqBackingItems.setAll(CourseCatalogStore.getAllCourseLabels());
         prerequisiteCombo.setItems(prereqBackingItems);
 
         TextField editor = prerequisiteCombo.getEditor();
-     // When opening the dropdown after a selection (or when blank), show all courses instead of the old filtered list
+        // When opening the dropdown after a selection (or when blank), show all courses
+        // instead of the old filtered list
         prerequisiteCombo.setOnShowing(e -> {
-            if (isUpdatingPrereq) return;
+            if (isUpdatingPrereq)
+                return;
             String text = editor.getText() != null ? editor.getText().trim() : "";
-            boolean isSelectedCourse =
-                    (prerequisiteCombo.getValue() != null && prerequisiteCombo.getValue().equals(text))
+            boolean isSelectedCourse = (prerequisiteCombo.getValue() != null
+                    && prerequisiteCombo.getValue().equals(text))
                     || CourseCatalogStore.findByLabelOrCode(text) != null;
 
             if (text.isEmpty() || isSelectedCourse) {
@@ -112,14 +137,15 @@ public class AdminCreateCourseController {
                 isUpdatingPrereq = false;
             }
         });
-        if (editor == null) return;
+        if (editor == null)
+            return;
 
         // Backspace once on any selected course clears it straight to blank
         editor.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.BACK_SPACE) {
                 String text = editor.getText() != null ? editor.getText() : "";
-                boolean isSelectedCourse =
-                        (prerequisiteCombo.getValue() != null && prerequisiteCombo.getValue().equals(text))
+                boolean isSelectedCourse = (prerequisiteCombo.getValue() != null
+                        && prerequisiteCombo.getValue().equals(text))
                         || CourseCatalogStore.findByLabelOrCode(text) != null;
 
                 if (!text.isEmpty() && isSelectedCourse) {
@@ -144,7 +170,8 @@ public class AdminCreateCourseController {
 
         // Live search while typing (mutates backing list without replacing it)
         editor.textProperty().addListener((obs, oldText, newText) -> {
-            if (isUpdatingPrereq) return;
+            if (isUpdatingPrereq)
+                return;
 
             String selected = prerequisiteCombo.getSelectionModel().getSelectedItem();
             if (selected != null && selected.equals(newText)) {
@@ -169,7 +196,8 @@ public class AdminCreateCourseController {
             }
             isUpdatingPrereq = false;
 
-            if (!matches.isEmpty() && !prerequisiteCombo.isShowing() && (prerequisiteCombo.isFocused() || editor.isFocused())) {
+            if (!matches.isEmpty() && !prerequisiteCombo.isShowing()
+                    && (prerequisiteCombo.isFocused() || editor.isFocused())) {
                 prerequisiteCombo.show();
             }
         });
@@ -191,7 +219,8 @@ public class AdminCreateCourseController {
         if (input == null || input.isBlank()) {
             input = prerequisiteCombo.getValue();
         }
-        if (input == null || input.isBlank()) return;
+        if (input == null || input.isBlank())
+            return;
 
         CourseCatalogStore.CourseItem matched = CourseCatalogStore.findByLabelOrCode(input);
         if (matched == null) {
@@ -224,7 +253,8 @@ public class AdminCreateCourseController {
     }
 
     private void setupCatalogTable() {
-        if (courseTable == null) return;
+        if (courseTable == null)
+            return;
 
         colCode.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().courseCode));
         colName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().courseName));
@@ -237,9 +267,9 @@ public class AdminCreateCourseController {
         courseTable.setItems(CourseCatalogStore.COURSES);
     }
 
-
     private void renderPrerequisiteChips() {
-        if (prerequisitesPane == null) return;
+        if (prerequisitesPane == null)
+            return;
         prerequisitesPane.getChildren().clear();
 
         if (selectedPrerequisites.isEmpty()) {
@@ -256,9 +286,8 @@ public class AdminCreateCourseController {
             HBox chip = new HBox(6.0);
             chip.setAlignment(Pos.CENTER_LEFT);
             chip.setStyle(
-                "-fx-background-color: #dbeafe; -fx-border-color: #93c5fd; " +
-                "-fx-background-radius: 14px; -fx-border-radius: 14px; -fx-padding: 4px 10px;"
-            );
+                    "-fx-background-color: #dbeafe; -fx-border-color: #93c5fd; " +
+                            "-fx-background-radius: 14px; -fx-border-radius: 14px; -fx-padding: 4px 10px;");
 
             Label lbl = new Label(labelText);
             lbl.setStyle("-fx-text-fill: #1e40af; -fx-font-weight: bold; -fx-font-size: 11.5px;");
@@ -299,29 +328,67 @@ public class AdminCreateCourseController {
         double credit;
         try {
             credit = Double.parseDouble(creditStr);
-            if (credit <= 0 || credit > 99.9) throw new NumberFormatException();
+            if (credit <= 0 || credit > 99.9)
+                throw new NumberFormatException();
         } catch (NumberFormatException ex) {
             showAlert(Alert.AlertType.WARNING, "Invalid Credit",
                     "Please enter a valid numeric credit value (e.g. 3.0 or 3.5).");
             return;
         }
+        CourseDAO courseDAO = new CourseDAO();
+        DepartmentDAO departmentDAO = new DepartmentDAO();
+        List<Integer> prerequisiteCourseIds = new ArrayList<>();
 
-        CourseCatalogStore.addCourse(code, name, dept, type, credit, active, selectedPrerequisites);
-        refreshPrerequisiteChoices();
-        if (courseTable != null) courseTable.refresh();
+        if (selectedPrerequisites != null && !selectedPrerequisites.isEmpty()) {
+            try (Connection conn = DatabaseConnector.getConnection()) {
+                int deptId = departmentDAO.getDeptIdForAdmin(conn, UserSession.userId);
+                for (String preCode : selectedPrerequisites) {
+                    if (preCode == null || preCode.isBlank())
+                        continue;
+                    int prerequisiteCourseId = courseDAO.getCourseIdByCodeAndDept(conn, preCode.trim(), deptId);
+                    if (!prerequisiteCourseIds.contains(prerequisiteCourseId)) {
+                        prerequisiteCourseIds.add(prerequisiteCourseId);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
 
-        showAlert(Alert.AlertType.INFORMATION, "Course Created",
-                code + " - " + name + " has been added to the catalog and is now available in Create New Class!");
-        handleClearForm();
+        try (Connection conn = DatabaseConnector.getConnection()) {
+            int deptId = departmentDAO.getDeptIdForAdmin(conn, UserSession.userId);
+            int item = courseDAO.createCourseWithPrerequisites(
+                    deptId, code, name, type, credit, active, prerequisiteCourseIds);
+            if (item > 0) {
+                CourseCatalogStore.reload();
+                refreshPrerequisiteChoices();
+                if (courseTable != null) {
+                    courseTable.refresh();
+                }
+                handleClearForm();
+                showAlert(Alert.AlertType.INFORMATION, "Course Created",
+                        code + " - " + name
+                                + " has been added to the catalog and is now available in Create New Class!");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Database Error",
+                    "Failed to save course: " + e.getMessage());
+        }
     }
 
     @FXML
     public void handleClearForm() {
-        if (courseCodeField != null) courseCodeField.clear();
-        if (courseNameField != null) courseNameField.clear();
-        if (creditField != null) creditField.setText("3.0");
-        if (courseTypeCombo != null) courseTypeCombo.setValue("Bachelor");
-        if (isActiveCheck != null) isActiveCheck.setSelected(true);
+        if (courseCodeField != null)
+            courseCodeField.clear();
+        if (courseNameField != null)
+            courseNameField.clear();
+        if (creditField != null)
+            creditField.setText("3.0");
+        if (courseTypeCombo != null)
+            courseTypeCombo.setValue("Bachelor");
+        if (isActiveCheck != null)
+            isActiveCheck.setSelected(true);
         selectedPrerequisites.clear();
         renderPrerequisiteChips();
     }
@@ -347,8 +414,10 @@ public class AdminCreateCourseController {
         a.setContentText(msg);
         a.showAndWait();
     }
+
     private void lockComboPopupWidth(ComboBox<String> combo) {
-        if (combo == null) return;
+        if (combo == null)
+            return;
 
         Runnable bindWidth = () -> {
             if (combo.getSkin() instanceof ComboBoxListViewSkin<?> skin

@@ -56,3 +56,46 @@ FROM course
 WHERE
     is_active = TRUE
 ORDER BY course_name ASC;
+
+--All Active Class for your own department
+SELECT
+    co.offering_id,
+    c.course_code,
+    c.course_name,
+    COALESCE(
+        (
+            SELECT d.dept_id
+            FROM
+                course_enrollment ce
+                JOIN student s ON ce.student_id = s.student_id
+                JOIN department d ON s.dept_id = d.dept_id
+            WHERE
+                ce.offering_id = co.offering_id
+            LIMIT 1
+        ),
+        d_create.dept_id
+    ) AS target_major,
+    co.year,
+    co.term,
+    co.max_student,
+    c.dept_id AS course_dept,
+    t.full_name AS lecturer,
+    co.badge_color,
+    co.card_symbol
+FROM
+    course_offering co
+    JOIN course c ON co.course_id = c.course_id
+    JOIN department d_create ON co.create_dept_id = d_create.dept_id
+    LEFT JOIN teacher t ON co.teacher_id = t.teacher_id
+WHERE
+    co.create_dept_id = ?
+    OR EXISTS (
+        SELECT 1
+        FROM
+            course_enrollment ce
+            JOIN student s ON ce.student_id = s.student_id
+        WHERE
+            ce.offering_id = co.offering_id
+            AND s.dept_id = ?
+    )
+ORDER BY co.offering_id DESC;

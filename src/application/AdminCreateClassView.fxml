@@ -5,6 +5,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -20,7 +21,10 @@
 
 <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.AdminCreateClassController">
    <content>
-      <VBox fx:id="rootPane" minWidth="0.0" spacing="18.0" style="-fx-padding: 20px;">
+      <VBox fx:id="rootPane" minWidth="0.0" spacing="18.0" style="-fx-background-color: #f4f6f9;">
+         <padding>
+            <Insets bottom="28.0" left="24.0" right="24.0" top="18.0" />
+         </padding>
          <children>
 
             <!-- TOP BAR: Back Button & Administrator Account Pill -->
@@ -52,7 +56,7 @@
             <VBox minWidth="0.0" spacing="4.0">
                <children>
                   <Label styleClass="page-title" text="Create New Class" />
-                  <Label styleClass="page-subtitle" text="Select a registered course, assign target major/year/semester to auto-enroll matching students, customize its card icon, and generate semester sessions." wrapText="true" />
+                  <Label styleClass="page-subtitle" text="Select a registered course, assign target major/year/semester to auto-enroll matching students, customize its card icon, configure exam distribution, and generate semester sessions." wrapText="true" />
                </children>
             </VBox>
 
@@ -65,7 +69,7 @@
                      </children>
                   </HBox>
 
-                  <!-- ROW 1: Searchable Course / Subject (Course Code removed; auto-resolved from CourseCatalogStore) -->
+                  <!-- ROW 1: Searchable Course / Subject -->
                   <VBox minWidth="0.0" spacing="4.0">
                      <children>
                         <HBox spacing="3.0">
@@ -78,7 +82,7 @@
                      </children>
                   </VBox>
 
-                  <!-- ROW 2: Major, Semester & Academic Year (Locked 33.33% / 33.33% / 33.34%) -->
+                  <!-- ROW 2: Major, Semester & Academic Year -->
                   <GridPane hgap="12.0" minWidth="0.0">
                      <columnConstraints>
                         <ColumnConstraints percentWidth="33.33" />
@@ -320,6 +324,89 @@
                         </VBox>
                      </children>
                   </GridPane>
+               </children>
+            </VBox>
+
+            <!-- SECTION C: EXAM & ASSESSMENT DISTRIBUTION -->
+            <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+               <children>
+                  <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-border-color: transparent transparent #e2e8f0 transparent; -fx-border-width: 0 0 1.5px 0; -fx-padding: 0 0 8px 0;">
+                     <children>
+                        <Label style="-fx-font-size: 19px; -fx-font-weight: 800; -fx-text-fill: #0f172a;" text="Exam &amp; Assessment Distribution" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="weightTotalBadge" style="-fx-background-color: #dcfce7; -fx-text-fill: #15803d; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;" text="✔ Total: 100% — Ready" />
+                     </children>
+                  </HBox>
+
+                  <!-- QUICK PRESETS BAR -->
+                  <HBox alignment="CENTER_LEFT" spacing="8.0">
+                     <children>
+                        <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #64748b;" text="Quick Presets:" />
+                        <Button mnemonicParsing="false" onAction="#handlePresetTheory" style="-fx-background-color: #f1f5f9; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-text-fill: #1e293b; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 5px 10px; -fx-cursor: hand;" text="Theory (60/40)" />
+                        <Button mnemonicParsing="false" onAction="#handlePresetLabHeavy" style="-fx-background-color: #f1f5f9; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-text-fill: #1e293b; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 5px 10px; -fx-cursor: hand;" text="Lab-Heavy (50/50)" />
+                        <Button mnemonicParsing="false" onAction="#handlePresetExamFocused" style="-fx-background-color: #f1f5f9; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-text-fill: #1e293b; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 5px 10px; -fx-cursor: hand;" text="Exam-Focused (70/30)" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button mnemonicParsing="false" onAction="#handleAutoFillFinal" style="-fx-background-color: #dbeafe; -fx-border-color: #93c5fd; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-text-fill: #1d4ed8; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 5px 10px; -fx-cursor: hand;" text="⚡ Auto-Fill Final Exam" />
+                     </children>
+                  </HBox>
+
+                  <!-- 5 WEIGHTAGE INPUTS (Matches MySQL assessment_weight columns) -->
+                  <GridPane hgap="12.0" minWidth="0.0">
+                     <columnConstraints>
+                        <ColumnConstraints percentWidth="20.0" />
+                        <ColumnConstraints percentWidth="20.0" />
+                        <ColumnConstraints percentWidth="20.0" />
+                        <ColumnConstraints percentWidth="20.0" />
+                        <ColumnConstraints percentWidth="20.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="52.0" />
+                     </rowConstraints>
+                     <children>
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Tutorial (%)" />
+                              <TextField fx:id="tutorialWeightField" maxWidth="Infinity" promptText="0 - 100" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 10px;" text="15" />
+                           </children>
+                        </VBox>
+
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Assignment (%)" />
+                              <TextField fx:id="assignmentWeightField" maxWidth="Infinity" promptText="0 - 100" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 10px;" text="15" />
+                           </children>
+                        </VBox>
+
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="2">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Lab Test (%)" />
+                              <TextField fx:id="labTestWeightField" maxWidth="Infinity" promptText="0 - 100" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 10px;" text="10" />
+                           </children>
+                        </VBox>
+
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="3">
+                           <children>
+                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Practical (%)" />
+                              <TextField fx:id="practicalWeightField" maxWidth="Infinity" promptText="0 - 100" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 10px;" text="0" />
+                           </children>
+                        </VBox>
+
+                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="4">
+                           <children>
+                              <HBox spacing="3.0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Final Exam (%)" />
+                                    <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
+                                 </children>
+                              </HBox>
+                              <TextField fx:id="finalExamWeightField" maxWidth="Infinity" promptText="0 - 100" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 10px;" text="60" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </GridPane>
+
+                  <!-- LIVE ALLOCATION BAR -->
+                  <ProgressBar fx:id="weightProgressBar" maxWidth="Infinity" prefHeight="8.0" progress="1.0" style="-fx-accent: #16a34a;" />
                </children>
             </VBox>
 

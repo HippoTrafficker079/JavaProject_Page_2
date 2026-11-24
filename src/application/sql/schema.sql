@@ -190,15 +190,25 @@ CREATE TABLE course_offering (
     offering_id INT PRIMARY KEY AUTO_INCREMENT,
     teacher_id INT NOT NULL,
     course_id INT NOT NULL,
-    `year` INT NOT NULL,
+    create_dept_id INT NOT NULL,
+    `year` VARCHAR(50) NOT NULL,
+    academic_year YEAR NOT NULL,
     total_sessions INT NOT NULL DEFAULT 0,
     term ENUM(
         'First Semester',
         'Second Semester'
     ) NOT NULL,
     max_student INT NOT NULL DEFAULT 0,
-    UNIQUE (course_id, `year`, term),
+    card_symbol VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '</>',
+    badge_color VARCHAR(32) NOT NULL DEFAULT '#2563eb',
+    UNIQUE (
+        course_id,
+        create_dept_id,
+        `year`,
+        term
+    ),
     FOREIGN KEY (teacher_id) REFERENCES teacher (teacher_id) ON DELETE RESTRICT,
+    FOREIGN KEY (create_dept_id) REFERENCES department (dept_id) ON DELETE RESTRICT,
     FOREIGN KEY (course_id) REFERENCES course (course_id) ON DELETE RESTRICT
 );
 
@@ -220,7 +230,7 @@ CREATE TABLE course_enrollment (
     enrollment_id INT PRIMARY KEY AUTO_INCREMENT,
     offering_id INT NOT NULL,
     student_id INT NOT NULL,
-    enrollment_date DATE NOT NULL DEFAULT(CURRENT_DATE),
+    enrollment_date DATE NOT NULL,
     status ENUM(
         'ENROLLED',
         'DROPPED',

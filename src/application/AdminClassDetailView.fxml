@@ -10,14 +10,21 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.AdminClassDetailController">
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.AdminClassDetailController">
    <content>
-      <VBox fx:id="rootPane" spacing="18.0" styleClass="content-area">
+      <VBox fx:id="rootPane" minWidth="0.0" spacing="18.0" style="-fx-background-color: #f4f6f9;">
+         <padding>
+            <Insets bottom="28.0" left="24.0" right="24.0" top="18.0" />
+         </padding>
          <children>
 
             <!-- TOP SECTION: Back Button & Title -->
@@ -126,27 +133,152 @@
                </children>
             </HBox>
 
-            <!-- ADMIN COURSE ALLOCATION & SCHEDULE CARD -->
-            <VBox spacing="10.0" styleClass="panel-card">
+            <!-- ADMIN COURSE ALLOCATION & SCHEDULE CARD (Collapsible) -->
+            <VBox minWidth="0.0" spacing="14.0" styleClass="panel-card">
                <children>
-                  <Label styleClass="panel-header" text="Course Allocation &amp; Schedule" />
-                  <HBox alignment="BOTTOM_LEFT" spacing="14.0">
+                  <HBox fx:id="scheduleHeaderBar" alignment="CENTER_LEFT" spacing="10.0">
                      <children>
-                        <VBox prefWidth="240.0" spacing="4.0">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Assigned Lecturer" />
-                              <ComboBox fx:id="assignTeacherCombo" maxWidth="Infinity" styleClass="shaded-combo" />
-                           </children>
-                        </VBox>
-                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Class Schedule" />
-                              <TextField fx:id="scheduleField" promptText="e.g. Tue 13:00 - 14:50 | Fri 08:00 - 09:50" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 7px 12px;" />
-                           </children>
-                        </VBox>
-                        <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleSaveAdminChanges" style="-fx-padding: 8px 18px;" styleClass="action-button" text="Save Changes" />
+                        <Label style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #0f172a;" text="Course Allocation &amp; Schedule" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="toggleScheduleBtn" alignment="CENTER_LEFT" maxWidth="140.0" minHeight="34.0" minWidth="140.0" prefWidth="140.0" mnemonicParsing="false" onAction="#handleToggleScheduleSection" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 6px 14px; -fx-alignment: CENTER_LEFT; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(37,99,235,0.28), 6, 0, 0, 2);" text="▼  Edit Schedule" />
                      </children>
                   </HBox>
+
+                  <!-- Collapsible Body (Grid + Bottom Reset/Save Bar) -->
+                  <VBox fx:id="scheduleBodyPane" managed="false" minWidth="0.0" spacing="14.0" visible="false">
+                     <children>
+                        <GridPane hgap="16.0" minWidth="0.0" vgap="10.0">
+                           <columnConstraints>
+                              <ColumnConstraints percentWidth="34.0" />
+                              <ColumnConstraints percentWidth="66.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints />
+                              <RowConstraints />
+                           </rowConstraints>
+                           <children>
+                              <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" text="Faculty &amp; Schedule Settings" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                              <Label style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" text="Auto-Generate Semester Schedule" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                              <!-- LEFT COLUMN: Lecturer, Start Date, Total Sessions -->
+                              <VBox minWidth="0.0" spacing="12.0" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                 <children>
+                                    <VBox minWidth="0.0" spacing="4.0">
+                                       <children>
+                                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Assigned Lecturer" />
+                                          <ComboBox fx:id="assignTeacherCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Assign Lecturer..." styleClass="shaded-combo" />
+                                       </children>
+                                    </VBox>
+
+                                    <VBox minWidth="0.0" spacing="4.0">
+                                       <children>
+                                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Start Date" />
+                                          <DatePicker fx:id="startDatePicker" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="YYYY-MM-DD" styleClass="shaded-combo" />
+                                       </children>
+                                    </VBox>
+
+                                    <VBox minWidth="0.0" spacing="4.0">
+                                       <children>
+                                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Total Sessions (Periods)" />
+                                          <TextField fx:id="totalSessionsField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. 24" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
+                                          <Label style="-fx-font-size: 10.5px; -fx-text-fill: #64748b;" text="Adjusting slots, start date, or count regenerates the schedule preview below." wrapText="true" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </VBox>
+
+                              <!-- RIGHT COLUMN: Weekly Slot Builder + Live Session Table -->
+                              <VBox minWidth="0.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                 <children>
+                                    <HBox alignment="BOTTOM_LEFT" minWidth="0.0" spacing="8.0">
+                                       <children>
+                                          <GridPane hgap="8.0" minWidth="0.0" HBox.hgrow="ALWAYS">
+                                             <columnConstraints>
+                                                <ColumnConstraints percentWidth="25.0" />
+                                                <ColumnConstraints percentWidth="43.0" />
+                                                <ColumnConstraints percentWidth="32.0" />
+                                             </columnConstraints>
+                                             <rowConstraints>
+                                                <RowConstraints />
+                                             </rowConstraints>
+                                             <children>
+                                                <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
+                                                   <children>
+                                                      <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Day of Week" />
+                                                      <ComboBox fx:id="slotDayCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                                   </children>
+                                                </VBox>
+
+                                                <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
+                                                   <children>
+                                                      <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Start Period" />
+                                                      <ComboBox fx:id="slotPeriodCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                                   </children>
+                                                </VBox>
+
+                                                <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="2">
+                                                   <children>
+                                                      <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Length" />
+                                                      <ComboBox fx:id="slotDurationCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                                   </children>
+                                                </VBox>
+                                             </children>
+                                          </GridPane>
+
+                                          <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleAddWeeklySlot" style="-fx-padding: 8px 12px;" styleClass="action-button" text="+ Add Slot" />
+                                       </children>
+                                    </HBox>
+
+                                    <VBox minWidth="0.0" spacing="6.0" style="-fx-background-color: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%); -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-padding: 8px 12px;">
+                                       <children>
+                                          <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="6.0">
+                                             <children>
+                                                <Label minWidth="-Infinity" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Weekly Timetable Pattern" />
+                                                <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
+                                                <Region HBox.hgrow="ALWAYS" />
+                                                <Label style="-fx-font-size: 10px; -fx-text-fill: #64748b;" text="Supports double/triple/quad blocks" />
+                                             </children>
+                                          </HBox>
+                                          <FlowPane fx:id="weeklySlotsPane" hgap="8.0" minWidth="0.0" vgap="6.0" />
+                                       </children>
+                                    </VBox>
+
+                                    <VBox minWidth="0.0" style="-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px;">
+                                       <children>
+                                          <TableView fx:id="sessionTable" minWidth="0.0" prefHeight="170.0" style="-fx-background-color: transparent;">
+                                             <columnResizePolicy>
+                                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                             </columnResizePolicy>
+                                             <columns>
+                                                <TableColumn fx:id="colSessionNo" prefWidth="40.0" reorderable="false" sortable="false" text="#" />
+                                                <TableColumn fx:id="colSessionDate" prefWidth="95.0" reorderable="false" sortable="false" text="Date" />
+                                                <TableColumn fx:id="colSessionDay" prefWidth="55.0" reorderable="false" sortable="false" text="Day" />
+                                                <TableColumn fx:id="colSessionPeriod" prefWidth="150.0" reorderable="false" sortable="false" text="Period &amp; Time" />
+                                                <TableColumn fx:id="colSessionAction" prefWidth="90.0" reorderable="false" sortable="false" text="Action" />
+                                             </columns>
+                                          </TableView>
+
+                                          <HBox alignment="CENTER_LEFT" minWidth="0.0" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0 transparent transparent transparent; -fx-border-width: 1px 0 0 0; -fx-padding: 7px 12px; -fx-background-radius: 0 0 6px 6px;">
+                                             <children>
+                                                <Label fx:id="sessionSummaryLabel" style="-fx-font-size: 11px; -fx-text-fill: #475569; -fx-font-weight: bold;" text="Loaded sessions" wrapText="true" />
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </VBox>
+                           </children>
+                        </GridPane>
+
+                        <!-- BOTTOM-RIGHT ACTION BAR: Reset & Save Changes -->
+                        <HBox alignment="CENTER_RIGHT" spacing="10.0" style="-fx-padding: 4px 0 0 0;">
+                           <children>
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleResetSchedule" style="-fx-padding: 8px 16px;" styleClass="filter-reset-btn" text="↺ Reset Schedule" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleSaveAdminChanges" style="-fx-padding: 8px 20px;" styleClass="primary-submit-btn" text="💾 Save Changes" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
                </children>
             </VBox>
 
@@ -290,7 +422,7 @@
                            </columns>
                         </TableView>
 
-                        <!-- Bottom Action Bar (All 4 Buttons Locked Visible) -->
+                        <!-- Bottom Action Bar -->
                         <HBox alignment="CENTER_RIGHT" spacing="8.0">
                            <children>
                               <Label fx:id="dailyLogFooterLabel" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Showing 10 attendance records" />

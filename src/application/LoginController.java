@@ -188,6 +188,7 @@ public class LoginController {
                 }
             }
             assignAdminDepartmentOnly(user, email);
+            UserSession.userId = "Mech".equalsIgnoreCase(UserSession.departmentCode) ? 3 : 1;
         } else {
             if (hasAnyInput) {
                 TeacherDirectoryStore.TeacherAccount matched = TeacherDirectoryStore.findByCredentials(
@@ -205,19 +206,24 @@ public class LoginController {
                                 "The password entered for " + matched.fullName + " does not match.");
                         return;
                     }
+                    UserSession.userId = (matched.userId >= 1 && matched.userId <= 4)
+                            ? matched.userId
+                            : ("Mech".equalsIgnoreCase(matched.deptCode) ? 3 : 1);
                     UserSession.lecturerName = matched.fullName;
                     UserSession.setDepartmentByCode(matched.deptCode);
                 } else {
                     assignSessionByUsername(user, email);
+                    UserSession.userId = "Mech".equalsIgnoreCase(UserSession.departmentCode) ? 3 : 1;
                 }
             } else {
-                UserSession.lecturerName = "Dr. Hla Myint";
+                UserSession.userId = 1;
+                UserSession.lecturerName = "Sadayo Kawakami";
                 UserSession.setDepartmentByCode("CEIT");
             }
         }
 
         // TODO (DB Integration): Authenticate against user_account + teacher + department tables
-        // and populate UserSession.lecturerName and UserSession.setDepartmentByCode(deptCode).
+        // and populate UserSession.userId, UserSession.lecturerName, and UserSession.setDepartmentByCode(deptCode).
 
         try {
             String targetFxml = "Admin".equals(selectedRole) ? "AdminMainLayout.fxml" : "MainLayout.fxml";
@@ -253,7 +259,7 @@ public class LoginController {
         String combined = ((user != null ? user : "") + " " + (email != null ? email : "")).trim().toLowerCase();
 
         if (combined.contains("ceit")) {
-            UserSession.lecturerName = "Dr. Hla Myint";
+            UserSession.lecturerName = "Sadayo Kawakami";
             UserSession.setDepartmentByCode("CEIT");
         } else if (combined.contains("mech")) {
             UserSession.lecturerName = "Tae Takemi";
@@ -295,11 +301,11 @@ public class LoginController {
             UserSession.lecturerName = "Dr. Aung Naing";
             UserSession.setDepartmentByCode("C");
         } else {
-            UserSession.lecturerName = "Dr. Hla Myint";
+            UserSession.lecturerName = "Sadayo Kawakami";
             UserSession.setDepartmentByCode("CEIT");
         }
     }
-    
+
     private void assignAdminDepartmentOnly(String user, String email) {
         String combined = ((user != null ? user : "") + " " + (email != null ? email : "")).trim().toLowerCase();
         if (combined.contains("mech")) UserSession.setDepartmentByCode("Mech");

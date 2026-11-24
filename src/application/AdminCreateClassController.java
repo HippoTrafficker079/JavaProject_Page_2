@@ -1,5 +1,10 @@
 package application;
 
+import application.dao.CourseDAO;
+import application.dao.CourseOfferingDAO;
+import application.dao.CourseOfferingDAO.SessionInput;
+import application.dao.DatabaseConnector;
+import application.dao.DepartmentDAO;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -11,12 +16,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -30,10 +37,17 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -78,6 +92,15 @@ public class AdminCreateClassController {
     @FXML private TableColumn<SessionRow, String> colSessionAction;
     @FXML private Label sessionSummaryLabel;
 
+    // Exam & Assessment Distribution
+    @FXML private TextField tutorialWeightField;
+    @FXML private TextField assignmentWeightField;
+    @FXML private TextField labTestWeightField;
+    @FXML private TextField practicalWeightField;
+    @FXML private TextField finalExamWeightField;
+    @FXML private Label weightTotalBadge;
+    @FXML private ProgressBar weightProgressBar;
+
     private final Map<String, String> colorPalette = new LinkedHashMap<>();
     private final List<WeeklySlot> weeklySlots = new ArrayList<>();
     private final ObservableList<SessionRow> generatedSessions = FXCollections.observableArrayList();
@@ -107,10 +130,12 @@ public class AdminCreateClassController {
 
     @FXML
     public void initialize() {
+        CourseCatalogStore.reload();
         initDropdowns();
         initSearchableCourseCombo();
         initIconAndColorControls();
         initSessionTable();
+        initWeightageControls();
 
         if (startDatePicker != null) {
             startDatePicker.setValue(LocalDate.of(2026, 6, 1));
@@ -328,11 +353,13 @@ public class AdminCreateClassController {
             academicYearCombo.setValue("Second Year");
         }
 
-        // Load all faculty across departments so cross-major teaching is supported
+        // Load all active faculty from MySQL (supports cross-major teaching), with fallback to directory store
         if (teacherCombo != null) {
-            teacherCombo.setItems(FXCollections.observableArrayList(
-                TeacherDirectoryStore.getTeacherNamesByDept(null)
-            ));
+            List<String> teachers = loadAllActiveTeachersFromDb();
+            if (teachers.isEmpty()) {
+                teachers = TeacherDirectoryStore.getTeacherNamesByDept(null);
+            }
+            teacherCombo.setItems(FXCollections.observableArrayList(teachers));
         }
 
         if (slotDayCombo != null) {
@@ -367,6 +394,146 @@ public class AdminCreateClassController {
             slotDurationCombo.setValue("2 Periods (Double)");
         }
     }
+
+    private List<String> loadAllActiveTeachersFromDb() {
+        List<String> names = new ArrayList<>();
+        String sql = """
+                SELECT DISTINCT t.full_name
+                FROM teacher t
+                JOIN user_account ua ON t.user_id = ua.user_id
+                WHERE ua.status = TRUE
+                  AND ua.user_role IN ('TEACHER', 'ADMIN')
+                ORDER BY t.full_name ASC
+                """;
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                names.add(rs.getString("full_name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return names;
+    }
+
+    // ==================== EXAM & ASSESSMENT WEIGHTAGE ====================
+
+    private void initWeightageControls() {
+        TextField[] fields = {
+            tutorialWeightField, assignmentWeightField, labTestWeightField,
+            practicalWeightField, finalExamWeightField
+        };
+        for (TextField tf : fields) {
+            if (tf == null) continue;
+            tf.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null && !newVal.matches("\\d*(\\.\\d{0,2})?")) {
+                    tf.setText(oldVal);
+                    return;
+                }
+                updateWeightageIndicator();
+            });
+        }
+        updateWeightageIndicator();
+    }
+
+    @FXML
+    private void handlePresetTheory(ActionEvent event) {
+        setWeightFields("15", "15", "10", "0", "60");
+    }
+
+    @FXML
+    private void handlePresetLabHeavy(ActionEvent event) {
+        setWeightFields("10", "10", "15", "15", "50");
+    }
+
+    @FXML
+    private void handlePresetExamFocused(ActionEvent event) {
+        setWeightFields("15", "15", "0", "0", "70");
+    }
+
+    @FXML
+    private void handleAutoFillFinal(ActionEvent event) {
+        BigDecimal others = parseWeight(tutorialWeightField)
+                .add(parseWeight(assignmentWeightField))
+                .add(parseWeight(labTestWeightField))
+                .add(parseWeight(practicalWeightField));
+        BigDecimal remaining = new BigDecimal("100.00").subtract(others);
+        if (remaining.compareTo(BigDecimal.ZERO) < 0) {
+            showAlert(Alert.AlertType.WARNING, "Weights Exceed 100%",
+                    "The other 4 components already total " + others.stripTrailingZeros().toPlainString()
+                    + "%. Lower them before auto-filling Final Exam.");
+            return;
+        }
+        if (finalExamWeightField != null) {
+            finalExamWeightField.setText(remaining.stripTrailingZeros().toPlainString());
+        }
+    }
+
+    private void setWeightFields(String tut, String assign, String lab, String prac, String fin) {
+        if (tutorialWeightField != null) tutorialWeightField.setText(tut);
+        if (assignmentWeightField != null) assignmentWeightField.setText(assign);
+        if (labTestWeightField != null) labTestWeightField.setText(lab);
+        if (practicalWeightField != null) practicalWeightField.setText(prac);
+        if (finalExamWeightField != null) finalExamWeightField.setText(fin);
+        updateWeightageIndicator();
+    }
+
+    private BigDecimal parseWeight(TextField field) {
+        if (field == null || field.getText() == null || field.getText().trim().isEmpty()) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+        try {
+            return new BigDecimal(field.getText().trim()).setScale(2, RoundingMode.HALF_UP);
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+    }
+
+    private BigDecimal getTotalWeight() {
+        return parseWeight(tutorialWeightField)
+                .add(parseWeight(assignmentWeightField))
+                .add(parseWeight(labTestWeightField))
+                .add(parseWeight(practicalWeightField))
+                .add(parseWeight(finalExamWeightField));
+    }
+
+    private void updateWeightageIndicator() {
+        BigDecimal total = getTotalWeight();
+        BigDecimal hundred = new BigDecimal("100.00");
+        int cmp = total.compareTo(hundred);
+
+        if (weightProgressBar != null) {
+            double progress = Math.min(1.0, Math.max(0.0, total.doubleValue() / 100.0));
+            weightProgressBar.setProgress(progress);
+            if (cmp == 0) {
+                weightProgressBar.setStyle("-fx-accent: #16a34a;");
+            } else if (cmp < 0) {
+                weightProgressBar.setStyle("-fx-accent: #d97706;");
+            } else {
+                weightProgressBar.setStyle("-fx-accent: #dc2626;");
+            }
+        }
+
+        if (weightTotalBadge != null) {
+            if (cmp == 0) {
+                weightTotalBadge.setText("✔ Total: 100% — Ready");
+                weightTotalBadge.setStyle("-fx-background-color: #dcfce7; -fx-text-fill: #15803d; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;");
+            } else if (cmp < 0) {
+                BigDecimal rem = hundred.subtract(total);
+                weightTotalBadge.setText("⚠ Total: " + total.stripTrailingZeros().toPlainString()
+                        + "% (" + rem.stripTrailingZeros().toPlainString() + "% left)");
+                weightTotalBadge.setStyle("-fx-background-color: #fef3c7; -fx-text-fill: #b45309; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;");
+            } else {
+                BigDecimal over = total.subtract(hundred);
+                weightTotalBadge.setText("✖ Total: " + total.stripTrailingZeros().toPlainString()
+                        + "% (" + over.stripTrailingZeros().toPlainString() + "% over)");
+                weightTotalBadge.setStyle("-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;");
+            }
+        }
+    }
+
+    // ==================== WEEKLY TIMETABLE SLOTS & SESSIONS ====================
 
     @FXML
     private void handleAddWeeklySlot(ActionEvent event) {
@@ -580,6 +747,8 @@ public class AdminCreateClassController {
         }
     }
 
+    // ==================== NAVIGATION & SUBMIT ====================
+
     @FXML
     private void handleBack(ActionEvent event) {
         navigateBackToClasses(event);
@@ -654,10 +823,82 @@ public class AdminCreateClassController {
             return;
         }
 
-        // Auto-assign matching (major, year, semester) students to this offering's Roster & Daily Log
+        // Validate Exam & Assessment Distribution (must total 100.00%)
+        BigDecimal tutorialWeight = parseWeight(tutorialWeightField);
+        BigDecimal assignmentWeight = parseWeight(assignmentWeightField);
+        BigDecimal labTestWeight = parseWeight(labTestWeightField);
+        BigDecimal practicalWeight = parseWeight(practicalWeightField);
+        BigDecimal finalExamWeight = parseWeight(finalExamWeightField);
+
+        BigDecimal weightSum = tutorialWeight.add(assignmentWeight)
+                .add(labTestWeight).add(practicalWeight).add(finalExamWeight);
+        if (weightSum.compareTo(new BigDecimal("100.00")) != 0) {
+            showAlert(Alert.AlertType.WARNING, "Invalid Exam Distribution",
+                    "Exam & Assessment weights must total exactly 100% (currently "
+                    + weightSum.stripTrailingZeros().toPlainString()
+                    + "%). Tip: click 'Auto-Fill Final Exam' to balance.");
+            return;
+        }
+
+        // Convert UI session rows to DAO SessionInput list
+        List<SessionInput> sessionInputs = generatedSessions.stream()
+                .map(row -> new SessionInput(LocalDate.parse(row.getDate()), row.getPeriodNumber()))
+                .collect(Collectors.toList());
+
+        int enrolledCount;
+        try (Connection conn = DatabaseConnector.getConnection()) {
+            DepartmentDAO departmentDAO = new DepartmentDAO();
+            CourseDAO courseDAO = new CourseDAO();
+            CourseOfferingDAO offeringDAO = new CourseOfferingDAO();
+
+            int createDeptId = departmentDAO.getDeptIdByUserId(UserSession.userId);
+            int targetDeptId = departmentDAO.getDeptIdByNameAndDept(conn, major, major);
+            int lecturerDeptId = departmentDAO.getDeptIdByTeacherName(conn, teacher);
+            int courseId = (course.courseId > 0)
+                    ? course.courseId
+                    : courseDAO.getCourseIdByCodeAndDept(conn, courseCode, createDeptId);
+
+            int offeringId = offeringDAO.createCourseOffering(
+                    teacher,
+                    lecturerDeptId,
+                    Collections.singletonList(targetDeptId),
+                    courseId,
+                    createDeptId,
+                    year,
+                    semester,
+                    startDate,
+                    capacity,
+                    generatedSessions.size(),
+                    customSymbol,
+                    badgeColor,
+                    sessionInputs,
+                    tutorialWeight,
+                    assignmentWeight,
+                    labTestWeight,
+                    practicalWeight,
+                    finalExamWeight
+            );
+
+            enrolledCount = offeringDAO.getTotalEnrolledStudents(conn, offeringId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Database Error",
+                    "Failed to create class offering in database:\n" + e.getMessage());
+            return;
+        }
+
+        // Sync in-memory stores for instant UI updates
         LocalDate firstDate = LocalDate.parse(generatedSessions.get(0).getDate());
-        int enrolledCount = ClassRosterStore.autoAssignStudentsForNewClass(
+        ClassRosterStore.autoAssignStudentsForNewClass(
                 courseCode, courseTitle, major, year, semester, firstDate
+        );
+
+        SubjectWeightageStore.setForSubject(
+                courseTitle,
+                labTestWeight.add(practicalWeight).intValue(),
+                assignmentWeight.intValue(),
+                tutorialWeight.intValue(),
+                finalExamWeight.intValue()
         );
 
         String patternSummary = weeklySlots.stream()
@@ -669,14 +910,6 @@ public class AdminCreateClassController {
         String shortSection = buildSectionLabel(year);
 
         ClassesController.initSampleClassData();
-
-        // =========================================================================
-        // TODO (DB Integration — Matches schema.sql):
-        // 1. Lookup course_id from `course` WHERE course_code = courseCode.
-        // 2. Lookup teacher_id from `teacher` WHERE full_name = teacher.
-        // 3. Insert into `course_offering` (teacher_id, course_id, year, total_sessions, term).
-        // 4. Batch-insert `generatedSessions` into `class_session` (offering_id, session_date, period).
-        // =========================================================================
         ClassesController.SHARED_CLASS_DATA.add(0, new ClassesController.ClassItem(
             courseCode,
             courseTitle,
@@ -693,10 +926,16 @@ public class AdminCreateClassController {
 
         showAlert(Alert.AlertType.INFORMATION, "Class Created & Published",
                 String.format(Locale.ENGLISH,
-                    "Class (%s - %s) has been published to both Admin and Lecturer views!\n"
+                    "Class (%s - %s) has been published!\n"
                     + "Timetable: %s (Starting %s, %d sessions)\n"
-                    + "Auto-Assigned Students: %d students (%s · %s · %s)",
+                    + "Exam Distribution: Tut %s%% | Assign %s%% | Lab %s%% | Prac %s%% | Final %s%%\n"
+                    + "Auto-Enrolled Students: %d students (%s · %s · %s)",
                     courseCode, courseTitle, patternSummary, startDate, generatedSessions.size(),
+                    tutorialWeight.stripTrailingZeros().toPlainString(),
+                    assignmentWeight.stripTrailingZeros().toPlainString(),
+                    labTestWeight.stripTrailingZeros().toPlainString(),
+                    practicalWeight.stripTrailingZeros().toPlainString(),
+                    finalExamWeight.stripTrailingZeros().toPlainString(),
                     enrolledCount, major, year, semester));
 
         navigateBackToClasses(event);
@@ -704,14 +943,25 @@ public class AdminCreateClassController {
 
     private void navigateBackToClasses(ActionEvent event) {
         try {
-            Node source = (Node) event.getSource();
+            Scene scene = null;
+            if (event != null && event.getSource() instanceof Node source) {
+                scene = source.getScene();
+            }
+            if (scene == null && rootPane != null) {
+                scene = rootPane.getScene();
+            }
+            if (scene == null) {
+                return;
+            }
+
+            StackPane contentArea = (StackPane) scene.lookup("#contentArea");
+            if (contentArea == null) {
+                return;
+            }
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("AdminClassesView.fxml"));
             Parent classesView = loader.load();
-
-            StackPane contentArea = (StackPane) source.getScene().lookup("#contentArea");
-            if (contentArea != null) {
-                contentArea.getChildren().setAll(classesView);
-            }
+            contentArea.getChildren().setAll(classesView);
         } catch (IOException e) {
             e.printStackTrace();
         }

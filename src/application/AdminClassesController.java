@@ -1,6 +1,7 @@
 package application;
 
 import javafx.application.Platform;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -21,6 +22,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import application.dao.CourseOfferingDAO;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class AdminClassesController {
 
@@ -225,7 +237,7 @@ public class AdminClassesController {
     }
 
     private VBox createClassCard(ClassesController.ClassItem item) {
-        return ClassCardFactory.createCard(item, true, this::handleViewClass, null);
+        return ClassCardFactory.createCard(item, true, this::handleViewClass, this::handleEditClass);
     }
 
     @FXML
@@ -249,5 +261,188 @@ public class AdminClassesController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    @FXML
+    private void handleEditClass(ActionEvent event) {
+        Button clickedButton = (Button) event.getSource();
+        String offeringKey = (String) clickedButton.getUserData();
+
+        ClassesController.ClassItem item = masterClassData.stream()
+                .filter(c -> c.getOfferingKey().equalsIgnoreCase(offeringKey))
+                .findFirst()
+                .orElse(null);
+
+        if (item == null) return;
+
+        Map<String, String> colorPalette = new LinkedHashMap<>();
+        colorPalette.put("Royal Blue (#2563eb)", "#2563eb");
+        colorPalette.put("Violet (#7c3aed)", "#7c3aed");
+        colorPalette.put("Sky Blue (#0284c7)", "#0284c7");
+        colorPalette.put("Purple (#9333ea)", "#9333ea");
+        colorPalette.put("Crimson (#dc2626)", "#dc2626");
+        colorPalette.put("Emerald (#16a34a)", "#16a34a");
+        colorPalette.put("Orange (#ea580c)", "#ea580c");
+        colorPalette.put("Teal (#0891b2)", "#0891b2");
+        colorPalette.put("Indigo (#4f46e5)", "#4f46e5");
+        colorPalette.put("Amber (#d97706)", "#d97706");
+        colorPalette.put("Rose (#db2777)", "#db2777");
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Edit Class — " + item.code);
+        dialog.setHeaderText(null);
+
+        ButtonType saveBtnType = new ButtonType("Save Changes", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveBtnType, ButtonType.CANCEL);
+
+        // Parse existing enrolled & max counts from "X / Y students"
+        int enrolledCount = 0;
+        int currentMax = 60;
+        if (item.studentCount != null && item.studentCount.contains("/")) {
+            String[] parts = item.studentCount.replaceAll("[^0-9/]", "").split("/");
+            if (parts.length == 2) {
+                try { enrolledCount = Integer.parseInt(parts[0]); } catch (NumberFormatException ignored) {}
+                try { currentMax = Integer.parseInt(parts[1]); } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        // Controls
+        TextField codeField = new TextField(item.code);
+        codeField.setDisable(true);
+
+        TextField titleField = new TextField(item.title);
+        titleField.setPromptText("Class / Course Title");
+
+        ComboBox<String> yearBox = new ComboBox<>(FXCollections.observableArrayList(
+                "First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year"));
+        yearBox.setValue(item.year);
+        yearBox.setMaxWidth(Double.MAX_VALUE);
+
+        ComboBox<String> semBox = new ComboBox<>(FXCollections.observableArrayList(
+                "First Semester", "Second Semester"));
+        semBox.setValue(item.semester);
+        semBox.setMaxWidth(Double.MAX_VALUE);
+
+        TextField maxStdField = new TextField(String.valueOf(currentMax));
+        maxStdField.setPromptText("e.g. 60");
+
+        ComboBox<String> symbolBox = new ComboBox<>(FXCollections.observableArrayList(
+                "</>", "💾", "🌐", "🖥", "⚙", "<*>", "📘", "☕", "🔌", "🧠", "🔒", "☁", "🏗", "🔥", "📡", "⚡", "🤖", "🧪"));
+        symbolBox.setEditable(true);
+        symbolBox.setValue(item.icon != null ? item.icon : "</>");
+        symbolBox.setMaxWidth(Double.MAX_VALUE);
+
+        ComboBox<String> colorBox = new ComboBox<>(FXCollections.observableArrayList(colorPalette.keySet()));
+        String matchedColorLabel = colorPalette.entrySet().stream()
+                .filter(e -> e.getValue().equalsIgnoreCase(item.badgeColor))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse("Royal Blue (#2563eb)");
+        colorBox.setValue(matchedColorLabel);
+        colorBox.setMaxWidth(Double.MAX_VALUE);
+
+        // Live Badge Preview
+        StackPane previewPane = new StackPane();
+        previewPane.setMinSize(44, 44);
+        previewPane.setMaxSize(44, 44);
+        Label previewLbl = new Label(symbolBox.getValue());
+        previewLbl.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;");
+        previewPane.getChildren().add(previewLbl);
+
+        Runnable refreshPreview = () -> {
+            String sym = symbolBox.getEditor().getText() != null && !symbolBox.getEditor().getText().trim().isEmpty()
+                    ? symbolBox.getEditor().getText().trim()
+                    : (symbolBox.getValue() != null ? symbolBox.getValue().trim() : "📘");
+            String hex = colorPalette.getOrDefault(colorBox.getValue(), "#2563eb");
+            previewLbl.setText(sym);
+            previewPane.setStyle("-fx-background-color: " + hex + "; -fx-background-radius: 10px;");
+        };
+        refreshPreview.run();
+
+        symbolBox.valueProperty().addListener((obs, o, n) -> refreshPreview.run());
+        symbolBox.getEditor().textProperty().addListener((obs, o, n) -> refreshPreview.run());
+        colorBox.valueProperty().addListener((obs, o, n) -> refreshPreview.run());
+
+        HBox previewRow = new HBox(12, previewPane, new Label("Live Card Badge Preview"));
+        previewRow.setAlignment(Pos.CENTER_LEFT);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(12);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(16, 20, 10, 20));
+        grid.setPrefWidth(430);
+
+        grid.add(new Label("Course Code:"), 0, 0);    grid.add(codeField, 1, 0);
+        grid.add(new Label("Class Name:"), 0, 1);     grid.add(titleField, 1, 1);
+        grid.add(new Label("Academic Year:"), 0, 2);  grid.add(yearBox, 1, 2);
+        grid.add(new Label("Semester:"), 0, 3);       grid.add(semBox, 1, 3);
+        grid.add(new Label("Max Students:"), 0, 4);   grid.add(maxStdField, 1, 4);
+        grid.add(new Label("Card Symbol:"), 0, 5);    grid.add(symbolBox, 1, 5);
+        grid.add(new Label("Badge Color:"), 0, 6);    grid.add(colorBox, 1, 6);
+        grid.add(previewRow, 1, 7);
+
+        dialog.getDialogPane().setContent(grid);
+
+        final int finalEnrolled = enrolledCount;
+        dialog.showAndWait().ifPresent(result -> {
+            if (result != saveBtnType) return;
+
+            String newTitle = titleField.getText() != null ? titleField.getText().trim() : "";
+            String newYear = yearBox.getValue();
+            String newSem = semBox.getValue();
+            String newSymbol = symbolBox.getEditor().getText() != null && !symbolBox.getEditor().getText().trim().isEmpty()
+                    ? symbolBox.getEditor().getText().trim()
+                    : (symbolBox.getValue() != null ? symbolBox.getValue().trim() : "</>");
+            String newColor = colorPalette.getOrDefault(colorBox.getValue(), "#2563eb");
+
+            if (newTitle.isEmpty()) {
+                Alert warn = new Alert(Alert.AlertType.WARNING, "Class Name cannot be empty.");
+                warn.setHeaderText(null);
+                warn.showAndWait();
+                return;
+            }
+
+            int newMax;
+            try {
+                newMax = Integer.parseInt(maxStdField.getText().trim());
+                if (newMax <= 0) throw new NumberFormatException();
+            } catch (NumberFormatException ex) {
+                Alert warn = new Alert(Alert.AlertType.WARNING, "Max Students must be a positive number.");
+                warn.setHeaderText(null);
+                warn.showAndWait();
+                return;
+            }
+
+            try {
+                CourseOfferingDAO dao = new CourseOfferingDAO();
+                dao.updateOfferingMetadata(
+                        item.code, item.year, item.semester,
+                        newTitle, newYear, newSem, newMax, newSymbol, newColor
+                );
+            } catch (SQLException e) {
+                e.printStackTrace();
+                Alert err = new Alert(Alert.AlertType.ERROR, "Failed to update class in database:\n" + e.getMessage());
+                err.setHeaderText(null);
+                err.showAndWait();
+                return;
+            }
+
+            // Update card in memory (and sync title across any offerings sharing the same course_code)
+            item.title = newTitle;
+            item.year = newYear;
+            item.semester = newSem;
+            item.studentCount = finalEnrolled + " / " + newMax + " students";
+            item.icon = newSymbol;
+            item.badgeColor = newColor;
+
+            for (ClassesController.ClassItem other : masterClassData) {
+                if (other.code.equalsIgnoreCase(item.code)) {
+                    other.title = newTitle;
+                }
+            }
+
+            CourseCatalogStore.reload();
+            applyFilter();
+        });
     }
 }

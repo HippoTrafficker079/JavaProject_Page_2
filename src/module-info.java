@@ -5,7 +5,7 @@ module JavaFX {
     requires java.xml;
     requires java.desktop;
     requires java.sql;
-//    requires jbcrypt;
+    requires jbcrypt;
 	requires javafx.base;
     
     opens application to javafx.graphics, javafx.fxml;
