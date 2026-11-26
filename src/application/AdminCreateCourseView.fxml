@@ -16,10 +16,14 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
 
 <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.AdminCreateCourseController">
    <content>
       <VBox fx:id="rootPane" minWidth="0.0" spacing="18.0" style="-fx-padding: 20px;">
+      <padding>
+            <Insets bottom="24.0" left="20.0" right="20.0" top="18.0" />
+         </padding>
          <children>
 
             <!-- TOP BAR -->
@@ -56,97 +60,101 @@
             </VBox>
 
             <!-- SECTION 1: COURSE INFORMATION -->
-            <VBox minWidth="0.0" spacing="14.0" styleClass="panel-card">
-               <children>
-                  <HBox alignment="CENTER_LEFT" style="-fx-border-color: transparent transparent #e2e8f0 transparent; -fx-border-width: 0 0 1.5px 0; -fx-padding: 0 0 8px 0;">
-                     <children>
-                        <Label style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #0f172a;" text="Course Details" />
-                     </children>
-                  </HBox>
+        <VBox minWidth="0.0" spacing="14.0" styleClass="panel-card">
+           <children>
+              <HBox alignment="CENTER_LEFT" style="-fx-border-color: transparent transparent #e2e8f0 transparent; -fx-border-width: 0 0 1.5px 0; -fx-padding: 0 0 8px 0;">
+                 <children>
+                    <Label style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #0f172a;" text="Course Details" />
+                 </children>
+              </HBox>
 
-                  <!-- ROW 1: Course Code & Course Name -->
-                  <GridPane hgap="14.0" minWidth="0.0">
-                     <columnConstraints>
-                        <ColumnConstraints percentWidth="35.0" />
-                        <ColumnConstraints percentWidth="65.0" />
-                     </columnConstraints>
-                     <rowConstraints>
-                        <RowConstraints minHeight="52.0" />
-                     </rowConstraints>
-                     <children>
-                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
-                           <children>
-                              <HBox spacing="3.0">
-                                 <children>
-                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course Code (course_code)" />
-                                    <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
-                                 </children>
-                              </HBox>
-                              <TextField fx:id="courseCodeField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. CEIT-4105" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
-                           </children>
-                        </VBox>
+              <!-- ROW 1: Course Code ([Dept Prefix] - [5 Digits]) & Course Name -->
+              <GridPane hgap="14.0" minWidth="0.0">
+                 <columnConstraints>
+                    <ColumnConstraints percentWidth="42.0" />
+                    <ColumnConstraints percentWidth="58.0" />
+                 </columnConstraints>
+                 <rowConstraints>
+                    <RowConstraints minHeight="52.0" />
+                 </rowConstraints>
+                 <children>
+                    <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
+                       <children>
+                          <HBox spacing="3.0">
+                             <children>
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course Code (Dept - 5 Digits)" />
+                                <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
+                             </children>
+                          </HBox>
+                          <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="8.0">
+                             <children>
+                                <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="8.0">
+	                             <children>
+	                                <TextField fx:id="deptPrefixField" alignment="CENTER" editable="false" focusTraversable="false" minWidth="80.0" prefWidth="90.0" style="-fx-background-color: #f1f5f9; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 10px; -fx-font-weight: bold; -fx-text-fill: #334155;" text="CEIT" />
+	                                <Label style="-fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: #475569;" text="-" />
+	                                <TextField fx:id="courseCodeField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. 11001" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" HBox.hgrow="ALWAYS" />
+	                             </children>
+	                          </HBox>
+                                <Label style="-fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: #475569;" text="-" />
+                                <TextField fx:id="courseCodeField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. 11001" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" HBox.hgrow="ALWAYS" />
+                             </children>
+                          </HBox>
+                       </children>
+                    </VBox>
 
-                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
-                           <children>
-                              <HBox spacing="3.0">
-                                 <children>
-                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course Name (course_name)" />
-                                    <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
-                                 </children>
-                              </HBox>
-                              <TextField fx:id="courseNameField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. Deep Learning Systems" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
-                           </children>
-                        </VBox>
-                     </children>
-                  </GridPane>
+                    <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
+                       <children>
+                          <HBox spacing="3.0">
+                             <children>
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course Name (course_name)" />
+                                <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
+                             </children>
+                          </HBox>
+                          <TextField fx:id="courseNameField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="e.g. Deep Learning Systems" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" />
+                       </children>
+                    </VBox>
+                 </children>
+              </GridPane>
 
-                  <!-- ROW 2: Department, Course Type, Credit, Is Active -->
-                  <GridPane hgap="12.0" minWidth="0.0">
-                     <columnConstraints>
-                        <ColumnConstraints percentWidth="30.0" />
-                        <ColumnConstraints percentWidth="28.0" />
-                        <ColumnConstraints percentWidth="22.0" />
-                        <ColumnConstraints percentWidth="20.0" />
-                     </columnConstraints>
-                     <rowConstraints>
-                        <RowConstraints minHeight="52.0" />
-                     </rowConstraints>
-                     <children>
-                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Department (dept_id)" />
-                              <ComboBox fx:id="deptCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
-                           </children>
-                        </VBox>
+              <!-- ROW 2: Course Type, Credit, Active Course (Department removed from here) -->
+              <GridPane hgap="12.0" minWidth="0.0">
+                 <columnConstraints>
+                    <ColumnConstraints percentWidth="40.0" />
+                    <ColumnConstraints percentWidth="35.0" />
+                    <ColumnConstraints percentWidth="25.0" />
+                 </columnConstraints>
+                 <rowConstraints>
+                    <RowConstraints minHeight="52.0" />
+                 </rowConstraints>
+                 <children>
+                    <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
+                       <children>
+                          <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course Type (course_type)" />
+                          <ComboBox fx:id="courseTypeCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                       </children>
+                    </VBox>
 
-                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
-                           <children>
-                              <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course Type (course_type)" />
-                              <ComboBox fx:id="courseTypeCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
-                           </children>
-                        </VBox>
+                    <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
+                       <children>
+                          <HBox spacing="3.0">
+                             <children>
+                                <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Credit" />
+                                <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
+                             </children>
+                          </HBox>
+                          <TextField fx:id="creditField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="3.0" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" text="3.0" />
+                       </children>
+                    </VBox>
 
-                        <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="2">
-                           <children>
-                              <HBox spacing="3.0">
-                                 <children>
-                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Credit" />
-                                    <Label style="-fx-text-fill: #e11d48; -fx-font-weight: bold; -fx-font-size: 11px;" text="*" />
-                                 </children>
-                              </HBox>
-                              <TextField fx:id="creditField" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="3.0" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 8px 12px;" text="3.0" />
-                           </children>
-                        </VBox>
-
-                        <VBox alignment="BOTTOM_LEFT" minWidth="0.0" spacing="4.0" style="-fx-padding: 0 0 8px 4px;" GridPane.columnIndex="3">
-                           <children>
-                              <CheckBox fx:id="isActiveCheck" mnemonicParsing="false" selected="true" styleClass="shaded-checkbox" text="Active Course" />
-                           </children>
-                        </VBox>
-                     </children>
-                  </GridPane>
-               </children>
-            </VBox>
+                    <VBox alignment="BOTTOM_LEFT" minWidth="0.0" spacing="4.0" style="-fx-padding: 0 0 8px 4px;" GridPane.columnIndex="2">
+                       <children>
+                          <CheckBox fx:id="isActiveCheck" mnemonicParsing="false" selected="true" styleClass="shaded-checkbox" text="Active Course" />
+                       </children>
+                    </VBox>
+                 </children>
+              </GridPane>
+           </children>
+        </VBox>
 
             <!-- SECTION 2: PREREQUISITE COURSES (SEARCHABLE) -->
             <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">

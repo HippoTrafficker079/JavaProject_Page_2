@@ -1,27 +1,37 @@
 package application;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+import java.io.IOException;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AdminExamsController {
 
@@ -30,37 +40,34 @@ public class AdminExamsController {
     @FXML private Label draftsCountLabel;
     @FXML private Label finishedCountLabel;
     @FXML private Label totalExamsCountLabel;
+    @FXML private Label classListBadge;
 
-    @FXML private ComboBox<String> lecturerCombo;
-    @FXML private ComboBox<String> classCombo;
+    @FXML private ComboBox<String> academicYearCombo;
     @FXML private ComboBox<String> semesterCombo;
-    @FXML private ComboBox<String> statusCombo;
     @FXML private TextField searchField;
 
-    @FXML private TableView<AdminExamRecord> examsTable;
-    @FXML private TableColumn<AdminExamRecord, String> titleColumn;
-    @FXML private TableColumn<AdminExamRecord, String> subjectColumn;
-    @FXML private TableColumn<AdminExamRecord, String> lecturedByColumn;
-    @FXML private TableColumn<AdminExamRecord, String> dateColumn;
-    @FXML private TableColumn<AdminExamRecord, String> durationColumn;
-    @FXML private TableColumn<AdminExamRecord, String> statusColumn;
-    @FXML private Button viewResultBtn;
+    @FXML private GridPane cardsGrid;
+    @FXML private Label paginationInfoLabel;
+    @FXML private HBox paginationControlsBox;
 
-    @FXML private Label monthYearLabel;
-    @FXML private GridPane calendarGrid;
+    private static final int ITEMS_PER_PAGE = 6;
+    private int currentPage = 1;
 
-    private YearMonth currentYearMonth = YearMonth.of(2024, 1);
-    private FilteredList<AdminExamRecord> filteredData;
+    private final ObservableList<ClassesController.ClassItem> masterClassData = ClassesController.SHARED_CLASS_DATA;
+    private List<ClassesController.ClassItem> filteredClassData = new ArrayList<>();
+
+    public static final DateTimeFormatter DISPLAY_DATE_FMT =
+            DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH);
 
     public static final ObservableList<AdminExamRecord> deptExamMasterData = FXCollections.observableArrayList(
-        new AdminExamRecord("Tutorial 1", "Data Structures", "Dr. Hla Myint", "2A", "Semester 1", "10 Jan 2024", "1 hour", "Finished", 50),
-        new AdminExamRecord("Final Exam", "Database Systems", "Dr. Aung Naing", "2A", "Semester 1", "18 Jan 2024", "3 hours", "Finished", 100),
-        new AdminExamRecord("Final Exam", "Computer Networks", "Dr. Su Su", "2A", "Semester 1", "25 Jan 2024", "3 hours", "Finished", 100),
-        new AdminExamRecord("Quiz", "Web Technologies", "Prof. Kyaw Zin", "2B", "Semester 1", "28 Jan 2024", "30 mins", "Draft", 20),
-        new AdminExamRecord("Tutorial 1", "Operating Systems", "Dr. Tin Maung", "3A", "Semester 2", "5 Feb 2024", "2 hours", "Finished", 50),
-        new AdminExamRecord("Final Exam", "Software Engineering", "Dr. Myo Tint", "3A", "Semester 2", "8 Feb 2024", "3 hours", "Draft", 100),
-        new AdminExamRecord("Tutorial 2", "Artificial Intelligence", "Dr. Hla Myint", "4A", "Semester 2", "14 Feb 2024", "1 hour", "Published", 50),
-        new AdminExamRecord("Quiz", "Machine Learning", "Dr. Aung Naing", "4A", "Semester 2", "20 Feb 2024", "30 mins", "Draft", 20)
+            new AdminExamRecord("Tutorial 1", "Advanced Database Systems", "Sadayo Kawakami", "CEIT-3101", "First Semester", "10 Jun 2026", "1 hour", "Finished", 50, "CEIT-3101"),
+            new AdminExamRecord("Quiz 1", "Advanced Database Systems", "Sadayo Kawakami", "CEIT-3101", "First Semester", "18 Jun 2026", "30 mins", "Published", 20, "CEIT-3101"),
+            new AdminExamRecord("Final Exam", "Advanced Database Systems", "Sadayo Kawakami", "CEIT-3101", "First Semester", "15 Dec 2026", "3 hours", "Published", 100, "CEIT-3101"),
+            new AdminExamRecord("Tutorial 1", "Object-Oriented Programming with Java", "Sojiro Sakura", "CEIT-3102", "First Semester", "12 Jun 2026", "1 hour", "Finished", 50, "CEIT-3102"),
+            new AdminExamRecord("Quiz 1", "Object-Oriented Programming with Java", "Sojiro Sakura", "CEIT-3102", "First Semester", "28 Nov 2026", "30 mins", "Draft", 20, "CEIT-3102"),
+            new AdminExamRecord("Final Exam", "Object-Oriented Programming with Java", "Sojiro Sakura", "CEIT-3102", "First Semester", "18 Dec 2026", "3 hours", "Published", 100, "CEIT-3102"),
+            new AdminExamRecord("Tutorial 1", "Advanced Thermodynamics", "Tae Takemi", "ME-3101", "First Semester", "14 Jun 2026", "2 hours", "Finished", 50, "ME-3101"),
+            new AdminExamRecord("Final Exam", "Advanced Thermodynamics", "Tae Takemi", "ME-3101", "First Semester", "20 Dec 2026", "3 hours", "Draft", 100, "ME-3101")
     );
 
     @FXML
@@ -69,71 +76,96 @@ public class AdminExamsController {
             examsDeptLabel.setText(UserSession.getFormattedDepartment());
         }
 
-        if (rootPane != null) {
-            rootPane.setOnMouseClicked(event -> {
-                examsTable.getSelectionModel().clearSelection();
-                rootPane.requestFocus();
-            });
-        }
+        initDropdowns();
+        ClassesController.initSampleClassData();
+        autoUpdateExpiredStatuses();
 
-        titleColumn.setCellValueFactory(c -> c.getValue().titleProperty());
-        subjectColumn.setCellValueFactory(c -> c.getValue().subjectProperty());
-        lecturedByColumn.setCellValueFactory(c -> c.getValue().lecturedByProperty());
-        dateColumn.setCellValueFactory(c -> c.getValue().examDateProperty());
-        durationColumn.setCellValueFactory(c -> c.getValue().durationProperty());
+        ClassesController.SHARED_CLASS_DATA.addListener(
+                (ListChangeListener<ClassesController.ClassItem>) change -> Platform.runLater(this::applyFilter));
 
-        statusColumn.setCellValueFactory(c -> c.getValue().statusProperty());
-        statusColumn.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String status, boolean empty) {
-                super.updateItem(status, empty);
-                if (empty || status == null) {
-                    setGraphic(null);
-                    setText(null);
-                } else {
-                    Label badge = new Label(status);
-                    String base = "-fx-padding: 3px 10px; -fx-background-radius: 12px; -fx-font-weight: bold; -fx-font-size: 11px;";
-                    switch (status.toLowerCase()) {
-                        case "finished"  -> badge.setStyle(base + " -fx-background-color: #dcfce7; -fx-text-fill: #16a34a;");
-                        case "published" -> badge.setStyle(base + " -fx-background-color: #e0f2fe; -fx-text-fill: #0284c7;");
-                        default          -> badge.setStyle(base + " -fx-background-color: #f3e8ff; -fx-text-fill: #9333ea;");
-                    }
-                    setGraphic(badge);
-                    setText(null);
-                }
-            }
-        });
+        deptExamMasterData.addListener(
+                (ListChangeListener<AdminExamRecord>) change -> Platform.runLater(this::updateMetricCards));
 
-        if (lecturerCombo != null) {
-            lecturerCombo.setItems(FXCollections.observableArrayList(
-                "All Lecturers", "Dr. Hla Myint", "Dr. Aung Naing", "Dr. Su Su", "Prof. Kyaw Zin", "Dr. Tin Maung", "Dr. Myo Tint"
-            ));
-            lecturerCombo.setValue("All Lecturers");
-        }
-        if (classCombo != null) {
-            classCombo.setItems(FXCollections.observableArrayList("All Classes", "2A", "2B", "3A", "4A"));
-            classCombo.setValue("All Classes");
+        if (academicYearCombo != null) {
+            academicYearCombo.valueProperty().addListener((obs, o, n) -> applyFilter());
         }
         if (semesterCombo != null) {
-            semesterCombo.setItems(FXCollections.observableArrayList("All Semesters", "Semester 1", "Semester 2"));
-            semesterCombo.setValue("All Semesters");
+            semesterCombo.valueProperty().addListener((obs, o, n) -> applyFilter());
         }
-        if (statusCombo != null) {
-            statusCombo.setItems(FXCollections.observableArrayList("All Status", "Finished", "Published", "Draft"));
-            statusCombo.setValue("All Status");
+        if (searchField != null) {
+            searchField.textProperty().addListener((obs, o, n) -> applyFilter());
         }
 
-        filteredData = new FilteredList<>(deptExamMasterData, b -> true);
-        SortedList<AdminExamRecord> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(examsTable.comparatorProperty());
-        examsTable.setItems(sortedData);
-
-        lockTableColumns(examsTable, 0.14, 0.23, 0.20, 0.16, 0.12, 0.146);
         updateMetricCards();
-        buildCalendar();
+        applyFilter();
+    }
+
+    private void initDropdowns() {
+        if (academicYearCombo != null) {
+            academicYearCombo.setItems(FXCollections.observableArrayList(
+                    "All Years", "First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year"));
+            academicYearCombo.getSelectionModel().selectFirst();
+        }
+        if (semesterCombo != null) {
+            semesterCombo.setItems(FXCollections.observableArrayList(
+                    "All Semesters", "First Semester", "Second Semester"));
+            semesterCombo.getSelectionModel().selectFirst();
+        }
+    }
+
+    /**
+     * Automatically marks any exam whose scheduled date has passed (strictly before today)
+     * as "Finished".
+     */
+    public static void autoUpdateExpiredStatuses() {
+        LocalDate today = LocalDate.now();
+        for (AdminExamRecord exam : deptExamMasterData) {
+            LocalDate parsed = parseExamDate(exam.getExamDate());
+            if (parsed != null && parsed.isBefore(today) && !"Finished".equalsIgnoreCase(exam.getStatus())) {
+                exam.statusProperty().set("Finished");
+            }
+        }
+    }
+
+    public static LocalDate parseExamDate(String dateStr) {
+        if (dateStr == null || dateStr.isBlank()) return null;
+        String trimmed = dateStr.trim();
+        DateTimeFormatter[] formatters = {
+                DISPLAY_DATE_FMT,
+                DateTimeFormatter.ISO_LOCAL_DATE,
+                DateTimeFormatter.ofPattern("dd-MM-yyyy")
+        };
+        for (DateTimeFormatter fmt : formatters) {
+            try {
+                return LocalDate.parse(trimmed, fmt);
+            } catch (DateTimeParseException ignored) {
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Checks whether an exam belongs to a given ClassItem (matches offeringKey, course code, or subject title).
+     */
+    public static boolean examBelongsToClass(AdminExamRecord exam, ClassesController.ClassItem item) {
+        if (exam == null || item == null) return false;
+        if (exam.getOfferingKey() != null && !exam.getOfferingKey().isBlank()) {
+            if (exam.getOfferingKey().equalsIgnoreCase(item.getOfferingKey())) {
+                return true;
+            }
+            if (exam.getOfferingKey().equalsIgnoreCase(item.code)) {
+                return true;
+            }
+        }
+        if (exam.getClassName() != null && exam.getClassName().equalsIgnoreCase(item.code)) {
+            return true;
+        }
+        return exam.getSubject() != null && item.title != null
+                && exam.getSubject().equalsIgnoreCase(item.title);
     }
 
     private void updateMetricCards() {
+        autoUpdateExpiredStatuses();
         int drafts = 0;
         int finished = 0;
         for (AdminExamRecord ex : deptExamMasterData) {
@@ -146,289 +178,265 @@ public class AdminExamsController {
     }
 
     @FXML
-    public void handleFilter() {
-        String selLecturer = lecturerCombo != null ? lecturerCombo.getValue() : "All Lecturers";
-        String selClass = classCombo != null ? classCombo.getValue() : "All Classes";
-        String selSemester = semesterCombo != null ? semesterCombo.getValue() : "All Semesters";
-        String selStatus = statusCombo != null ? statusCombo.getValue() : "All Status";
-        String q = searchField != null && searchField.getText() != null ? searchField.getText().trim().toLowerCase() : "";
-
-        filteredData.setPredicate(exam -> {
-            boolean matchLecturer = selLecturer == null || selLecturer.equals("All Lecturers")
-                    || exam.getLecturedBy().equalsIgnoreCase(selLecturer);
-            boolean matchClass = selClass == null || selClass.equals("All Classes")
-                    || exam.getClassName().equalsIgnoreCase(selClass);
-            boolean matchSemester = selSemester == null || selSemester.equals("All Semesters")
-                    || exam.getSemester().equalsIgnoreCase(selSemester);
-            boolean matchStatus = selStatus == null || selStatus.equals("All Status")
-                    || exam.getStatus().equalsIgnoreCase(selStatus);
-            boolean matchSearch = q.isEmpty()
-                    || exam.getTitle().toLowerCase().contains(q)
-                    || exam.getSubject().toLowerCase().contains(q)
-                    || exam.getLecturedBy().toLowerCase().contains(q)
-                    || exam.getExamDate().toLowerCase().contains(q);
-            return matchLecturer && matchClass && matchSemester && matchStatus && matchSearch;
-        });
-    }
-
-    @FXML
-    public void handleReset() {
-        if (lecturerCombo != null) lecturerCombo.setValue("All Lecturers");
-        if (classCombo != null) classCombo.setValue("All Classes");
+    public void handleResetFilters(ActionEvent event) {
+        if (academicYearCombo != null) academicYearCombo.setValue("All Years");
         if (semesterCombo != null) semesterCombo.setValue("All Semesters");
-        if (statusCombo != null) statusCombo.setValue("All Status");
         if (searchField != null) searchField.clear();
-        if (filteredData != null) filteredData.setPredicate(b -> true);
+        applyFilter();
     }
 
-    // =========================================================================
-    // ADMIN-EXCLUSIVE EXAM ACTIONS
-    // =========================================================================
+    private void applyFilter() {
+        String selectedYear = academicYearCombo != null ? academicYearCombo.getValue() : "All Years";
+        String selectedSem = semesterCombo != null ? semesterCombo.getValue() : "All Semesters";
+        String keyword = (searchField == null || searchField.getText() == null)
+                ? "" : searchField.getText().trim().toLowerCase();
 
-    @FXML
-    public void handleScheduleNewExam() {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Schedule Department Exam");
-        dialog.setHeaderText("Create & Assign New Exam");
+        filteredClassData = masterClassData.stream().filter(c -> {
+            boolean matchesYear = (selectedYear == null || selectedYear.equals("All Years")
+                    || c.year.equalsIgnoreCase(selectedYear));
+            boolean matchesSem = (selectedSem == null || selectedSem.equals("All Semesters")
+                    || c.semester.equalsIgnoreCase(selectedSem));
+            boolean matchesSearch = keyword.isEmpty()
+                    || c.code.toLowerCase().contains(keyword)
+                    || c.title.toLowerCase().contains(keyword)
+                    || c.department.toLowerCase().contains(keyword)
+                    || c.major.toLowerCase().contains(keyword)
+                    || c.lecturer.toLowerCase().contains(keyword);
+            return matchesYear && matchesSem && matchesSearch;
+        }).collect(Collectors.toList());
 
-        ComboBox<String> typeBox = new ComboBox<>(FXCollections.observableArrayList("Tutorial 1", "Tutorial 2", "Quiz", "Final Exam"));
-        typeBox.setValue("Tutorial 1");
-        TextField subjectField = new TextField();
-        subjectField.setPromptText("e.g. Cloud Computing");
-        ComboBox<String> lecturerBox = new ComboBox<>(FXCollections.observableArrayList(
-            "Dr. Hla Myint", "Dr. Aung Naing", "Dr. Su Su", "Prof. Kyaw Zin", "Dr. Tin Maung", "Dr. Myo Tint"
-        ));
-        lecturerBox.setValue("Dr. Hla Myint");
-        ComboBox<String> classBox = new ComboBox<>(FXCollections.observableArrayList("2A", "2B", "3A", "4A"));
-        classBox.setValue("3A");
-        TextField dateField = new TextField("25 Feb 2024");
-        TextField durationField = new TextField("1 hour");
+        currentPage = 1;
+        renderCurrentPage();
+    }
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.addRow(0, new Label("Exam Type:"), typeBox);
-        grid.addRow(1, new Label("Subject:"), subjectField);
-        grid.addRow(2, new Label("Lectured By:"), lecturerBox);
-        grid.addRow(3, new Label("Class:"), classBox);
-        grid.addRow(4, new Label("Exam Date:"), dateField);
-        grid.addRow(5, new Label("Duration:"), durationField);
+    private void renderCurrentPage() {
+        if (cardsGrid == null) return;
+        cardsGrid.getChildren().clear();
 
-        dialog.getDialogPane().setContent(grid);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        int totalItems = filteredClassData.size();
+        int totalPages = (int) Math.ceil((double) totalItems / ITEMS_PER_PAGE);
+        if (totalPages == 0) totalPages = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
 
-        dialog.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.OK && !subjectField.getText().trim().isEmpty()) {
-                String type = typeBox.getValue();
-                int maxMarks = type.toLowerCase().contains("quiz") ? 20 : (type.toLowerCase().contains("tutorial") ? 50 : 100);
-                deptExamMasterData.add(0, new AdminExamRecord(
-                    type,
-                    subjectField.getText().trim(),
-                    lecturerBox.getValue(),
-                    classBox.getValue(),
-                    "Semester 2",
-                    dateField.getText().trim(),
-                    durationField.getText().trim(),
-                    "Published",
-                    maxMarks
-                ));
-                updateMetricCards();
-                buildCalendar();
+        int startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+
+        for (int i = startIndex; i < endIndex; i++) {
+            int relativeIndex = i - startIndex;
+            int col = relativeIndex % 3;
+            int row = relativeIndex / 3;
+
+            ClassesController.ClassItem item = filteredClassData.get(i);
+            VBox card = ClassCardFactory.createExamCard(item, true, this::handleOpenClassExamDetail);
+            cardsGrid.add(card, col, row);
+        }
+
+        if (paginationInfoLabel != null) {
+            paginationInfoLabel.setText(totalItems == 0
+                    ? "Showing 0 - 0 of 0 classes"
+                    : "Showing " + (startIndex + 1) + " - " + endIndex + " of " + totalItems + " classes");
+        }
+        if (classListBadge != null) {
+            classListBadge.setText(totalItems + " available");
+        }
+
+        renderPaginationButtons(totalPages);
+    }
+
+    private void renderPaginationButtons(int totalPages) {
+        if (paginationControlsBox == null) return;
+        paginationControlsBox.getChildren().clear();
+
+        String navStyle = "-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-text-fill: #334155; "
+                + "-fx-font-size: 13.5px; -fx-font-weight: bold; -fx-border-radius: 6px; -fx-background-radius: 6px; "
+                + "-fx-min-width: 34px; -fx-min-height: 34px; -fx-padding: 5px 11px; -fx-cursor: hand;";
+        String activeStyle = "-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-size: 13.5px; "
+                + "-fx-font-weight: bold; -fx-background-radius: 6px; -fx-min-width: 34px; -fx-min-height: 34px; "
+                + "-fx-padding: 5px 12px; -fx-cursor: hand;";
+        String inactiveStyle = "-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-text-fill: #1e293b; "
+                + "-fx-font-size: 13.5px; -fx-font-weight: bold; -fx-border-radius: 6px; -fx-background-radius: 6px; "
+                + "-fx-min-width: 34px; -fx-min-height: 34px; -fx-padding: 5px 12px; -fx-cursor: hand;";
+
+        // Previous Button '<'
+        Button prevBtn = new Button("<");
+        prevBtn.setStyle(navStyle);
+        prevBtn.setDisable(currentPage <= 1);
+        prevBtn.setOnAction(e -> {
+            if (currentPage > 1) {
+                currentPage--;
+                renderCurrentPage();
             }
         });
-    }
+        paginationControlsBox.getChildren().add(prevBtn);
 
-    @FXML
-    public void handleEditExam() {
-        AdminExamRecord selected = examsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert("No Selection", "Please select an exam row from the table to edit.", Alert.AlertType.WARNING);
-            return;
+        // Page Number Buttons '1', '2', ...
+        for (int p = 1; p <= totalPages; p++) {
+            final int pageNum = p;
+            Button pageBtn = new Button(String.valueOf(pageNum));
+            pageBtn.setStyle(pageNum == currentPage ? activeStyle : inactiveStyle);
+            pageBtn.setOnAction(e -> {
+                currentPage = pageNum;
+                renderCurrentPage();
+            });
+            paginationControlsBox.getChildren().add(pageBtn);
         }
 
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Edit Exam Details");
-        dialog.setHeaderText("Modify " + selected.getTitle() + " - " + selected.getSubject());
-
-        ComboBox<String> lecturerBox = new ComboBox<>(FXCollections.observableArrayList(
-            "Dr. Hla Myint", "Dr. Aung Naing", "Dr. Su Su", "Prof. Kyaw Zin", "Dr. Tin Maung", "Dr. Myo Tint"
-        ));
-        lecturerBox.setValue(selected.getLecturedBy());
-        TextField dateField = new TextField(selected.getExamDate());
-        TextField durationField = new TextField(selected.getDuration());
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.addRow(0, new Label("Lectured By:"), lecturerBox);
-        grid.addRow(1, new Label("Exam Date:"), dateField);
-        grid.addRow(2, new Label("Duration:"), durationField);
-
-        dialog.getDialogPane().setContent(grid);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.OK) {
-                selected.lecturedByProperty().set(lecturerBox.getValue());
-                selected.examDateProperty().set(dateField.getText().trim());
-                selected.durationProperty().set(durationField.getText().trim());
-                examsTable.refresh();
-                buildCalendar();
+        // Next Button '>'
+        Button nextBtn = new Button(">");
+        nextBtn.setStyle(navStyle);
+        nextBtn.setDisable(currentPage >= totalPages);
+        nextBtn.setOnAction(e -> {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderCurrentPage();
             }
         });
+        paginationControlsBox.getChildren().add(nextBtn);
     }
 
-    @FXML
-    public void handleTogglePublishStatus() {
-        AdminExamRecord selected = examsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert("No Selection", "Please select an exam row to toggle Draft / Published / Finished status.", Alert.AlertType.WARNING);
-            return;
-        }
-        String nextStatus = switch (selected.getStatus().toLowerCase()) {
-            case "draft" -> "Published";
-            case "published" -> "Finished";
-            default -> "Draft";
-        };
-        selected.statusProperty().set(nextStatus);
-        examsTable.refresh();
-        updateMetricCards();
-    }
+    private void handleOpenClassExamDetail(ActionEvent event) {
+        Button clickedBtn = (Button) event.getSource();
+        String offeringKey = (String) clickedBtn.getUserData();
 
-    @FXML
-    public void handleDeleteExam() {
-        AdminExamRecord selected = examsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert("No Selection", "Please select an exam row to delete.", Alert.AlertType.WARNING);
-            return;
-        }
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "Delete " + selected.getTitle() + " (" + selected.getSubject() + " - " + selected.getLecturedBy() + ")?",
-                ButtonType.YES, ButtonType.NO);
-        confirm.setTitle("Confirm Delete");
-        confirm.setHeaderText(null);
-        confirm.showAndWait().ifPresent(res -> {
-            if (res == ButtonType.YES) {
-                deptExamMasterData.remove(selected);
-                updateMetricCards();
-                buildCalendar();
-            }
-        });
-    }
+        ClassesController.ClassItem selectedClass = masterClassData.stream()
+                .filter(c -> c.getOfferingKey().equalsIgnoreCase(offeringKey))
+                .findFirst()
+                .orElse(null);
 
-    @FXML
-    public void handleViewResult() {
-        AdminExamRecord selected = examsTable.getSelectionModel().getSelectedItem();
-        if (selected == null && !examsTable.getItems().isEmpty()) {
-            selected = examsTable.getItems().get(0);
-        }
-        if (selected == null) {
-            showAlert("No Exam", "No exam record available to audit.", Alert.AlertType.WARNING);
-            return;
-        }
+        if (selectedClass == null) return;
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("AdminResultView.fxml"));
-            Parent resultView = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("ClassExamDetailView.fxml"));
+            Parent detailView = loader.load();
 
-            AdminResultController controller = loader.getController();
+            ClassExamDetailController controller = loader.getController();
             if (controller != null) {
-                controller.initData(selected);
+                controller.initData(selectedClass, true);
             }
 
             StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
             if (contentArea != null) {
-                contentArea.getChildren().setAll(resultView);
+            	ViewNavigationHistory.navigateForward(contentArea, detailView);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
-            showAlert("Loading Error", "Failed to load AdminResultView.fxml:\n" + e.getMessage(), Alert.AlertType.ERROR);
+            showAlert("Loading Error", "Failed to load ClassExamDetailView.fxml:\n" + e.getMessage(), Alert.AlertType.ERROR);
         }
-    }
-
-    // =========================================================================
-    // CALENDAR WIDGET
-    // =========================================================================
-
-    @FXML
-    public void handlePrevMonth() {
-        currentYearMonth = currentYearMonth.minusMonths(1);
-        buildCalendar();
     }
 
     @FXML
-    public void handleNextMonth() {
-        currentYearMonth = currentYearMonth.plusMonths(1);
-        buildCalendar();
+    public void handleScheduleNewExam() {
+        if (masterClassData.isEmpty()) {
+            showAlert("No Classes Found", "Create at least one class before scheduling an exam.", Alert.AlertType.WARNING);
+            return;
+        }
+        showScheduleExamDialog(null, () -> {
+            autoUpdateExpiredStatuses();
+            updateMetricCards();
+        });
     }
 
-    private void buildCalendar() {
-        if (monthYearLabel != null) {
-            monthYearLabel.setText(currentYearMonth.getMonth().getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH) + " " + currentYearMonth.getYear());
+    /**
+     * Reusable dialog for scheduling a new exam either from the Admin Exams overview
+     * (choose any class) or from inside a specific Class Exam Detail page (pre-locked to that class).
+     */
+    public static void showScheduleExamDialog(ClassesController.ClassItem preselectedClass, Runnable onSaved) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Schedule Department Exam");
+        dialog.setHeaderText(preselectedClass != null
+                ? "Schedule Exam for " + preselectedClass.code + " - " + preselectedClass.title
+                : "Create & Assign New Exam");
+
+        ComboBox<String> classPicker = new ComboBox<>();
+        ObservableList<String> classLabels = FXCollections.observableArrayList();
+        for (ClassesController.ClassItem c : ClassesController.SHARED_CLASS_DATA) {
+            classLabels.add(c.code + " — " + c.title + " (" + c.major + ", " + c.year + ")");
         }
-        if (calendarGrid == null) return;
-
-        calendarGrid.getChildren().removeIf(node -> GridPane.getRowIndex(node) != null && GridPane.getRowIndex(node) > 0);
-
-        Set<LocalDate> examDates = new HashSet<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH);
-        for (AdminExamRecord exam : deptExamMasterData) {
-            try {
-                examDates.add(LocalDate.parse(exam.getExamDate(), formatter));
-            } catch (DateTimeParseException ignored) {}
-        }
-
-        LocalDate firstOfMonth = currentYearMonth.atDay(1);
-        int startDayOffset = firstOfMonth.getDayOfWeek().getValue() % 7;
-        int daysInMonth = currentYearMonth.lengthOfMonth();
-
-        int row = 1;
-        int col = startDayOffset;
-
-        YearMonth prevMonth = currentYearMonth.minusMonths(1);
-        int daysInPrevMonth = prevMonth.lengthOfMonth();
-        for (int i = startDayOffset - 1; i >= 0; i--) {
-            StackPane cellPane = createCalCell(String.valueOf(daysInPrevMonth - i), "#cbd5e1", false);
-            calendarGrid.add(cellPane, i, row);
+        classPicker.setItems(classLabels);
+        classPicker.setMaxWidth(Double.MAX_VALUE);
+        if (preselectedClass != null) {
+            int idx = ClassesController.SHARED_CLASS_DATA.indexOf(preselectedClass);
+            if (idx >= 0) classPicker.getSelectionModel().select(idx);
+            classPicker.setDisable(true);
+        } else if (!classLabels.isEmpty()) {
+            classPicker.getSelectionModel().selectFirst();
         }
 
-        for (int day = 1; day <= daysInMonth; day++) {
-            boolean isExamDate = examDates.contains(currentYearMonth.atDay(day));
-            StackPane cellPane = createCalCell(String.valueOf(day), isExamDate ? "white" : "#1e293b", isExamDate);
-            calendarGrid.add(cellPane, col, row);
-            col++;
-            if (col > 6) {
-                col = 0;
-                row++;
+        ComboBox<String> typeBox = new ComboBox<>(FXCollections.observableArrayList(
+                "Tutorial 1", "Tutorial 2", "Quiz 1", "Quiz 2", "Assignment", "Final Exam"));
+        typeBox.setEditable(true);
+        typeBox.setValue("Tutorial 1");
+        typeBox.setMaxWidth(Double.MAX_VALUE);
+
+        DatePicker datePicker = new DatePicker(LocalDate.now().plusDays(7));
+        datePicker.setMaxWidth(Double.MAX_VALUE);
+
+        TextField durationField = new TextField("1 hour");
+        ComboBox<String> statusBox = new ComboBox<>(FXCollections.observableArrayList("Published", "Draft"));
+        statusBox.setValue("Published");
+        statusBox.setMaxWidth(Double.MAX_VALUE);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(14, 18, 10, 18));
+        grid.addRow(0, new Label("Class / Subject:"), classPicker);
+        grid.addRow(1, new Label("Exam Title:"), typeBox);
+        grid.addRow(2, new Label("Exam Date:"), datePicker);
+        grid.addRow(3, new Label("Duration:"), durationField);
+        grid.addRow(4, new Label("Initial Status:"), statusBox);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn != ButtonType.OK) return;
+
+            int selIdx = classPicker.getSelectionModel().getSelectedIndex();
+            ClassesController.ClassItem chosenClass = (preselectedClass != null)
+                    ? preselectedClass
+                    : (selIdx >= 0 && selIdx < ClassesController.SHARED_CLASS_DATA.size()
+                            ? ClassesController.SHARED_CLASS_DATA.get(selIdx) : null);
+
+            if (chosenClass == null) return;
+
+            String title = typeBox.getEditor().getText() != null && !typeBox.getEditor().getText().trim().isEmpty()
+                    ? typeBox.getEditor().getText().trim()
+                    : (typeBox.getValue() != null ? typeBox.getValue().trim() : "Tutorial 1");
+            LocalDate chosenDate = datePicker.getValue() != null ? datePicker.getValue() : LocalDate.now();
+            String formattedDate = chosenDate.format(DISPLAY_DATE_FMT);
+            String duration = durationField.getText() != null && !durationField.getText().trim().isEmpty()
+                    ? durationField.getText().trim() : "1 hour";
+
+            // If the selected exam date has already passed, force status to Finished immediately
+            String initialStatus = chosenDate.isBefore(LocalDate.now())
+                    ? "Finished"
+                    : (statusBox.getValue() != null ? statusBox.getValue() : "Published");
+
+            int maxMarks = title.toLowerCase().contains("quiz") ? 20
+                    : (title.toLowerCase().contains("tutorial") ? 50 : 100);
+
+            String cleanLecturer = chosenClass.lecturer != null
+                    ? chosenClass.lecturer.replace(" (Assigned)", "").trim()
+                    : "Unassigned";
+
+            deptExamMasterData.add(0, new AdminExamRecord(
+                    title,
+                    chosenClass.title,
+                    cleanLecturer,
+                    chosenClass.code,
+                    chosenClass.semester,
+                    formattedDate,
+                    duration,
+                    initialStatus,
+                    maxMarks,
+                    chosenClass.getOfferingKey()
+            ));
+
+            if (onSaved != null) {
+                onSaved.run();
             }
-        }
-
-        int nextMonthDay = 1;
-        while (row <= 5 && (row > 1 || col > 0)) {
-            if (col > 6) {
-                col = 0;
-                row++;
-                if (row > 5) break;
-            }
-            calendarGrid.add(createCalCell(String.valueOf(nextMonthDay++), "#cbd5e1", false), col, row);
-            col++;
-        }
-    }
-
-    private StackPane createCalCell(String text, String textFill, boolean highlight) {
-        StackPane cellPane = new StackPane();
-        cellPane.setMinSize(25, 25);
-        cellPane.setMaxSize(25, 25);
-        Label dayLabel = new Label(text);
-        if (highlight) {
-            cellPane.setStyle("-fx-background-color: #2563eb; -fx-background-radius: 13px;");
-            dayLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11px;");
-        } else {
-            dayLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: " + textFill + ";");
-        }
-        cellPane.getChildren().add(dayLabel);
-        StackPane.setAlignment(dayLabel, Pos.CENTER);
-        return cellPane;
+        });
     }
 
     private void showAlert(String title, String message, Alert.AlertType type) {
@@ -437,19 +445,6 @@ public class AdminExamsController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    private void lockTableColumns(TableView<?> table, double... ratios) {
-        if (table == null || table.getColumns().size() != ratios.length) return;
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        for (int i = 0; i < ratios.length; i++) {
-            TableColumn<?, ?> col = table.getColumns().get(i);
-            col.setReorderable(false);
-            col.setSortable(false);
-            col.minWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
-            col.maxWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
-            col.prefWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
-        }
     }
 
     public static class AdminExamRecord {
@@ -462,9 +457,16 @@ public class AdminExamsController {
         private final SimpleStringProperty duration;
         private final SimpleStringProperty status;
         private final SimpleIntegerProperty totalMarks;
+        private final String offeringKey;
 
         public AdminExamRecord(String title, String subject, String lecturedBy, String className,
                                String semester, String examDate, String duration, String status, int totalMarks) {
+            this(title, subject, lecturedBy, className, semester, examDate, duration, status, totalMarks, className);
+        }
+
+        public AdminExamRecord(String title, String subject, String lecturedBy, String className,
+                               String semester, String examDate, String duration, String status,
+                               int totalMarks, String offeringKey) {
             this.title = new SimpleStringProperty(title);
             this.subject = new SimpleStringProperty(subject);
             this.lecturedBy = new SimpleStringProperty(lecturedBy);
@@ -474,6 +476,7 @@ public class AdminExamsController {
             this.duration = new SimpleStringProperty(duration);
             this.status = new SimpleStringProperty(status);
             this.totalMarks = new SimpleIntegerProperty(totalMarks);
+            this.offeringKey = offeringKey;
         }
 
         public String getTitle() { return title.get(); }
@@ -501,5 +504,6 @@ public class AdminExamsController {
         public SimpleStringProperty statusProperty() { return status; }
 
         public int getTotalMarks() { return totalMarks.get(); }
+        public String getOfferingKey() { return offeringKey; }
     }
 }

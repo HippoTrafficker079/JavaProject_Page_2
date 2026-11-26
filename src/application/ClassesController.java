@@ -1,6 +1,7 @@
 package application;
 
 import javafx.application.Platform;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -55,6 +56,12 @@ public class ClassesController {
     private Label paginationInfoLabel;
     @FXML
     private HBox paginationControlsBox;
+    
+    @FXML private Label totalStudentsLabel;
+    @FXML private Label totalTeachersLabel;
+    @FXML private Label totalCoursesLabel;
+    @FXML private Label todayAttendanceLabel;
+    @FXML private Label todayPresentSubLabel;
 
     private static final int ITEMS_PER_PAGE = 6;
     private int currentPage = 1;
@@ -93,6 +100,7 @@ public class ClassesController {
         }
 
         applyFilter();
+        loadMetricCardsFromDb();
     }
 
     private void initDropdowns() {
@@ -208,11 +216,22 @@ public class ClassesController {
     }
 
     private void renderPaginationButtons(int totalPages) {
+        if (paginationControlsBox == null) return;
         paginationControlsBox.getChildren().clear();
 
+        String navStyle = "-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-text-fill: #334155; "
+                + "-fx-font-size: 13.5px; -fx-font-weight: bold; -fx-border-radius: 6px; -fx-background-radius: 6px; "
+                + "-fx-min-width: 34px; -fx-min-height: 34px; -fx-padding: 5px 11px; -fx-cursor: hand;";
+        String activeStyle = "-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-size: 13.5px; "
+                + "-fx-font-weight: bold; -fx-background-radius: 6px; -fx-min-width: 34px; -fx-min-height: 34px; "
+                + "-fx-padding: 5px 12px; -fx-cursor: hand;";
+        String inactiveStyle = "-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-text-fill: #1e293b; "
+                + "-fx-font-size: 13.5px; -fx-font-weight: bold; -fx-border-radius: 6px; -fx-background-radius: 6px; "
+                + "-fx-min-width: 34px; -fx-min-height: 34px; -fx-padding: 5px 12px; -fx-cursor: hand;";
+
+        // Previous Button '<'
         Button prevBtn = new Button("<");
-        prevBtn.setStyle(
-                "-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 4px; -fx-background-radius: 4px; -fx-padding: 3px 8px; -fx-cursor: hand;");
+        prevBtn.setStyle(navStyle);
         prevBtn.setDisable(currentPage <= 1);
         prevBtn.setOnAction(e -> {
             if (currentPage > 1) {
@@ -222,16 +241,11 @@ public class ClassesController {
         });
         paginationControlsBox.getChildren().add(prevBtn);
 
+        // Page Number Buttons '1', '2', ...
         for (int p = 1; p <= totalPages; p++) {
             final int pageNum = p;
             Button pageBtn = new Button(String.valueOf(pageNum));
-            if (pageNum == currentPage) {
-                pageBtn.setStyle(
-                        "-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4px; -fx-padding: 3px 10px; -fx-cursor: hand;");
-            } else {
-                pageBtn.setStyle(
-                        "-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-text-fill: #1e293b; -fx-border-radius: 4px; -fx-background-radius: 4px; -fx-padding: 3px 10px; -fx-cursor: hand;");
-            }
+            pageBtn.setStyle(pageNum == currentPage ? activeStyle : inactiveStyle);
             pageBtn.setOnAction(e -> {
                 currentPage = pageNum;
                 renderCurrentPage();
@@ -239,9 +253,9 @@ public class ClassesController {
             paginationControlsBox.getChildren().add(pageBtn);
         }
 
+        // Next Button '>'
         Button nextBtn = new Button(">");
-        nextBtn.setStyle(
-                "-fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 4px; -fx-background-radius: 4px; -fx-padding: 3px 8px; -fx-cursor: hand;");
+        nextBtn.setStyle(navStyle);
         nextBtn.setDisable(currentPage >= totalPages);
         nextBtn.setOnAction(e -> {
             if (currentPage < totalPages) {
@@ -253,13 +267,25 @@ public class ClassesController {
     }
 
     private VBox createClassCard(ClassItem item) {
-        return ClassCardFactory.createCard(item, false, this::handleViewClass, null);
+        return ClassCardFactory.createCard(item, false, this::handleViewClass);
     }
 
     @FXML
     private void handleViewClass(ActionEvent event) {
         Button clickedButton = (Button) event.getSource();
-        String offeringKey = (String) clickedButton.getUserData();
+        Object userData = clickedButton.getUserData();
+
+        int offeringId = -1;
+        String fallbackKey = null;
+
+        if (userData instanceof Integer id) {
+            offeringId = id;
+        } else if (userData instanceof ClassesController.ClassItem item) {
+            offeringId = item.getOfferingId();
+            fallbackKey = item.getOfferingKey();
+        } else if (userData != null) {
+            fallbackKey = userData.toString();
+        }
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("ClassDetailView.fxml"));
@@ -267,12 +293,12 @@ public class ClassesController {
 
             ClassDetailController detailController = loader.getController();
             if (detailController != null) {
-                detailController.initClassData(offeringKey);
+                detailController.initClassData(offeringId, fallbackKey);
             }
 
             StackPane contentArea = (StackPane) clickedButton.getScene().lookup("#contentArea");
             if (contentArea != null) {
-                contentArea.getChildren().setAll(detailView);
+            	ViewNavigationHistory.navigateForward(contentArea, detailView);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -280,6 +306,7 @@ public class ClassesController {
     }
 
     public static class ClassItem {
+        int offeringId;
         String code;
         String title;
         String major;
@@ -293,15 +320,18 @@ public class ClassesController {
         String badgeColor;
         String icon;
 
-        public ClassItem(String code, String title, String major, String year, String semester,
+        public ClassItem(int offeringId, String code, String title, String major, String year, String semester,
                 String className, String studentCount, String schedule, String lecturer,
                 String badgeColor, String icon) {
+            this.offeringId = offeringId;
             this.code = code;
             this.title = title;
             this.major = major;
             this.year = year;
             this.semester = semester;
-            this.department = major.equalsIgnoreCase("CEIT") ? "Computer Engineering & IT" : major + " Engineering";
+            this.department = (major != null && major.equalsIgnoreCase("CEIT"))
+                    ? "Computer Engineering & IT"
+                    : major + " Engineering";
             this.className = className;
             this.studentCount = studentCount;
             this.schedule = schedule;
@@ -310,8 +340,32 @@ public class ClassesController {
             this.icon = icon;
         }
 
+        public int getOfferingId() {
+            return offeringId;
+        }
+
         public String getOfferingKey() {
             return ClassRosterStore.buildKey(code, major, year, semester);
         }
     }
+    private void loadMetricCardsFromDb() {
+        CourseOfferingDAO dao = new CourseOfferingDAO();
+        CourseOfferingDAO.TopLevelMetrics m = dao.getTopLevelMetrics();
+
+        if (totalStudentsLabel != null) totalStudentsLabel.setText(String.valueOf(m.totalStudents()));
+        if (totalTeachersLabel != null) totalTeachersLabel.setText(String.valueOf(m.totalTeachers()));
+        if (totalCoursesLabel != null) totalCoursesLabel.setText(String.valueOf(m.totalCourses()));
+
+        if (todayAttendanceLabel != null) {
+            todayAttendanceLabel.setText(m.todayTotalCount() == 0
+                    ? "0.0%"
+                    : String.format("%.1f%%", m.todayAttendancePct()));
+        }
+        if (todayPresentSubLabel != null) {
+            todayPresentSubLabel.setText(m.todayTotalCount() == 0
+                    ? "No sessions today"
+                    : "Present: " + m.todayPresentCount() + " / " + m.todayTotalCount());
+        }
+    }
+    
 }

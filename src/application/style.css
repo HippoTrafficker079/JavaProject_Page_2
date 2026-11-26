@@ -24,24 +24,21 @@
 .nav-button {
     -fx-background-color: transparent;
     -fx-text-fill: #94a3b8;
-    -fx-font-size: 13px;
+    -fx-font-size: 13.5px;
     -fx-alignment: CENTER_LEFT;
-    -fx-padding: 10px 15px;
-    -fx-background-radius: 8px;
+    -fx-padding: 0 15px 0 28px;
+    -fx-background-radius: 0px;
     -fx-cursor: hand;
 }
-
 .nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
     -fx-text-fill: #ffffff;
-    -fx-background-color: #395d87;
 }
-
 .nav-button:pressed {
-    -fx-background-color: #2c4a6e;
+    -fx-background-color: rgba(255, 255, 255, 0.14);
 }
-
 .nav-button.active {
-    -fx-background-color: #2563eb;
+    -fx-background-color: rgba(255, 255, 255, 0.14);
     -fx-text-fill: #ffffff;
     -fx-font-weight: bold;
 }
@@ -219,6 +216,7 @@
     -fx-background-color: #395d87;
     -fx-text-fill: white;
     -fx-font-size: 11px;
+    -fx-font-weight: bold;
     -fx-background-radius: 6px;
     -fx-padding: 5px 12px;
     -fx-cursor: hand;
@@ -339,28 +337,36 @@
     -fx-font-size: 12px;
 }
 
-/* --- Inline Reset Button --- */
-.filter-reset-btn {
-    -fx-background-color: linear-gradient(to bottom, #f1f5f9 0%, #e2e8f0 100%);
+/* --- 3D Reset & Reset Status Buttons --- */
+.filter-reset-btn,
+.reset-button {
+    -fx-background-color: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%);
     -fx-border-color: #94a3b8;
+    -fx-border-width: 1px;
     -fx-border-radius: 6px;
     -fx-background-radius: 6px;
     -fx-text-fill: #334155;
     -fx-font-weight: bold;
     -fx-font-size: 12px;
-    -fx-padding: 8px 14px;
+    -fx-padding: 7px 14px;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.06), 3, 0, 0, 1);
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.12), 4, 0, 0, 2);
 }
 
-.filter-reset-btn:hover {
+.filter-reset-btn:hover,
+.reset-button:hover {
     -fx-background-color: linear-gradient(to bottom, #ffffff 0%, #cbd5e1 100%);
     -fx-text-fill: #0f172a;
     -fx-border-color: #64748b;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.18), 5, 0, 0, 2);
 }
 
-.filter-reset-btn:pressed {
-    -fx-background-color: #cbd5e1;
+.filter-reset-btn:pressed,
+.reset-button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #cbd5e1 0%, #e2e8f0 100%);
+    -fx-border-color: #475569;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.06), 2, 0, 0, 1);
+    -fx-translate-y: 1px;
 }
 
 /* --- Striking Class List Section Title (Image 2 Enhancement) --- */
@@ -522,4 +528,177 @@
 .date-picker-popup .next-month {
     -fx-text-fill: #94a3b8;
     -fx-background-color: #f8fafc;
+}
+
+/* --- Interactive Status & Action Buttons (Hover + Click Feedback) --- */
+.btn-primary-blue {
+    -fx-background-color: #2563eb;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-background-radius: 8px;
+    -fx-padding: 7px 14px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(37, 99, 235, 0.25), 6, 0, 0, 2);
+}
+.btn-primary-blue:hover {
+    -fx-background-color: #3b82f6;
+    -fx-effect: dropshadow(three-pass-box, rgba(59, 130, 246, 0.35), 8, 0, 0, 2);
+}
+.btn-primary-blue:pressed {
+    -fx-background-color: #1d4ed8;
+    -fx-translate-y: 1px;
+}
+
+.btn-success {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-background-radius: 8px;
+    -fx-padding: 7px 14px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(22, 163, 74, 0.25), 6, 0, 0, 2);
+}
+.btn-success:hover {
+    -fx-background-color: #22c55e;
+    -fx-effect: dropshadow(three-pass-box, rgba(34, 197, 94, 0.35), 8, 0, 0, 2);
+}
+.btn-success:pressed {
+    -fx-background-color: #15803d;
+    -fx-translate-y: 1px;
+}
+
+.btn-danger-solid {
+    -fx-background-color: #e11d48;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-background-radius: 8px;
+    -fx-padding: 7px 14px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(225, 29, 72, 0.25), 6, 0, 0, 2);
+}
+.btn-danger-solid:hover {
+    -fx-background-color: #f43f5e;
+    -fx-effect: dropshadow(three-pass-box, rgba(244, 63, 94, 0.35), 8, 0, 0, 2);
+}
+.btn-danger-solid:pressed {
+    -fx-background-color: #be123c;
+    -fx-translate-y: 1px;
+}
+
+/* --- Striking Indigo Button for "+ Create New Course" (Matches Action Button Size) --- */
+.btn-create-course {
+    -fx-background-color: #4f46e5;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-padding: 9px 18px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(79, 70, 229, 0.28), 6, 0, 0, 2);
+}
+.btn-create-course:hover {
+    -fx-background-color: #6366f1;
+    -fx-effect: dropshadow(three-pass-box, rgba(99, 102, 241, 0.38), 8, 0, 0, 2);
+}
+.btn-create-course:pressed {
+    -fx-background-color: #4338ca;
+    -fx-translate-y: 1px;
+}
+
+/* --- Pill Tab Switcher Container (#16417C Deep Navy Theme) --- */
+.tab-bar-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10px;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 8px 12px;
+    -fx-effect: dropshadow(three-pass-box, rgba(15, 23, 42, 0.04), 8, 0, 0, 2);
+}
+
+.tab-pill-active {
+    -fx-background-color: #16417C;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 7px;
+    -fx-padding: 8px 18px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(22, 65, 124, 0.25), 6, 0, 0, 2);
+}
+.tab-pill-active:hover {
+    -fx-background-color: #1f539c;
+}
+.tab-pill-active:pressed {
+    -fx-background-color: #0f2e59;
+    -fx-translate-y: 1px;
+}
+
+.tab-pill-inactive {
+    -fx-background-color: #f8fafc;
+    -fx-text-fill: #334155;
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 1px;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 7px;
+    -fx-border-radius: 7px;
+    -fx-padding: 8px 18px;
+    -fx-cursor: hand;
+}
+.tab-pill-inactive:hover {
+    -fx-background-color: #e9eff8;
+    -fx-border-color: #9bb5d9;
+    -fx-text-fill: #16417C;
+}
+.tab-pill-inactive:pressed {
+    -fx-background-color: #d6e2f2;
+    -fx-translate-y: 1px;
+}
+
+/* --- Sub-Mode Strip (Attendance: Matrix Summary / Daily Log) --- */
+.submode-bar {
+    -fx-background-color: #f4f7fb;
+    -fx-background-radius: 9px;
+    -fx-border-color: #dbe3ee;
+    -fx-border-radius: 9px;
+    -fx-border-width: 1px;
+    -fx-padding: 6px 12px;
+}
+
+.submode-pill-active {
+    -fx-background-color: #16417C;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+    -fx-padding: 6px 16px;
+    -fx-cursor: hand;
+}
+.submode-pill-active:hover {
+    -fx-background-color: #1f539c;
+}
+.submode-pill-active:pressed {
+    -fx-background-color: #0f2e59;
+    -fx-translate-y: 1px;
+}
+
+.submode-pill-inactive {
+    -fx-background-color: transparent;
+    -fx-text-fill: #475569;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+    -fx-padding: 6px 16px;
+    -fx-cursor: hand;
+}
+.submode-pill-inactive:hover {
+    -fx-background-color: #e9eff8;
+    -fx-text-fill: #16417C;
+}
+.submode-pill-inactive:pressed {
+    -fx-background-color: #d6e2f2;
+    -fx-translate-y: 1px;
 }

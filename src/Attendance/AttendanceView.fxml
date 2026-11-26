@@ -1,0 +1,532 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: #f4f6f9;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Attendance.AttendanceController">
+   <content>
+      <VBox fx:id="rootPane" minWidth="0.0" spacing="20.0" style="-fx-background-color: #f4f6f9;">
+         <padding>
+            <Insets bottom="24.0" left="20.0" right="20.0" top="18.0" />
+         </padding>
+         <children>
+
+            <!-- TOP BAR: Notification & Profile Badge -->
+            <HBox alignment="CENTER_RIGHT" minWidth="0.0" spacing="15.0">
+               <children>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label style="-fx-font-size: 16px;" text="🔔" />
+                  <HBox alignment="CENTER" minWidth="-Infinity" spacing="8.0" style="-fx-background-color: #ffffff; -fx-background-radius: 20px; -fx-padding: 6px 14px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 6, 0, 0, 2); -fx-border-color: #e2e8f0; -fx-border-radius: 20px;">
+                     <children>
+                        <StackPane fx:id="profileIconBg" style="-fx-background-color: #f3e8ff; -fx-background-radius: 12px; -fx-min-width: 24px; -fx-min-height: 24px;">
+                           <children>
+                              <Label fx:id="profileIconLabel" style="-fx-font-size: 13px; -fx-text-fill: #9333ea;" text="⚙" />
+                           </children>
+                        </StackPane>
+                        <VBox alignment="CENTER_LEFT" spacing="1.0">
+                           <children>
+                              <Label style="-fx-font-size: 9px; -fx-text-fill: #16a34a; -fx-font-weight: bold;" text="● LOGGED IN AS" />
+                              <Label fx:id="profileNameLabel" style="-fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-font-size: 12px;" text="System Administrator" />
+                           </children>
+                        </VBox>
+                        <Label style="-fx-text-fill: #64748b; -fx-font-size: 10px;" text="▼" />
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+
+            <!-- PAGE TITLE, SUBTITLE & DEPARTMENT BADGE -->
+            <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="12.0">
+               <children>
+                  <VBox minWidth="0.0" spacing="3.0" HBox.hgrow="ALWAYS">
+                     <children>
+                        <Label fx:id="pageTitleLabel" styleClass="page-title" text="Attendance Oversight (Admin)" />
+                        <Label fx:id="pageSubtitleLabel" styleClass="page-subtitle" text="Track attendance rates, edit daily session logs, and inspect individual student attendance history." wrapText="true" />
+                     </children>
+                  </VBox>
+                  <Label fx:id="deptBadgeLabel" minWidth="-Infinity" style="-fx-background-color: #eff6ff; -fx-text-fill: #2563eb; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 5px 12px; -fx-background-radius: 12px; -fx-border-color: #bfdbfe; -fx-border-radius: 12px;" text="CEIT (Computer Engineering and Information Technology)" />
+               </children>
+            </HBox>
+
+            <!-- 4 KPI METRIC CARDS -->
+            <HBox minWidth="0.0" spacing="12.0">
+               <children>
+                  <!-- 1. Average Attendance -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 14px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="38.0" maxWidth="38.0" minHeight="38.0" minWidth="38.0" style="-fx-background-color: #dcfce7; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-text-fill: #16a34a; -fx-font-size: 18px;" text="✓" />
+                                 </children>
+                              </StackPane>
+                              <Label fx:id="overallRateLabel" styleClass="metric-value" text="0.0%" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Average Attendance" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Across active students" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 2. Today's Attendance -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 14px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="38.0" maxWidth="38.0" minHeight="38.0" minWidth="38.0" style="-fx-background-color: #dbeafe; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-text-fill: #2563eb; -fx-font-size: 18px;" text="📅" />
+                                 </children>
+                              </StackPane>
+                              <Label fx:id="todayRateLabel" styleClass="metric-value" text="0.0%" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Today's Attendance" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Live session percentage" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 3. Students Tracked -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 14px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="38.0" maxWidth="38.0" minHeight="38.0" minWidth="38.0" style="-fx-background-color: #f3e8ff; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-text-fill: #9333ea; -fx-font-size: 18px;" text="👥" />
+                                 </children>
+                              </StackPane>
+                              <Label fx:id="studentsTrackedLabel" styleClass="metric-value" text="0" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="Students Tracked" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Enrolled in scope" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- 4. Low Attendance (< 75%) -->
+                  <VBox minWidth="0.0" spacing="6.0" style="-fx-padding: 14px;" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <StackPane maxHeight="38.0" maxWidth="38.0" minHeight="38.0" minWidth="38.0" style="-fx-background-color: #fef3c7; -fx-background-radius: 50em;">
+                                 <children>
+                                    <Label style="-fx-text-fill: #d97706; -fx-font-size: 18px;" text="⚠" />
+                                 </children>
+                              </StackPane>
+                              <Label fx:id="lowAttendanceCountLabel" styleClass="metric-value" text="0" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="1.0">
+                           <children>
+                              <Label styleClass="metric-title" text="At-Risk Students" />
+                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Attendance &lt; 75%" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+
+            <!-- MODE SWITCHER BAR (Primary Pill Card + Sub-Mode Strip) -->
+			<VBox minWidth="0.0" spacing="10.0">
+			   <children>
+			      <!-- Row 1: Primary Mode Switcher -->
+					<HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="10.0" styleClass="tab-bar-card">
+					   <children>
+					      <Button fx:id="tabClassViewBtn" minWidth="215.0" mnemonicParsing="false" onAction="#switchToClassView" prefWidth="215.0" styleClass="tab-pill-active" text="CLASS VIEW" />
+					      <Button fx:id="tabIndividualBtn" minWidth="215.0" mnemonicParsing="false" onAction="#switchToIndividualTab" prefWidth="215.0" styleClass="tab-pill-inactive" text="INDIVIDUAL STUDENT VIEW" />
+					      <Region HBox.hgrow="ALWAYS" />
+					      <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleRefreshAll" styleClass="filter-reset-btn" text="↻ Refresh" />
+					   </children>
+					</HBox>
+			
+			      <!-- Row 2: Sub-Mode Bar (Visible only when CLASS VIEW is active) -->
+					<HBox fx:id="subModeBar" alignment="CENTER_LEFT" minWidth="0.0" spacing="10.0" styleClass="submode-bar">
+					   <children>
+					      <Label style="-fx-text-fill: #16417C; -fx-font-weight: 800; -fx-font-size: 12.5px;" text="Sub-Mode:" />
+					      <Button fx:id="tabMatrixBtn" minWidth="165.0" mnemonicParsing="false" onAction="#switchToMatrixTab" prefWidth="165.0" styleClass="submode-pill-active" text="•  Matrix Summary" />
+					      <Button fx:id="tabDailyBtn" minWidth="165.0" mnemonicParsing="false" onAction="#switchToDailyTab" prefWidth="165.0" styleClass="submode-pill-inactive" text="•  Daily Log" />
+					   </children>
+					</HBox>
+			   </children>
+			</VBox>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 1: MATRIX SUMMARY                                                     -->
+            <!-- ========================================================================= -->
+            <VBox fx:id="matrixSection" minWidth="0.0" spacing="14.0">
+               <children>
+                  <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+                     <children>
+                        <Label styleClass="panel-header" text="Filter Attendance Summary" />
+
+                        <GridPane hgap="10.0" minWidth="0.0" vgap="10.0">
+                           <columnConstraints>
+                              <ColumnConstraints minWidth="0.0" percentWidth="24.0" />
+                              <ColumnConstraints minWidth="0.0" percentWidth="32.0" />
+                              <ColumnConstraints minWidth="0.0" percentWidth="22.0" />
+                              <ColumnConstraints minWidth="0.0" percentWidth="22.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints />
+                           </rowConstraints>
+                           <children>
+                              <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Academic Year" />
+                                    <ComboBox fx:id="matrixYearCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                              <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Subject / Course" />
+                                    <ComboBox fx:id="matrixSubjectCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                              <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="2">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="From Date" />
+                                    <DatePicker fx:id="matrixStartDate" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="Start date" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                              <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="3">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="To Date" />
+                                    <DatePicker fx:id="matrixEndDate" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" promptText="End date" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </GridPane>
+
+                        <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="10.0">
+                           <children>
+                              <TextField fx:id="matrixSearchField" minWidth="80.0" prefWidth="0.0" promptText="🔍 Search student roll no or name..." style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 7px 12px;" HBox.hgrow="ALWAYS" />
+                              <CheckBox fx:id="chkLowAttendance" minWidth="-Infinity" mnemonicParsing="false" styleClass="shaded-checkbox" text="Below 75% Only" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleApplyMatrixFilter" style="-fx-padding: 7px 16px;" styleClass="action-button" text="Filter" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleResetMatrixFilter" styleClass="filter-reset-btn" text="↺ Reset" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <HBox alignment="CENTER_LEFT" minWidth="0.0" style="-fx-background-color: #eff6ff; -fx-padding: 10px 14px; -fx-background-radius: 6px; -fx-border-color: #bfdbfe; -fx-border-radius: 6px;">
+                     <children>
+                        <Label style="-fx-text-fill: #1d4ed8; -fx-font-weight: bold; -fx-font-size: 12.5px;" text="💡  Tip: Double-click any student row to open their Individual Attendance Dashboard and chronological history." wrapText="true" />
+                     </children>
+                  </HBox>
+
+                  <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+                     <children>
+                        <TableView fx:id="matrixTable" minWidth="0.0" prefHeight="330.0" prefWidth="0.0" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px;">
+                           <columnResizePolicy>
+                              <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                           </columnResizePolicy>
+                           <columns>
+                              <TableColumn fx:id="colNoMatrix" prefWidth="50.0" reorderable="false" sortable="false" text="No" />
+                              <TableColumn fx:id="colRollMatrix" prefWidth="120.0" reorderable="false" sortable="false" text="Roll No" />
+                              <TableColumn fx:id="colNameMatrix" prefWidth="190.0" reorderable="false" sortable="false" text="Student Name" />
+                              <TableColumn fx:id="colDeptMatrix" prefWidth="85.0" reorderable="false" sortable="false" text="Major" />
+                              <TableColumn fx:id="colYearMatrix" prefWidth="115.0" reorderable="false" sortable="false" text="Year" />
+                              <TableColumn fx:id="colAttendedMatrix" prefWidth="115.0" reorderable="false" sortable="false" text="Attended" />
+                              <TableColumn fx:id="colOverallMatrix" prefWidth="120.0" reorderable="false" sortable="false" text="Attendance %" />
+                           </columns>
+                        </TableView>
+
+                        <HBox alignment="CENTER_RIGHT" minWidth="0.0" spacing="10.0">
+						   <children>
+						      <Label fx:id="matrixFooterLabel" style="-fx-text-fill: #475569; -fx-font-size: 13.5px;" text="Showing 0 students" />
+						   </children>
+						</HBox>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 2: DAILY ATTENDANCE LOG                                               -->
+            <!-- ========================================================================= -->
+            <VBox fx:id="dailySection" managed="false" minWidth="0.0" spacing="14.0" visible="false">
+               <children>
+                  <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+                     <children>
+                        <Label styleClass="panel-header" text="Filter Daily Attendance Log" />
+
+                        <GridPane hgap="10.0" minWidth="0.0" vgap="10.0">
+                           <columnConstraints>
+                              <ColumnConstraints minWidth="0.0" percentWidth="28.0" />
+                              <ColumnConstraints minWidth="0.0" percentWidth="24.0" />
+                              <ColumnConstraints minWidth="0.0" percentWidth="48.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints />
+                           </rowConstraints>
+                           <children>
+                              <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Session Date" />
+                                    <DatePicker fx:id="dailyDatePicker" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                              <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="1">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Period" />
+                                    <ComboBox fx:id="dailyPeriodCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                              <VBox minWidth="0.0" spacing="4.0" GridPane.columnIndex="2">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Search" />
+                                    <TextField fx:id="dailySearchField" minWidth="60.0" prefWidth="0.0" promptText="🔍 Search roll no, student name, or subject..." style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 7px 12px;" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </GridPane>
+
+                        <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="14.0">
+                           <children>
+                              <Label style="-fx-text-fill: #1e3a8a; -fx-font-weight: bold; -fx-font-size: 12px;" text="Status Filter:" />
+                              <CheckBox fx:id="chkPresent" mnemonicParsing="false" styleClass="shaded-checkbox" text="Present" />
+                              <CheckBox fx:id="chkAbsent" mnemonicParsing="false" styleClass="shaded-checkbox" text="Absent" />
+                              <CheckBox fx:id="chkExcuse" mnemonicParsing="false" styleClass="shaded-checkbox" text="Excused" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleApplyDailyFilter" style="-fx-padding: 7px 16px;" styleClass="action-button" text="Filter" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleResetDailyFilter" styleClass="filter-reset-btn" text="↺ Reset" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <HBox alignment="CENTER_LEFT" minWidth="0.0" style="-fx-background-color: #eff6ff; -fx-padding: 10px 14px; -fx-background-radius: 6px; -fx-border-color: #bfdbfe; -fx-border-radius: 6px;">
+                     <children>
+                        <Label style="-fx-text-fill: #1d4ed8; -fx-font-weight: bold; -fx-font-size: 12.5px;" text="💡  Hint: Select a row and press &quot;Toggle Status&quot; (Present → Absent → Excused), or double-click Remarks to edit, then click &quot;Save Changes&quot;." wrapText="true" />
+                     </children>
+                  </HBox>
+
+                  <VBox minWidth="0.0" spacing="14.0" styleClass="panel-card">
+                     <children>
+                        <TableView fx:id="dailyLogTable" editable="true" minWidth="0.0" prefHeight="330.0" prefWidth="0.0" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px;">
+                           <columnResizePolicy>
+                              <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                           </columnResizePolicy>
+                           <columns>
+                              <TableColumn fx:id="colNoLog" prefWidth="45.0" reorderable="false" sortable="false" text="No" />
+                              <TableColumn fx:id="colRollLog" prefWidth="105.0" reorderable="false" sortable="false" text="Roll No" />
+                              <TableColumn fx:id="colNameLog" prefWidth="150.0" reorderable="false" sortable="false" text="Student Name" />
+                              <TableColumn fx:id="colPeriodLog" prefWidth="65.0" reorderable="false" sortable="false" text="Period" />
+                              <TableColumn fx:id="colSubjLog" prefWidth="165.0" reorderable="false" sortable="false" text="Subject" />
+                              <TableColumn fx:id="colStatusLog" prefWidth="105.0" reorderable="false" sortable="false" text="Status" />
+                              <TableColumn fx:id="colMarkedByLog" prefWidth="125.0" reorderable="false" sortable="false" text="Lecturer" />
+                              <TableColumn fx:id="colRemarksLog" prefWidth="140.0" reorderable="false" sortable="false" text="Remarks" />
+                           </columns>
+                        </TableView>
+
+                        <HBox alignment="CENTER_RIGHT" minWidth="0.0" spacing="8.0">
+                           <children>
+                              <Label fx:id="dailyFooterLabel" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Showing 0 records" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleToggleDailyStatus" styleClass="btn-primary-blue" text="🔄 Toggle Status" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleResetDailyStatus" styleClass="filter-reset-btn" text="↺ Reset Status" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleMarkAllPresent" styleClass="btn-success" text="✔ Mark All Present" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleSaveDailyChanges" styleClass="action-button" text="💾 Save Changes" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 3: INDIVIDUAL STUDENT ATTENDANCE DASHBOARD                            -->
+            <!-- ========================================================================= -->
+            <VBox fx:id="individualSection" managed="false" minWidth="0.0" spacing="16.0" visible="false">
+               <children>
+
+                  <!-- Student Selector Bar -->
+                  <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="10.0" style="-fx-padding: 14px 18px;" styleClass="panel-card">
+                     <children>
+                        <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#switchToMatrixTab" styleClass="secondary-button" text="← Back to Matrix" />
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #334155; -fx-font-size: 12.5px;" text="Select Student:" />
+                        <ComboBox fx:id="indivStudentCombo" editable="true" maxWidth="360.0" minWidth="180.0" promptText="🔍 Type or select a student..." styleClass="shaded-combo" HBox.hgrow="ALWAYS" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="lblIndivStatusBadge" style="-fx-background-color: #dcfce7; -fx-text-fill: #15803d; -fx-font-weight: bold; -fx-font-size: 11px; -fx-padding: 4px 12px; -fx-background-radius: 12px;" text="Active" />
+                     </children>
+                  </HBox>
+
+                  <!-- Student Profile & Summary Metrics -->
+                  <GridPane hgap="16.0" minWidth="0.0">
+                     <columnConstraints>
+                        <ColumnConstraints minWidth="0.0" percentWidth="55.0" />
+                        <ColumnConstraints minWidth="0.0" percentWidth="45.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints />
+                     </rowConstraints>
+                     <children>
+                        <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="14.0" styleClass="panel-card" GridPane.columnIndex="0">
+                           <children>
+                              <VBox alignment="CENTER" maxHeight="92.0" maxWidth="74.0" minHeight="92.0" minWidth="74.0" style="-fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 8px; -fx-background-radius: 8px;">
+                                 <children>
+                                    <ImageView fx:id="indivProfileImage" fitHeight="86.0" fitWidth="68.0" pickOnBounds="true" preserveRatio="false" />
+                                    <Label fx:id="indivPhotoPlaceholder" style="-fx-font-size: 24px; -fx-text-fill: #94a3b8;" text="👤" />
+                                 </children>
+                              </VBox>
+                              <VBox minWidth="0.0" spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label fx:id="lblIndivName" style="-fx-font-size: 17px; -fx-font-weight: 800; -fx-text-fill: #0f172a;" text="Select a student" wrapText="true" />
+                                    <Label fx:id="lblIndivMeta" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #2563eb;" text="Roll No · Dept · Year" wrapText="true" />
+                                    <Label fx:id="lblIndivEmail" style="-fx-font-size: 11.5px; -fx-text-fill: #475569;" text="✉ -" wrapText="true" />
+                                    <Label fx:id="lblIndivPhone" style="-fx-font-size: 11.5px; -fx-text-fill: #475569;" text="📞 -" wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+
+                        <VBox alignment="CENTER_LEFT" minWidth="0.0" spacing="10.0" styleClass="panel-card" GridPane.columnIndex="1">
+                           <children>
+                              <Label styleClass="panel-header" text="Attendance Overview" />
+                              <HBox minWidth="0.0" spacing="14.0">
+                                 <children>
+                                    <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <Label style="-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-weight: bold;" text="Attended" />
+                                          <Label fx:id="lblIndivAttended" style="-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: #0f172a;" text="0 / 0" />
+                                       </children>
+                                    </VBox>
+                                    <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <Label style="-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-weight: bold;" text="Rate" />
+                                          <Label fx:id="lblIndivRate" style="-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: #16a34a;" text="0.0%" />
+                                       </children>
+                                    </VBox>
+                                    <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <Label style="-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-weight: bold;" text="Standing" />
+                                          <Label fx:id="lblIndivStanding" style="-fx-font-size: 16px; -fx-font-weight: 800; -fx-text-fill: #15803d;" text="Good" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </GridPane>
+
+                  <!-- Subject-by-Subject Breakdown Table -->
+                  <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+                     <children>
+                        <Label styleClass="panel-header" text="📚 Subject Attendance Breakdown" />
+                        <TableView fx:id="subjectBreakdownTable" minWidth="0.0" prefHeight="200.0" prefWidth="0.0" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px;">
+                           <columnResizePolicy>
+                              <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                           </columnResizePolicy>
+                           <columns>
+                              <TableColumn fx:id="colNoIndiv" prefWidth="45.0" reorderable="false" sortable="false" text="No" />
+                              <TableColumn fx:id="colCourseCodeIndiv" prefWidth="115.0" reorderable="false" sortable="false" text="Course Code" />
+                              <TableColumn fx:id="colSubjIndiv" prefWidth="240.0" reorderable="false" sortable="false" text="Subject" />
+                              <TableColumn fx:id="colAttendedIndiv" prefWidth="115.0" reorderable="false" sortable="false" text="Attended" />
+                              <TableColumn fx:id="colPercentageIndiv" prefWidth="115.0" reorderable="false" sortable="false" text="Percentage" />
+                              <TableColumn fx:id="colStandingIndiv" prefWidth="115.0" reorderable="false" sortable="false" text="Standing" />
+                           </columns>
+                        </TableView>
+                     </children>
+                  </VBox>
+
+                  <!-- Chronological Session Log Table -->
+                  <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+                     <children>
+                        <Label styleClass="panel-header" text="🕒 Chronological Attendance History" />
+
+                        <HBox alignment="BOTTOM_LEFT" minWidth="0.0" spacing="10.0">
+                           <children>
+                              <VBox minWidth="120.0" prefWidth="185.0" spacing="4.0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Course" />
+                                    <ComboBox fx:id="indivCourseFilterCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                              <VBox minWidth="110.0" prefWidth="145.0" spacing="4.0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="Status" />
+                                    <ComboBox fx:id="indivStatusFilterCombo" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                              <VBox minWidth="115.0" prefWidth="140.0" spacing="4.0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="From Date" />
+                                    <DatePicker fx:id="indivStartDate" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                              <VBox minWidth="115.0" prefWidth="140.0" spacing="4.0">
+                                 <children>
+                                    <Label style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #475569;" text="To Date" />
+                                    <DatePicker fx:id="indivEndDate" maxWidth="Infinity" minWidth="0.0" prefWidth="0.0" styleClass="shaded-combo" />
+                                 </children>
+                              </VBox>
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleApplyIndivLogFilter" style="-fx-padding: 7px 14px;" styleClass="action-button" text="Filter" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleResetIndivLogFilter" styleClass="filter-reset-btn" text="↺ Reset" />
+                           </children>
+                        </HBox>
+
+                        <TableView fx:id="chronologicalLogTable" fixedCellSize="40.0" maxHeight="276.0" minHeight="276.0" minWidth="0.0" prefHeight="276.0" prefWidth="0.0" style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px;">
+						   <columnResizePolicy>
+						      <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+						   </columnResizePolicy>
+						   <columns>
+						      <TableColumn fx:id="colNoChrono" prefWidth="45.0" reorderable="false" sortable="false" text="No" />
+						      <TableColumn fx:id="colDateChrono" prefWidth="135.0" reorderable="false" sortable="false" text="Date" />
+						      <TableColumn fx:id="colPeriodChrono" prefWidth="75.0" reorderable="false" sortable="false" text="Period" />
+						      <TableColumn fx:id="colCourseChrono" prefWidth="195.0" reorderable="false" sortable="false" text="Course" />
+						      <TableColumn fx:id="colStatusChrono" prefWidth="105.0" reorderable="false" sortable="false" text="Status" />
+						      <TableColumn fx:id="colMarkedByChrono" prefWidth="135.0" reorderable="false" sortable="false" text="Lecturer" />
+						      <TableColumn fx:id="colRemarksChrono" prefWidth="145.0" reorderable="false" sortable="false" text="Remarks" />
+						   </columns>
+						</TableView>
+						
+						<!-- Pagination Bar for Chronological Log (6 rows per page, matching Classes/Exams style) -->
+						<HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="8.0">
+						   <children>
+						      <Label fx:id="chronoPaginationLabel" style="-fx-text-fill: #475569; -fx-font-size: 13.5px;" text="Showing 0 - 0 of 0 records" />
+						      <Region HBox.hgrow="ALWAYS" />
+						      <HBox fx:id="chronoPaginationBox" alignment="CENTER" spacing="6.0" />
+						   </children>
+						</HBox>
+                     </children>
+                  </VBox>
+
+               </children>
+            </VBox>
+
+         </children>
+      </VBox>
+   </content>
+</ScrollPane>

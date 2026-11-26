@@ -26,8 +26,7 @@ public class ClassCardFactory {
     public static VBox createCard(
             ClassesController.ClassItem item,
             boolean isAdminView,
-            EventHandler<ActionEvent> onPrimaryAction,
-            EventHandler<ActionEvent> onEditAction) {
+            EventHandler<ActionEvent> onPrimaryAction) {
 
         VBox card = new VBox(8.0);
         card.getStyleClass().add("panel-card");
@@ -134,26 +133,13 @@ public class ClassCardFactory {
         Region verticalSpacer = new Region();
         VBox.setVgrow(verticalSpacer, Priority.ALWAYS);
 
-        // 4. ACTION BUTTONS (Passes unique offeringKey so cross-major offerings stay separate)
+     // 4. ACTION BUTTON (Passes unique offeringKey so cross-major offerings stay separate)
         HBox btnHBox = new HBox(8.0);
         btnHBox.setAlignment(Pos.CENTER_RIGHT);
         btnHBox.setMinHeight(32.0);
         btnHBox.setPrefHeight(32.0);
 
         String offeringKey = item.getOfferingKey();
-
-        if (isAdminView) {
-            Button editBtn = new Button("Edit");
-            editBtn.setStyle(
-                "-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-size: 12px; " +
-                "-fx-font-weight: bold; -fx-background-radius: 6px; -fx-padding: 6px 13px; -fx-cursor: hand;"
-            );
-            editBtn.setUserData(offeringKey);
-            if (onEditAction != null) {
-                editBtn.setOnAction(onEditAction);
-            }
-            btnHBox.getChildren().add(editBtn);
-        }
 
         Button primaryBtn = new Button(isAdminView ? "Manage Class" : "View Class");
         primaryBtn.getStyleClass().add("view-class-button");
@@ -166,6 +152,7 @@ public class ClassCardFactory {
 
         card.getChildren().addAll(topHBox, divider, detailsBox, timetableBox, verticalSpacer, btnHBox);
         return card;
+    
     }
 
     private static FlowPane buildTimetablePills(String schedule) {
@@ -262,5 +249,95 @@ public class ClassCardFactory {
             case "Fifth Year"  -> "Year 5";
             default            -> year.trim();
         };
+    }
+    
+    public static VBox createExamCard(
+            ClassesController.ClassItem item,
+            boolean isAdminView,
+            EventHandler<ActionEvent> onOpenExamDetail) {
+
+        VBox card = new VBox(8.0);
+        card.getStyleClass().add("panel-card");
+        card.setMinWidth(0.0);
+        card.setMinHeight(240.0);
+        card.setPrefHeight(240.0);
+        card.setMaxHeight(240.0);
+        card.setPadding(new Insets(14.0, 16.0, 14.0, 16.0));
+
+        // 1. HEADER
+        HBox topHBox = new HBox(12.0);
+        topHBox.setAlignment(Pos.TOP_LEFT);
+        topHBox.setMinHeight(56.0);
+        topHBox.setPrefHeight(56.0);
+        topHBox.setMaxHeight(56.0);
+
+        StackPane iconPane = new StackPane();
+        iconPane.setMinSize(44.0, 44.0);
+        iconPane.setMaxSize(44.0, 44.0);
+        iconPane.setStyle("-fx-background-color: " + item.badgeColor + "; -fx-background-radius: 10px;");
+
+        Label iconLabel = new Label(item.icon);
+        iconLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;");
+        iconPane.getChildren().add(iconLabel);
+
+        VBox titleBox = new VBox(2.0);
+        HBox.setHgrow(titleBox, Priority.ALWAYS);
+        titleBox.setMinWidth(0.0);
+
+        Label codeLabel = new Label(item.code);
+        codeLabel.setStyle("-fx-font-size: 16.5px; -fx-font-weight: 800; -fx-text-fill: #0f172a;");
+
+        Label subLabel = new Label(item.title);
+        subLabel.setStyle("-fx-font-size: 12.5px; -fx-font-weight: 600; -fx-text-fill: #334155;");
+        subLabel.setWrapText(true);
+        subLabel.setAlignment(Pos.TOP_LEFT);
+        subLabel.setMinHeight(34.0);
+        subLabel.setPrefHeight(34.0);
+        subLabel.setMaxHeight(34.0);
+
+        titleBox.getChildren().addAll(codeLabel, subLabel);
+        topHBox.getChildren().addAll(iconPane, titleBox);
+
+        Separator divider = new Separator();
+        divider.setStyle("-fx-opacity: 0.7;");
+
+        // 2. CLASS DETAILS
+        VBox detailsBox = new VBox(4.0);
+
+        Label deptLabel = new Label("🏛  " + item.department);
+        deptLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: #1e293b;");
+
+        Label yearSemLabel = new Label("🎓  " + formatYearOnly(item.year) + " · " + item.semester);
+        yearSemLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: #334155;");
+
+        String formattedStudents = item.studentCount != null
+                ? item.studentCount.replace("students", "Students")
+                : "0 Students";
+        Label stdLabel = new Label("👥  " + formattedStudents);
+        stdLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: #334155;");
+
+        String lecturerText = isAdminView
+                ? item.lecturer + (item.lecturer.contains("(Assigned)") ? "" : " (Assigned)")
+                : item.lecturer.replace(" (Assigned)", "");
+        Label lectLabel = new Label("👤  " + lecturerText);
+        lectLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: 600; -fx-text-fill: #334155;");
+
+        detailsBox.getChildren().addAll(deptLabel, yearSemLabel, stdLabel, lectLabel);
+
+        Region verticalSpacer = new Region();
+        VBox.setVgrow(verticalSpacer, Priority.ALWAYS);
+
+        // 3. FULL-WIDTH EXAM DETAIL BUTTON
+        Button openBtn = new Button("View Exam & Grading Detail");
+        openBtn.getStyleClass().add("view-class-button");
+        openBtn.setMaxWidth(Double.MAX_VALUE);
+        openBtn.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 8px 14px;");
+        openBtn.setUserData(item.getOfferingKey());
+        if (onOpenExamDetail != null) {
+            openBtn.setOnAction(onOpenExamDetail);
+        }
+
+        card.getChildren().addAll(topHBox, divider, detailsBox, verticalSpacer, openBtn);
+        return card;
     }
 }

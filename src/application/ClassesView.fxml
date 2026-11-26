@@ -12,10 +12,13 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-
+<?import javafx.geometry.Insets?>
 <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ClassesController">
    <content>
       <VBox fx:id="rootPane" spacing="18.0" style="-fx-padding: 22px;">
+      <padding>
+         <Insets bottom="24.0" left="20.0" right="20.0" top="18.0" />
+      </padding>
          <children>
 
             <!-- TOP BAR: Notification & Profile -->
@@ -91,7 +94,7 @@
                                     <Label style="-fx-text-fill: #16a34a; -fx-font-size: 17px;" text="🎓" />
                                  </children>
                               </StackPane>
-                              <Label styleClass="metric-value" text="348" />
+                              <Label fx:id="totalStudentsLabel" styleClass="metric-value" text="0" />
                            </children>
                         </HBox>
                         <VBox spacing="1.0">
@@ -113,7 +116,7 @@
                                     <Label style="-fx-text-fill: #e11d48; -fx-font-size: 17px;" text="👨‍🏫" />
                                  </children>
                               </StackPane>
-                              <Label styleClass="metric-value" text="84" />
+                              <Label fx:id="totalTeachersLabel" styleClass="metric-value" text="0" />
                            </children>
                         </HBox>
                         <VBox spacing="1.0">
@@ -135,7 +138,7 @@
                                     <Label style="-fx-text-fill: #9333ea; -fx-font-size: 17px;" text="📚" />
                                  </children>
                               </StackPane>
-                              <Label styleClass="metric-value" text="96" />
+                              <Label fx:id="totalCoursesLabel" styleClass="metric-value" text="0" />
                            </children>
                         </HBox>
                         <VBox spacing="1.0">
@@ -157,13 +160,13 @@
                                     <Label style="-fx-text-fill: #d97706; -fx-font-size: 17px;" text="📅" />
                                  </children>
                               </StackPane>
-                              <Label styleClass="metric-value" text="92.3%" />
+                              <Label fx:id="todayAttendanceLabel" styleClass="metric-value" text="0.0%" />
                            </children>
                         </HBox>
                         <VBox spacing="1.0">
                            <children>
                               <Label styleClass="metric-title" text="Today's Attendance" />
-                              <Label style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Present: 1,158" />
+                              <Label fx:id="todayPresentSubLabel" style="-fx-font-size: 10px; -fx-text-fill: #94a3b8;" text="Present: 0" />
                            </children>
                         </VBox>
                      </children>
@@ -205,7 +208,7 @@
                               <HBox alignment="CENTER_LEFT" spacing="8.0">
                                  <children>
                                     <TextField fx:id="searchField" promptText="🔍 Search by class code, title, or room..." style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 7px 12px;" HBox.hgrow="ALWAYS" />
-                                    <Button fx:id="resetFilterBtn" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleResetFilters" styleClass="secondary-button" text="↻ Reset" />
+                                    <Button fx:id="resetFilterBtn" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleResetFilters" styleClass="filter-reset-btn" text="↻ Reset" />
                                  </children>
                               </HBox>
                            </children>
@@ -230,12 +233,12 @@
 
             <!-- BOTTOM FOOTER & DYNAMIC PAGINATION -->
             <HBox alignment="CENTER_LEFT">
-               <children>
-                  <Label fx:id="paginationInfoLabel" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Showing 1 - 6 of 12 classes" />
-                  <Region HBox.hgrow="ALWAYS" />
-                  <HBox fx:id="paginationControlsBox" alignment="CENTER" spacing="5.0" />
-               </children>
-            </HBox>
+			   <children>
+			      <Label fx:id="paginationInfoLabel" style="-fx-text-fill: #475569; -fx-font-size: 13.5px;" text="Showing 1 - 6 of 12 classes" />
+			      <Region HBox.hgrow="ALWAYS" />
+			      <HBox fx:id="paginationControlsBox" alignment="CENTER" spacing="6.0" />
+			   </children>
+			</HBox>
 
          </children>
       </VBox>

@@ -19,18 +19,26 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.AdminClassDetailController">
+<ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: #f8fafc;" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.AdminClassDetailController">
    <content>
-      <VBox fx:id="rootPane" minWidth="0.0" spacing="18.0" style="-fx-background-color: #f4f6f9;">
+      <VBox fx:id="rootPane" spacing="20.0" style="-fx-background-color: #f8fafc;">
          <padding>
-            <Insets bottom="28.0" left="24.0" right="24.0" top="18.0" />
+            <Insets bottom="24.0" left="20.0" right="20.0" top="18.0" />
          </padding>
+
          <children>
 
-            <!-- TOP SECTION: Back Button & Title -->
+            <!-- TOP SECTION: Back Button, Class Actions (Complete / Delete) & Title -->
             <VBox alignment="TOP_LEFT" spacing="12.0">
                <children>
-                  <Button mnemonicParsing="false" onAction="#handleBackToClasses" style="-fx-font-size: 13px; -fx-padding: 8px 16px;" styleClass="secondary-button" text="← Back to Classes" />
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#handleBackToClasses" style="-fx-font-size: 13px; -fx-padding: 8px 16px;" styleClass="secondary-button" text="← Back to Classes" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button mnemonicParsing="false" onAction="#handleCompleteClass" styleClass="btn-success" text="✔ Complete Class" />
+                        <Button mnemonicParsing="false" onAction="#handleDeleteClass" styleClass="btn-danger-solid" text="🗑 Delete Class" />
+                     </children>
+                  </HBox>
                   <VBox spacing="3.0">
                      <children>
                         <Label fx:id="classNameLabel" styleClass="page-title" text="Admin Class Management (IT201)" />
@@ -53,7 +61,7 @@
                                     <Label style="-fx-text-fill: #2563eb; -fx-font-size: 18px;" text="👥" />
                                  </children>
                               </StackPane>
-                              <Label fx:id="totalStudentsLabel" styleClass="metric-value" text="10" />
+                              <Label fx:id="totalStudentsLabel" styleClass="metric-value" text="0" />
                            </children>
                         </HBox>
                         <VBox spacing="1.0">
@@ -75,7 +83,7 @@
                                     <Label style="-fx-text-fill: #16a34a; -fx-font-size: 18px;" text="🎓" />
                                  </children>
                               </StackPane>
-                              <Label fx:id="activeStudentsLabel" styleClass="metric-value" text="6" />
+                              <Label fx:id="activeStudentsLabel" styleClass="metric-value" text="0" />
                            </children>
                         </HBox>
                         <VBox spacing="1.0">
@@ -97,7 +105,7 @@
                                     <Label style="-fx-text-fill: #d97706; -fx-font-size: 18px;" text="❗" />
                                  </children>
                               </StackPane>
-                              <Label fx:id="atRiskLabel" styleClass="metric-value" text="2" />
+                              <Label fx:id="atRiskLabel" styleClass="metric-value" text="0" />
                            </children>
                         </HBox>
                         <VBox spacing="1.0">
@@ -119,7 +127,7 @@
                                     <Label style="-fx-text-fill: #e11d48; -fx-font-size: 18px;" text="🚫" />
                                  </children>
                               </StackPane>
-                              <Label fx:id="inactiveLabel" styleClass="metric-value" text="2" />
+                              <Label fx:id="inactiveLabel" styleClass="metric-value" text="0" />
                            </children>
                         </HBox>
                         <VBox spacing="1.0">
@@ -140,7 +148,7 @@
                      <children>
                         <Label style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #0f172a;" text="Course Allocation &amp; Schedule" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button fx:id="toggleScheduleBtn" alignment="CENTER_LEFT" maxWidth="140.0" minHeight="34.0" minWidth="140.0" prefWidth="140.0" mnemonicParsing="false" onAction="#handleToggleScheduleSection" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 6px 14px; -fx-alignment: CENTER_LEFT; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(37,99,235,0.28), 6, 0, 0, 2);" text="▼  Edit Schedule" />
+                        <Button fx:id="toggleScheduleBtn" alignment="CENTER_LEFT" maxWidth="140.0" minHeight="34.0" minWidth="140.0" mnemonicParsing="false" onAction="#handleToggleScheduleSection" prefWidth="140.0" styleClass="btn-primary-blue" text="▼  Edit Schedule" />
                      </children>
                   </HBox>
 
@@ -283,10 +291,10 @@
             </VBox>
 
             <!-- NAVIGATION TAB BAR -->
-            <HBox alignment="CENTER_LEFT" spacing="18.0" style="-fx-border-color: transparent transparent #cbd5e1 transparent; -fx-border-width: 0 0 2 0; -fx-padding: 4px 0 0 0;">
+            <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="12.0" styleClass="tab-bar-card">
                <children>
-                  <Button fx:id="tabRosterBtn" mnemonicParsing="false" onAction="#switchToRosterTab" style="-fx-background-color: transparent; -fx-border-color: transparent transparent #1b315e transparent; -fx-border-width: 0 0 3.5 0; -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 800; -fx-padding: 6px 8px; -fx-cursor: hand;" text="👥  Student Roster" />
-                  <Button fx:id="tabAttendanceBtn" mnemonicParsing="false" onAction="#switchToAttendanceTab" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-border-width: 0 0 3.5 0; -fx-text-fill: #64748b; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 6px 8px; -fx-cursor: hand;" text="📅  Daily Attendance Log" />
+                  <Button fx:id="tabRosterBtn" minWidth="215.0" mnemonicParsing="false" onAction="#switchToRosterTab" prefWidth="215.0" styleClass="tab-pill-active" text="👥  STUDENT ROSTER" />
+                  <Button fx:id="tabAttendanceBtn" minWidth="215.0" mnemonicParsing="false" onAction="#switchToAttendanceTab" prefWidth="215.0" styleClass="tab-pill-inactive" text="📅  DAILY ATTENDANCE LOG" />
                </children>
             </HBox>
 
@@ -355,14 +363,9 @@
 
                         <HBox alignment="CENTER_LEFT">
                            <children>
-                              <HBox spacing="10.0">
-                                 <children>
-                                    <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleModifyStudent" styleClass="footer-btn, action-button" text="✎ Modify" />
-                                    <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleRemoveStudent" styleClass="footer-btn, danger-button" text="🗑 Remove" />
-                                 </children>
-                              </HBox>
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleRemoveStudent" styleClass="footer-btn, danger-button" text="🗑 Remove" />
                               <Region HBox.hgrow="ALWAYS" />
-                              <Label fx:id="studentCountFooterLabel" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Showing 1 - 10 of 10 students" />
+                              <Label fx:id="studentCountFooterLabel" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Showing 0 of 0 students" />
                            </children>
                         </HBox>
                      </children>
@@ -380,6 +383,7 @@
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                            <children>
                               <DatePicker fx:id="dailyDatePicker" prefHeight="32.0" prefWidth="165.0" promptText="dd-MM-yyyy" styleClass="shaded-combo" />
+                              <ComboBox fx:id="dailyPeriodCombo" prefHeight="32.0" prefWidth="155.0" promptText="Period" styleClass="shaded-combo" />
                               <TextField fx:id="dailySearchField" prefHeight="32.0" promptText="Search student roll no, name, or subject..." style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 6px 12px;" HBox.hgrow="ALWAYS" />
                            </children>
                         </HBox>
@@ -425,11 +429,11 @@
                         <!-- Bottom Action Bar -->
                         <HBox alignment="CENTER_RIGHT" spacing="8.0">
                            <children>
-                              <Label fx:id="dailyLogFooterLabel" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Showing 10 attendance records" />
+                              <Label fx:id="dailyLogFooterLabel" style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Showing 0 attendance records" />
                               <Region HBox.hgrow="ALWAYS" />
-                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleToggleDailyStatus" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-padding: 7px 12px; -fx-font-size: 12px; -fx-cursor: hand;" text="🔄 Toggle Status" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleToggleDailyStatus" styleClass="btn-primary-blue" text="🔄 Toggle Status" />
                               <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleResetDailyStatus" style="-fx-padding: 7px 12px; -fx-font-size: 12px;" styleClass="reset-button" text="↺ Reset Status" />
-                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleMarkAllPresent" style="-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-padding: 7px 12px; -fx-font-size: 12px; -fx-cursor: hand;" text="✔ Mark All Present" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleMarkAllPresent" styleClass="btn-success" text="✔ Mark All Present" />
                               <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleSaveDailyChanges" style="-fx-padding: 7px 12px; -fx-font-size: 12px;" styleClass="search-button" text="💾 Save Changes" />
                            </children>
                         </HBox>

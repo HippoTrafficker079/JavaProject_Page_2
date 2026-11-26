@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: #f4f6f9;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Student.StudentDetailController">
+   <content>
+      <VBox fx:id="rootPane" minWidth="0.0" spacing="18.0" style="-fx-background-color: #f4f6f9;">
+         <padding>
+            <Insets bottom="24.0" left="20.0" right="20.0" top="18.0" />
+         </padding>
+         <children>
+
+            <!-- TOP NAVIGATION BAR -->
+            <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="10.0">
+               <children>
+                  <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#handleBack" style="-fx-font-size: 13px; -fx-padding: 8px 16px;" styleClass="secondary-button" text="← Back to Students" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button fx:id="viewAttendanceBtn" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleViewAttendance" styleClass="btn-primary-blue" text="📅 View Attendance Dashboard" />
+               </children>
+            </HBox>
+
+            <!-- HEADER SUMMARY CARD WITH PASSPORT PHOTO -->
+            <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+               <children>
+                  <HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="16.0">
+                     <children>
+                        <VBox alignment="CENTER" maxHeight="112.0" maxWidth="88.0" minHeight="112.0" minWidth="88.0" prefHeight="112.0" prefWidth="88.0" style="-fx-border-color: #395d87; -fx-border-width: 1.5; -fx-background-color: #f8fafc; -fx-border-radius: 8; -fx-background-radius: 8;">
+                           <children>
+                              <ImageView fx:id="passportImageView" fitHeight="106.0" fitWidth="82.0" pickOnBounds="true" preserveRatio="false" />
+                              <Label fx:id="photoPlaceholderLabel" style="-fx-font-size: 28px; -fx-text-fill: #94a3b8;" text="👤" />
+                           </children>
+                        </VBox>
+
+                        <VBox minWidth="0.0" spacing="6.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label fx:id="lblHeaderName" styleClass="page-title" text="Student Name" wrapText="true" />
+                              <Label fx:id="lblHeaderBanner" style="-fx-background-color: #eff6ff; -fx-border-color: #bfdbfe; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-padding: 6px 12px; -fx-text-fill: #1e3a8a; -fx-font-weight: bold; -fx-font-size: 12.5px;" text="Roll No | Major | Year" wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+
+            <!-- 1. STUDENT DETAILS -->
+            <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+               <children>
+                  <Label styleClass="panel-header" text="1. Student Details" />
+                  <GridPane hgap="14.0" minWidth="0.0" vgap="10.0">
+                     <columnConstraints>
+                        <ColumnConstraints minWidth="95.0" percentWidth="18.0" />
+                        <ColumnConstraints minWidth="0.0" percentWidth="32.0" />
+                        <ColumnConstraints minWidth="95.0" percentWidth="18.0" />
+                        <ColumnConstraints minWidth="0.0" percentWidth="32.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="24.0" />
+                        <RowConstraints minHeight="24.0" />
+                        <RowConstraints minHeight="24.0" />
+                        <RowConstraints minHeight="24.0" />
+                        <RowConstraints minHeight="24.0" />
+                     </rowConstraints>
+                     <children>
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Roll No:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                        <Label fx:id="lblRollNo" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Date of Birth:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                        <Label fx:id="lblDob" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Full Name:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                        <Label fx:id="lblName" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Gender:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                        <Label fx:id="lblGender" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Department:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                        <Label fx:id="lblMajor" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Nationality:" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                        <Label fx:id="lblNationality" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Year / Level:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                        <Label fx:id="lblYear" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Standing:" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                        <Label fx:id="lblSemester" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="NRC / ID No.:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                        <Label fx:id="lblNrc" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                     </children>
+                  </GridPane>
+               </children>
+            </VBox>
+
+            <!-- 2. CONTACT INFORMATION -->
+            <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+               <children>
+                  <Label styleClass="panel-header" text="2. Contact Information" />
+                  <GridPane hgap="14.0" minWidth="0.0" vgap="10.0">
+                     <columnConstraints>
+                        <ColumnConstraints minWidth="120.0" percentWidth="20.0" />
+                        <ColumnConstraints minWidth="0.0" percentWidth="80.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="24.0" />
+                        <RowConstraints minHeight="24.0" />
+                        <RowConstraints minHeight="24.0" />
+                        <RowConstraints minHeight="24.0" />
+                     </rowConstraints>
+                     <children>
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Phone Number:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                        <Label fx:id="lblPhone" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Email Address:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                        <Label fx:id="lblEmail" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Current Address:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                        <Label fx:id="lblCurrentAddress" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Permanent Address:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                        <Label fx:id="lblPermanentAddress" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                     </children>
+                  </GridPane>
+               </children>
+            </VBox>
+
+            <!-- 3 & 4. GUARDIAN INFORMATION -->
+            <GridPane hgap="16.0" minWidth="0.0">
+               <columnConstraints>
+                  <ColumnConstraints minWidth="0.0" percentWidth="50.0" />
+                  <ColumnConstraints minWidth="0.0" percentWidth="50.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints />
+               </rowConstraints>
+               <children>
+                  <VBox minWidth="0.0" spacing="10.0" styleClass="panel-card" GridPane.columnIndex="0">
+                     <children>
+                        <Label styleClass="panel-header" text="3. Father's Information" />
+                        <GridPane hgap="10.0" minWidth="0.0" vgap="8.0">
+                           <columnConstraints>
+                              <ColumnConstraints minWidth="82.0" percentWidth="32.0" />
+                              <ColumnConstraints minWidth="0.0" percentWidth="68.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints minHeight="22.0" />
+                              <RowConstraints minHeight="22.0" />
+                              <RowConstraints minHeight="22.0" />
+                              <RowConstraints minHeight="22.0" />
+                           </rowConstraints>
+                           <children>
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Full Name:" GridPane.rowIndex="0" />
+                              <Label fx:id="lblFatherName" style="-fx-text-fill: #0f172a; -fx-font-size: 12px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Occupation:" GridPane.rowIndex="1" />
+                              <Label fx:id="lblFatherOcc" style="-fx-text-fill: #0f172a; -fx-font-size: 12px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Phone:" GridPane.rowIndex="2" />
+                              <Label fx:id="lblFatherPhone" style="-fx-text-fill: #0f172a; -fx-font-size: 12px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Email:" GridPane.rowIndex="3" />
+                              <Label fx:id="lblFatherEmail" style="-fx-text-fill: #0f172a; -fx-font-size: 12px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                           </children>
+                        </GridPane>
+                     </children>
+                  </VBox>
+
+                  <VBox minWidth="0.0" spacing="10.0" styleClass="panel-card" GridPane.columnIndex="1">
+                     <children>
+                        <Label styleClass="panel-header" text="4. Mother's Information" />
+                        <GridPane hgap="10.0" minWidth="0.0" vgap="8.0">
+                           <columnConstraints>
+                              <ColumnConstraints minWidth="82.0" percentWidth="32.0" />
+                              <ColumnConstraints minWidth="0.0" percentWidth="68.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints minHeight="22.0" />
+                              <RowConstraints minHeight="22.0" />
+                              <RowConstraints minHeight="22.0" />
+                              <RowConstraints minHeight="22.0" />
+                           </rowConstraints>
+                           <children>
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Full Name:" GridPane.rowIndex="0" />
+                              <Label fx:id="lblMotherName" style="-fx-text-fill: #0f172a; -fx-font-size: 12px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Occupation:" GridPane.rowIndex="1" />
+                              <Label fx:id="lblMotherOcc" style="-fx-text-fill: #0f172a; -fx-font-size: 12px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Phone:" GridPane.rowIndex="2" />
+                              <Label fx:id="lblMotherPhone" style="-fx-text-fill: #0f172a; -fx-font-size: 12px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Email:" GridPane.rowIndex="3" />
+                              <Label fx:id="lblMotherEmail" style="-fx-text-fill: #0f172a; -fx-font-size: 12px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                           </children>
+                        </GridPane>
+                     </children>
+                  </VBox>
+               </children>
+            </GridPane>
+
+            <!-- 5. EDUCATIONAL BACKGROUND -->
+            <VBox minWidth="0.0" spacing="12.0" styleClass="panel-card">
+               <children>
+                  <Label styleClass="panel-header" text="5. Educational Background &amp; Additional Info" />
+                  <GridPane hgap="14.0" minWidth="0.0" vgap="10.0">
+                     <columnConstraints>
+                        <ColumnConstraints minWidth="120.0" percentWidth="20.0" />
+                        <ColumnConstraints minWidth="0.0" percentWidth="80.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="24.0" />
+                        <RowConstraints minHeight="24.0" />
+                        <RowConstraints minHeight="24.0" />
+                     </rowConstraints>
+                     <children>
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Previous School:" GridPane.rowIndex="0" />
+                        <Label fx:id="lblPrevSchool" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Year Completed:" GridPane.rowIndex="1" />
+                        <Label fx:id="lblYearCompleted" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #475569; -fx-font-size: 12px;" text="Additional Info:" GridPane.rowIndex="2" />
+                        <Label fx:id="lblAdditionalInfo" style="-fx-text-fill: #0f172a; -fx-font-size: 12.5px;" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                     </children>
+                  </GridPane>
+               </children>
+            </VBox>
+
+         </children>
+      </VBox>
+   </content>
+</ScrollPane>

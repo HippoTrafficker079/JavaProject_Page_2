@@ -1,8 +1,12 @@
+USE sims_db;
+
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS class_session;
 
 DROP TABLE IF EXISTS assessment;
+
+DROP TABLE IF EXISTS assessment_weight;
 
 DROP TABLE IF EXISTS student_grade;
 
@@ -60,8 +64,7 @@ CREATE TABLE department (
     dept_code VARCHAR(30) NOT NULL,
     dept_name VARCHAR(100) NOT NULL,
     established_date DATE NOT NULL,
-    dept_location VARCHAR(50) NOT NULL,
-    FOREIGN KEY (dept_head_id) REFERENCES teacher (teacher_id) ON DELETE SET NULL
+    dept_location VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE course (
@@ -111,6 +114,10 @@ CREATE TABLE teacher (
     FOREIGN KEY (user_id) REFERENCES user_account (user_id) ON DELETE CASCADE,
     FOREIGN KEY (dept_id) REFERENCES department (dept_id) ON DELETE RESTRICT
 );
+
+ALTER TABLE department
+    ADD CONSTRAINT fk_department_head
+    FOREIGN KEY (dept_head_id) REFERENCES teacher (teacher_id) ON DELETE SET NULL;
 
 CREATE TABLE teacher_contact_information (
     teacher_id INT PRIMARY KEY,
@@ -230,7 +237,7 @@ CREATE TABLE course_enrollment (
     enrollment_id INT PRIMARY KEY AUTO_INCREMENT,
     offering_id INT NOT NULL,
     student_id INT NOT NULL,
-    enrollment_date DATE NOT NULL,
+    enrollment_date DATE NOT NULL DEFAULT(CURRENT_DATE),
     status ENUM(
         'ENROLLED',
         'DROPPED',

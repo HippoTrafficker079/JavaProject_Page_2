@@ -1,3 +1,5 @@
+USE sims_db;
+
 -- Disable foreign key checks temporarily for clean insertion
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -5,6 +7,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 DELETE FROM student_grade;
 
 DELETE FROM assessment;
+
+DELETE FROM assessment_weight;
 
 DELETE FROM attendance;
 
@@ -102,47 +106,47 @@ VALUES
         TRUE
     ),
 
--- Students User Accounts (Username = Full Name, Email = formatted roll_no placeholder)
-(
-    5,
-    'Ren Amamiya',
-    'iiiceit1@ytu.edu.mm',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
-    'STUDENT',
-    TRUE
-),
-(
-    6,
-    'Ryuji Sakamoto',
-    'iiiceit2@ytu.edu.mm',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
-    'STUDENT',
-    TRUE
-),
-(
-    7,
-    'Ann Takamaki',
-    'iiiceit3@ytu.edu.mm',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
-    'STUDENT',
-    TRUE
-),
-(
-    8,
-    'Yusuke Kitagawa',
-    'iiimech1@ytu.edu.mm',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
-    'STUDENT',
-    TRUE
-),
-(
-    9,
-    'Makoto Niijima',
-    'iiimech2@ytu.edu.mm',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
-    'STUDENT',
-    TRUE
-);
+    -- Students User Accounts (Username = Full Name, Email = formatted roll_no placeholder)
+    (
+        5,
+        'Ren Amamiya',
+        'iiiceit1@ytu.edu.mm',
+        '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
+        'STUDENT',
+        TRUE
+    ),
+    (
+        6,
+        'Ryuji Sakamoto',
+        'iiiceit2@ytu.edu.mm',
+        '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
+        'STUDENT',
+        TRUE
+    ),
+    (
+        7,
+        'Ann Takamaki',
+        'iiiceit3@ytu.edu.mm',
+        '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
+        'STUDENT',
+        TRUE
+    ),
+    (
+        8,
+        'Yusuke Kitagawa',
+        'iiimech1@ytu.edu.mm',
+        '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
+        'STUDENT',
+        TRUE
+    ),
+    (
+        9,
+        'Makoto Niijima',
+        'iiimech2@ytu.edu.mm',
+        '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J08H9xY4e',
+        'STUDENT',
+        TRUE
+    );
 
 -- ==========================================
 -- 3. DEPARTMENTS
@@ -740,7 +744,7 @@ VALUES (
     );
 
 -- ==========================================
--- 7. COURSE OFFERINGS
+-- 7. COURSE OFFERINGS & ASSESSMENT WEIGHTS
 -- ==========================================
 INSERT INTO
     course_offering (
@@ -748,44 +752,90 @@ INSERT INTO
         teacher_id,
         course_id,
         create_dept_id,
-        academic_year,
         `year`,
+        academic_year,
         total_sessions,
-        term
+        term,
+        max_student,
+        card_symbol,
+        badge_color
     )
 VALUES (
         1,
         1,
         1,
         1,
-        2026,
         'Second Year',
-        10,
-        'First Semester'
+        2026,
+        6,
+        'First Semester',
+        60,
+        '💾',
+        '#2563eb'
     ), -- Advanced DB (Taught by Sadayo Kawakami)
     (
         2,
         2,
         2,
         1,
-        2026,
         'Third Year',
-        10,
-        'First Semester'
+        2026,
+        6,
+        'First Semester',
+        60,
+        '☕',
+        '#7c3aed'
     ), -- Java OOP (Taught by Sojiro Sakura)
     (
         3,
         3,
         3,
         1,
-        2026,
         'Fourth Year',
-        10,
-        'First Semester'
-    );
--- Thermodynamics (Taught by Tae Takemi)
+        2026,
+        3,
+        'First Semester',
+        50,
+        '🔥',
+        '#ea580c'
+    ); -- Thermodynamics (Taught by Tae Takemi)
 
--- 8. CLASS SESSIONS (Updated with Today's Date: 2026-11-15)
+INSERT INTO
+    assessment_weight (
+        offering_id,
+        tutorial_weight,
+        assignment_weight,
+        lab_test_weight,
+        practical_weight,
+        final_exam_weight
+    )
+VALUES (
+        1,
+        15.00,
+        15.00,
+        10.00,
+        0.00,
+        60.00
+    ),
+    (
+        2,
+        10.00,
+        10.00,
+        15.00,
+        15.00,
+        50.00
+    ),
+    (
+        3,
+        15.00,
+        15.00,
+        0.00,
+        0.00,
+        70.00
+    );
+
+-- ==========================================
+-- 8. CLASS SESSIONS (Updated with CURDATE() for Today's Attendance)
 -- ==========================================
 INSERT INTO
     class_session (
@@ -812,11 +862,10 @@ VALUES
     (11, 3, '2026-06-01', 3, FALSE),
     (12, 3, '2026-06-05', 3, FALSE),
 
--- TODAY'S SESSIONS (2026-11-15) for Testing Daily Logs
-(13, 1, '2026-11-15', 1, FALSE), -- Advanced DB (Period 1)
-(14, 2, '2026-11-15', 2, FALSE), -- Java OOP (Period 2)
-(15, 3, '2026-11-15', 3, FALSE);
--- Thermodynamics (Period 3)
+    -- TODAY'S SESSIONS (CURDATE()) for Testing Daily Logs & Today's Attendance
+    (13, 1, CURDATE(), 1, FALSE), -- Advanced DB (Period 1)
+    (14, 2, CURDATE(), 2, FALSE), -- Java OOP (Period 2)
+    (15, 3, CURDATE(), 3, FALSE); -- Thermodynamics (Period 3)
 
 -- ==========================================
 -- 9. COURSE ENROLLMENTS
@@ -877,8 +926,7 @@ VALUES (
         5,
         '2026-05-20',
         'ENROLLED'
-    );
--- Makoto in Thermodynamics
+    ); -- Makoto in Thermodynamics
 
 -- ==========================================
 -- 10. ATTENDANCE (Expanded Sparse Exception Model)
@@ -901,44 +949,74 @@ VALUES
         'Metaverse Operation'
     ),
 
--- Ryuji's absence (Enrollment 3 - Advanced DB)
-( 2, 1, 3, 'UNEXCUSED', 'Overslept / Track Practice' ),
+    -- Ryuji's absence (Enrollment 3 - Advanced DB)
+    (
+        2,
+        1,
+        3,
+        'UNEXCUSED',
+        'Overslept / Track Practice'
+    ),
 
--- Ann's multiple absences to test < 75% filter (Enrollment 5 - Advanced DB)
-(
-    3,
-    1,
-    5,
-    'UNEXCUSED',
-    'Modeling Photo Shoot'
-),
-(
-    4,
-    3,
-    5,
-    'UNEXCUSED',
-    'Skipped class'
-),
-(
-    5,
-    4,
-    5,
-    'EXCUSED',
-    'Agency Work'
-),
+    -- Ann's multiple absences to test < 75% filter (Enrollment 5 - Advanced DB)
+    (
+        3,
+        1,
+        5,
+        'UNEXCUSED',
+        'Modeling Photo Shoot'
+    ),
+    (
+        4,
+        3,
+        5,
+        'UNEXCUSED',
+        'Skipped class'
+    ),
+    (
+        5,
+        4,
+        5,
+        'EXCUSED',
+        'Agency Work'
+    ),
 
--- Ren's absence in Java OOP (Enrollment 2)
-( 6, 7, 2, 'EXCUSED', 'Mementos Mission' ),
+    -- Ren's absence in Java OOP (Enrollment 2)
+    (
+        6,
+        7,
+        2,
+        'EXCUSED',
+        'Mementos Mission'
+    ),
 
--- TODAY'S TEST ATTENDANCE RECORDS (2026-11-15)
--- Session 13 (Advanced DB): Ryuji (Enrollment 3) is absent (Unexcused)
-( 7, 13, 3, 'UNEXCUSED', 'Overslept' ),
+    -- TODAY'S TEST ATTENDANCE RECORDS (Matches CURDATE() sessions 13, 14, 15)
+    -- Session 13 (Advanced DB): Ryuji (Enrollment 3) is absent (Unexcused)
+    (
+        7,
+        13,
+        3,
+        'UNEXCUSED',
+        'Overslept'
+    ),
 
--- Session 14 (Java OOP): Ren (Enrollment 2) is excused with a medical reason
-( 8, 14, 2, 'EXCUSED', 'Medical Checkup - Fever' ),
+    -- Session 14 (Java OOP): Ren (Enrollment 2) is excused with a medical reason
+    (
+        8,
+        14,
+        2,
+        'EXCUSED',
+        'Medical Checkup - Fever'
+    ),
 
--- Session 15 (Thermodynamics): Makoto (Enrollment 7) is absent (Unexcused)
-( 9, 15, 7, 'UNEXCUSED', 'Student Council Meeting' );
+    -- Session 15 (Thermodynamics): Makoto (Enrollment 7) is absent (Unexcused)
+    (
+        9,
+        15,
+        7,
+        'UNEXCUSED',
+        'Student Council Meeting'
+    );
 
 -- ==========================================
 -- 11. ASSESSMENTS & STUDENT GRADES
@@ -950,7 +1028,7 @@ INSERT INTO
         title,
         assessment_type,
         max_marks
-)
+    )
 VALUES (
         1,
         1,
@@ -980,11 +1058,16 @@ INSERT INTO
         assessment_id,
         marks_obtained
     )
-VALUES (1, 1, 1, 19.00), -- Ren lab score in Advanced DB
+VALUES
+    (1, 1, 1, 19.00), -- Ren lab score in Advanced DB
     (2, 3, 1, 12.00), -- Ryuji lab score in Advanced DB
     (3, 5, 1, 14.50), -- Ann lab score in Advanced DB
-    (4, 2, 3, 48.00);
--- Ren project score in Java OOP
+    (4, 2, 3, 48.00); -- Ren project score in Java OOP
 
 -- Restore foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+UPDATE course_offering
+SET `year` = 'Third Year'
+WHERE offering_id IN (1, 3);

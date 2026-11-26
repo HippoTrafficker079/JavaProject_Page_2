@@ -2,6 +2,7 @@ package application;
 
 import javafx.application.Platform;
 
+
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -39,6 +40,8 @@ import javafx.scene.input.KeyEvent;
 
 import javafx.scene.control.ListView;
 import javafx.scene.control.skin.ComboBoxListViewSkin;
+
+import javafx.scene.control.TextFormatter;
 
 public class AdminCreateCourseController {
 
@@ -81,6 +84,8 @@ public class AdminCreateCourseController {
     private TableColumn<CourseCatalogStore.CourseItem, String> colStatus;
     @FXML
     private TableColumn<CourseCatalogStore.CourseItem, String> colPrereqs;
+    @FXML
+    private TextField deptPrefixField;
 
     private final List<String> selectedPrerequisites = new ArrayList<>();
     private FilteredList<String> filteredPrereqItems;
@@ -88,10 +93,19 @@ public class AdminCreateCourseController {
 
     @FXML
     public void initialize() {
-        if (deptCombo != null) {
-            deptCombo.setItems(FXCollections.observableArrayList(
-                    "CEIT", "C", "Mech", "EP", "EC", "McE", "ChE", "Tex", "Mn", "PE", "Arch", "Tele", "Met", "FE"));
-            deptCombo.setValue(UserSession.departmentCode != null ? UserSession.departmentCode : "CEIT");
+        String adminDept = (UserSession.departmentCode != null && !UserSession.departmentCode.isBlank())
+                ? UserSession.departmentCode.trim()
+                : "CEIT";
+
+        if (deptPrefixField != null) {
+            deptPrefixField.setText(adminDept);
+            deptPrefixField.setEditable(false);
+        }
+
+        if (courseCodeField != null) {
+            courseCodeField.setPromptText("e.g. 11001");
+            courseCodeField.setTextFormatter(new TextFormatter<>(change ->
+                    change.getControlNewText().matches("\\d{0,5}") ? change : null));
         }
 
         if (courseTypeCombo != null) {
@@ -102,6 +116,19 @@ public class AdminCreateCourseController {
         setupSearchablePrerequisiteCombo();
         setupCatalogTable();
         renderPrerequisiteChips();
+    }
+
+    private String buildFullCourseCode() {
+        String dept = (deptPrefixField != null && deptPrefixField.getText() != null)
+                ? deptPrefixField.getText().trim()
+                : "";
+        String digits = (courseCodeField != null && courseCodeField.getText() != null)
+                ? courseCodeField.getText().trim()
+                : "";
+        if (dept.isEmpty() || digits.isEmpty()) {
+            return "";
+        }
+        return dept + "-" + digits;
     }
 
     private void setupSearchablePrerequisiteCombo() {
@@ -229,7 +256,7 @@ public class AdminCreateCourseController {
             return;
         }
 
-        String currentCode = courseCodeField.getText() != null ? courseCodeField.getText().trim() : "";
+        String currentCode = buildFullCourseCode();
         if (!currentCode.isEmpty() && matched.courseCode.equalsIgnoreCase(currentCode)) {
             showAlert(Alert.AlertType.WARNING, "Invalid Prerequisite",
                     "A course cannot be a prerequisite of itself.");
@@ -306,16 +333,30 @@ public class AdminCreateCourseController {
 
     @FXML
     public void handleSaveCourse() {
-        String code = courseCodeField.getText() != null ? courseCodeField.getText().trim().toUpperCase() : "";
+        String dept = (deptPrefixField != null && deptPrefixField.getText() != null)
+                ? deptPrefixField.getText().trim()
+                : "";
+        String digits = (courseCodeField != null && courseCodeField.getText() != null)
+                ? courseCodeField.getText().trim()
+                : "";
+        String code = buildFullCourseCode();
         String name = courseNameField.getText() != null ? courseNameField.getText().trim() : "";
-        String dept = deptCombo.getValue() != null ? deptCombo.getValue() : "CEIT";
         String type = courseTypeCombo.getValue() != null ? courseTypeCombo.getValue() : "Bachelor";
         String creditStr = creditField.getText() != null ? creditField.getText().trim() : "3.0";
         boolean active = isActiveCheck == null || isActiveCheck.isSelected();
 
-        if (code.isEmpty() || name.isEmpty()) {
+        if (digits.isEmpty() || name.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "Missing Required Fields",
-                    "Please enter both Course Code and Course Name.");
+                    "Please enter both the 5-digit Course Number and Course Name.");
+            return;
+        }
+
+        if (!CourseCatalogStore.isValidYtuCourseCode(code)) {
+            showAlert(Alert.AlertType.WARNING, "Invalid YTU Course Code Format",
+                    "The 5-digit number after \"" + dept + "-\" must follow YTU rules (e.g. 11001 or 31016):\n"
+                            + "• 1st Digit: Study Year (1–5)\n"
+                            + "• 2nd Digit: Semester (1 = First, 2 = Second)\n"
+                            + "• Last 3 Digits: Course sequence (001–999)");
             return;
         }
 
@@ -335,6 +376,7 @@ public class AdminCreateCourseController {
                     "Please enter a valid numeric credit value (e.g. 3.0 or 3.5).");
             return;
         }
+
         CourseDAO courseDAO = new CourseDAO();
         DepartmentDAO departmentDAO = new DepartmentDAO();
         List<Integer> prerequisiteCourseIds = new ArrayList<>();
@@ -396,9 +438,12 @@ public class AdminCreateCourseController {
     @FXML
     public void handleBack(ActionEvent event) {
         try {
+        	StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
+        	if (ViewNavigationHistory.goBack(contentArea)) {
+        	    return;
+        	}
             FXMLLoader loader = new FXMLLoader(getClass().getResource("AdminClassesView.fxml"));
             Parent classesView = loader.load();
-            StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
             if (contentArea != null) {
                 contentArea.getChildren().setAll(classesView);
             }
@@ -433,4 +478,5 @@ public class AdminCreateCourseController {
         combo.skinProperty().addListener((obs, oldSkin, newSkin) -> bindWidth.run());
         combo.addEventHandler(ComboBox.ON_SHOWING, e -> bindWidth.run());
     }
+    
 }

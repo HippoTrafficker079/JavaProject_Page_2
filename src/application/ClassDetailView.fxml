@@ -14,10 +14,13 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-
+<?import javafx.geometry.Insets?>
 <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.ClassDetailController">
    <content>
       <VBox fx:id="rootPane" spacing="18.0" styleClass="content-area">
+      <padding>
+         <Insets bottom="24.0" left="20.0" right="20.0" top="18.0" />
+      </padding>
          <children>
 
             <!-- TOP SECTION: Back Button Above Title, Left-Aligned -->
@@ -126,13 +129,13 @@
                </children>
             </HBox>
 
-            <!-- NAVIGATION TAB BAR (Switch between Student Roster & Daily Attendance Log) -->
-            <HBox alignment="CENTER_LEFT" spacing="18.0" style="-fx-border-color: transparent transparent #cbd5e1 transparent; -fx-border-width: 0 0 2 0; -fx-padding: 4px 0 0 0;">
-               <children>
-                  <Button fx:id="tabRosterBtn" mnemonicParsing="false" onAction="#switchToRosterTab" style="-fx-background-color: transparent; -fx-border-color: transparent transparent #1b315e transparent; -fx-border-width: 0 0 3.5 0; -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 800; -fx-padding: 6px 8px; -fx-cursor: hand;" text="👥  Student Roster" />
-                  <Button fx:id="tabAttendanceBtn" mnemonicParsing="false" onAction="#switchToAttendanceTab" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-border-width: 0 0 3.5 0; -fx-text-fill: #64748b; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 6px 8px; -fx-cursor: hand;" text="📅  Daily Attendance Log" />
-               </children>
-            </HBox>
+			<!-- NAVIGATION TAB BAR -->
+			<HBox alignment="CENTER_LEFT" minWidth="0.0" spacing="10.0" styleClass="tab-bar-card">
+			   <children>
+			      <Button fx:id="tabRosterBtn" minWidth="215.0" mnemonicParsing="false" onAction="#switchToRosterTab" prefWidth="215.0" styleClass="tab-pill-active" text="👥  STUDENT ROSTER" />
+			      <Button fx:id="tabAttendanceBtn" minWidth="215.0" mnemonicParsing="false" onAction="#switchToAttendanceTab" prefWidth="215.0" styleClass="tab-pill-inactive" text="📅  DAILY ATTENDANCE LOG" />
+			   </children>
+			</HBox>		
 
             <!-- ========================================================================= -->
             <!-- TAB 1: STUDENT ROSTER SECTION                                             -->
@@ -220,6 +223,7 @@
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                            <children>
                               <DatePicker fx:id="dailyDatePicker" prefHeight="32.0" prefWidth="165.0" promptText="dd-MM-yyyy" styleClass="shaded-combo" />
+                              <ComboBox fx:id="dailyPeriodCombo" prefHeight="32.0" prefWidth="155.0" promptText="Period" styleClass="shaded-combo" />
                               <TextField fx:id="dailySearchField" prefHeight="32.0" promptText="Search student roll no, name, or subject..." style="-fx-background-color: white; -fx-background-radius: 6px; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-padding: 6px 12px;" HBox.hgrow="ALWAYS" />
                            </children>
                         </HBox>

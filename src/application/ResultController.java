@@ -1,22 +1,26 @@
 package application;
 
-import java.util.function.BiConsumer;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.chart.PieChart;
+import javafx.scene.Parent;
+import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+
+import java.io.IOException;
 
 public class ResultController {
 
@@ -28,23 +32,9 @@ public class ResultController {
     @FXML private Label totalGradedLabel;
     @FXML private Label maxMarksInfoLabel;
 
-    // Grading Criteria & Donut Legend Labels
-    @FXML private Label quizWeightLabel;
-    @FXML private Label assignmentWeightLabel;
-    @FXML private Label tutorialWeightLabel;
-    @FXML private Label finalWeightLabel;
-    @FXML private Label totalWeightLabel;
-    @FXML private Label donutTotalLabel;
-    @FXML private Label legendQuizLabel;
-    @FXML private Label legendAssignLabel;
-    @FXML private Label legendTutLabel;
-    @FXML private Label legendFinalLabel;
-
     @FXML private ComboBox<String> rollNoFilterCombo;
     @FXML private ComboBox<String> statusFilterCombo;
     @FXML private TextField searchField;
-
-    @FXML private PieChart weightagePieChart;
 
     @FXML private TableView<Result> resultsTable;
     @FXML private TableColumn<Result, String> colRollNo;
@@ -53,12 +43,34 @@ public class ResultController {
     @FXML private TableColumn<Result, String> colStatus;
 
     private Exam currentExam;
+    private ClassesController.ClassItem parentClassItem;
     private ObservableList<Result> masterResultData;
     private FilteredList<Result> filteredData;
-    private BiConsumer<String, SubjectWeightageStore.Weightage> weightageListener;
+
+    @FXML
+    public void initialize() {
+        if (rootPane != null) {
+            rootPane.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+                Node target = (event.getTarget() instanceof Node) ? (Node) event.getTarget() : null;
+                if (isInsideNodeType(target, TableView.class) || isInsideNodeType(target, ButtonBase.class)) {
+                    return;
+                }
+                if (resultsTable != null) {
+                    resultsTable.getSelectionModel().clearSelection();
+                }
+                rootPane.requestFocus();
+            });
+        }
+    }
 
     public void initData(Exam exam) {
+        initData(exam, null);
+    }
+
+    public void initData(Exam exam, ClassesController.ClassItem parentClass) {
         this.currentExam = exam;
+        this.parentClassItem = parentClass;
+
         if (exam != null) {
             examTitleLabel.setText("Result: " + exam.getTitle() + " - " + exam.getSubject());
             examSubtitleLabel.setText("Class: " + exam.getClassName() + " | Date: " + exam.getExamDate() + " | Total Marks: " + exam.getTotalMarks());
@@ -68,24 +80,26 @@ public class ResultController {
             setupStatusDropdownForExam(exam);
         }
 
-        // Setup Roll No ComboBox
         if (rollNoFilterCombo != null) {
             ObservableList<String> rollNos = FXCollections.observableArrayList("All Roll Nos");
-            for (int i = 1; i <= 30; i++) {
-                rollNos.add("III-CEIT-" + i);
+            if (masterResultData != null) {
+                for (Result r : masterResultData) {
+                    if (!rollNos.contains(r.getRollNo())) {
+                        rollNos.add(r.getRollNo());
+                    }
+                }
             }
             rollNoFilterCombo.setItems(rollNos);
             rollNoFilterCombo.setValue("All Roll Nos");
             rollNoFilterCombo.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         }
 
-        // Setup Table Columns
         colRollNo.setCellValueFactory(cell -> cell.getValue().rollNoProperty());
         colName.setCellValueFactory(cell -> cell.getValue().studentNameProperty());
         colMarks.setCellValueFactory(cell -> cell.getValue().totalMarksProperty().asObject());
 
         colStatus.setCellValueFactory(cell -> cell.getValue().statusProperty());
-        colStatus.setCellFactory(column -> new TableCell<Result, String>() {
+        colStatus.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
@@ -108,36 +122,16 @@ public class ResultController {
             }
         });
 
-        // Filter and Sort setup
         filteredData = new FilteredList<>(masterResultData, b -> true);
         SortedList<Result> sortedData = new SortedList<>(filteredData);
         sortedData.comparatorProperty().bind(resultsTable.comparatorProperty());
         resultsTable.setItems(sortedData);
         lockTableColumns(resultsTable, 0.18, 0.38, 0.22, 0.216);
 
-        // Listeners for search field
         if (searchField != null) {
             searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         }
 
-        // Initial Weightage Load + Live Sync Listener from Admin Edits
-        SubjectWeightageStore.Weightage initialW = SubjectWeightageStore.getForSubject(
-                exam != null ? exam.getSubject() : null
-        );
-        refreshWeightageUI(initialW);
-
-        if (weightageListener != null) {
-            SubjectWeightageStore.removeListener(weightageListener);
-        }
-        weightageListener = (updatedSubjectKey, newWeightage) -> {
-            if (currentExam != null &&
-                SubjectWeightageStore.normalizeSubjectKey(currentExam.getSubject()).equals(updatedSubjectKey)) {
-                refreshWeightageUI(newWeightage);
-            }
-        };
-        SubjectWeightageStore.addListener(weightageListener);
-
-        // Dynamic Metrics Calculation
         if (exam != null && masterResultData != null && !masterResultData.isEmpty()) {
             double totalScoreSum = 0;
             int passCount = 0;
@@ -165,50 +159,6 @@ public class ResultController {
             avgScoreLabel.setText("Pending");
             passRateLabel.setText("N/A");
             totalGradedLabel.setText("0");
-        }
-    }
-
-    private void refreshWeightageUI(SubjectWeightageStore.Weightage w) {
-        int totalW = w.quiz + w.assignment + w.tutorial + w.finalExam;
-
-        if (quizWeightLabel != null) quizWeightLabel.setText(w.quiz + "%");
-        if (assignmentWeightLabel != null) assignmentWeightLabel.setText(w.assignment + "%");
-        if (tutorialWeightLabel != null) tutorialWeightLabel.setText(w.tutorial + "%");
-        if (finalWeightLabel != null) finalWeightLabel.setText(w.finalExam + "%");
-        if (totalWeightLabel != null) totalWeightLabel.setText(totalW + "%");
-        if (donutTotalLabel != null) donutTotalLabel.setText(totalW + "%");
-
-        if (legendQuizLabel != null) legendQuizLabel.setText(w.quiz + "%");
-        if (legendAssignLabel != null) legendAssignLabel.setText(w.assignment + "%");
-        if (legendTutLabel != null) legendTutLabel.setText(w.tutorial + "%");
-        if (legendFinalLabel != null) legendFinalLabel.setText(w.finalExam + "%");
-
-        if (weightagePieChart != null) {
-            ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList(
-                new PieChart.Data("Quiz", w.quiz),
-                new PieChart.Data("Assignment", w.assignment),
-                new PieChart.Data("Tutorial", w.tutorial),
-                new PieChart.Data("Final", w.finalExam)
-            );
-            weightagePieChart.setData(pieChartData);
-
-            Platform.runLater(() -> {
-                for (PieChart.Data data : weightagePieChart.getData()) {
-                    Node node = data.getNode();
-                    if (node != null) {
-                        String name = data.getName();
-                        if (name.contains("Assignment")) {
-                            node.setStyle("-fx-pie-color: #9333ea;");
-                        } else if (name.contains("Tutorial")) {
-                            node.setStyle("-fx-pie-color: #3b82f6;");
-                        } else if (name.contains("Final")) {
-                            node.setStyle("-fx-pie-color: #22c55e;");
-                        } else if (name.contains("Quiz")) {
-                            node.setStyle("-fx-pie-color: #fbbf24;");
-                        }
-                    }
-                }
-            });
         }
     }
 
@@ -271,29 +221,18 @@ public class ResultController {
 
     private Result createResult(String rollNo, String name, double totalMarks, String examTitle) {
         String status;
-
         if (examTitle.contains("tutorial")) {
             status = (totalMarks >= 20.0) ? "Pass" : "Fail";
         } else if (examTitle.contains("quiz")) {
-            if (totalMarks >= 20.0) {
-                status = "Outstanding";
-            } else if (totalMarks >= 15.0) {
-                status = "Great";
-            } else if (totalMarks >= 7.0) {
-                status = "Good";
-            } else {
-                status = "Poor";
-            }
+            if (totalMarks >= 20.0) status = "Outstanding";
+            else if (totalMarks >= 15.0) status = "Great";
+            else if (totalMarks >= 7.0) status = "Good";
+            else status = "Poor";
         } else {
-            if (totalMarks >= 90.0) {
-                status = "Excellent";
-            } else if (totalMarks >= 50.0) {
-                status = "Pass";
-            } else {
-                status = "Fail";
-            }
+            if (totalMarks >= 90.0) status = "Excellent";
+            else if (totalMarks >= 50.0) status = "Pass";
+            else status = "Fail";
         }
-
         return new Result(rollNo, name, totalMarks, status, 0, 0, 0, 0, currentExam != null ? currentExam.getTitle() : "Exam");
     }
 
@@ -303,44 +242,62 @@ public class ResultController {
         String selectedStatus = statusFilterCombo != null ? statusFilterCombo.getValue() : "All";
 
         filteredData.setPredicate(result -> {
-            boolean matchesRoll = (selectedRoll == null || selectedRoll.equals("All Roll Nos")) ||
-                result.getRollNo().equalsIgnoreCase(selectedRoll);
-
-            boolean matchesSearch = searchQuery.isEmpty() ||
-                result.getStudentName().toLowerCase().contains(searchQuery) ||
-                result.getRollNo().toLowerCase().contains(searchQuery) ||
-                result.getStatus().toLowerCase().contains(searchQuery);
-
-            boolean matchesStatus = (selectedStatus == null || selectedStatus.equals("All")) ||
-                result.getStatus().equalsIgnoreCase(selectedStatus);
-
+            boolean matchesRoll = (selectedRoll == null || selectedRoll.equals("All Roll Nos"))
+                    || result.getRollNo().equalsIgnoreCase(selectedRoll);
+            boolean matchesSearch = searchQuery.isEmpty()
+                    || result.getStudentName().toLowerCase().contains(searchQuery)
+                    || result.getRollNo().toLowerCase().contains(searchQuery)
+                    || result.getStatus().toLowerCase().contains(searchQuery);
+            boolean matchesStatus = (selectedStatus == null || selectedStatus.equals("All"))
+                    || result.getStatus().equalsIgnoreCase(selectedStatus);
             return matchesRoll && matchesSearch && matchesStatus;
         });
     }
 
     @FXML
     public void handleBack() {
-        if (weightageListener != null) {
-            SubjectWeightageStore.removeListener(weightageListener);
-        }
-        if (MainController.instance != null) {
-            MainController.instance.showExams();
+        try {
+        	StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
+        	if (ViewNavigationHistory.goBack(contentArea)) {
+        	    return;
+        	}
+            if (parentClassItem != null) {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("ClassExamDetailView.fxml"));
+                Parent detailView = loader.load();
+                ClassExamDetailController controller = loader.getController();
+                if (controller != null) {
+                    controller.initData(parentClassItem, false);
+                }
+                if (MainController.instance != null) {
+                    MainController.instance.loadCustomView(detailView);
+                } else {
+                    if (contentArea != null) {
+                        contentArea.getChildren().setAll(detailView);
+                    }
+                }
+            } else if (MainController.instance != null) {
+                MainController.instance.showExams();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     @FXML
     public void handleResetFilters(ActionEvent event) {
-        if (rollNoFilterCombo != null) {
-            rollNoFilterCombo.setValue("All Roll Nos");
-        }
-        if (statusFilterCombo != null) {
-            statusFilterCombo.setValue("All");
-        }
-        if (searchField != null) {
-            searchField.clear();
-        }
-
+        if (rollNoFilterCombo != null) rollNoFilterCombo.setValue("All Roll Nos");
+        if (statusFilterCombo != null) statusFilterCombo.setValue("All");
+        if (searchField != null) searchField.clear();
         applyFilters();
+    }
+
+    private boolean isInsideNodeType(Node node, Class<?> type) {
+        Node current = node;
+        while (current != null) {
+            if (type.isInstance(current)) return true;
+            current = current.getParent();
+        }
+        return false;
     }
 
     private void lockTableColumns(TableView<?> table, double... ratios) {
@@ -348,6 +305,7 @@ public class ResultController {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         for (int i = 0; i < ratios.length; i++) {
             TableColumn<?, ?> col = table.getColumns().get(i);
+            col.setResizable(false);
             col.setReorderable(false);
             col.setSortable(false);
             col.minWidthProperty().bind(table.widthProperty().multiply(ratios[i]));

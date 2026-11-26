@@ -9,5 +9,7 @@ module JavaFX {
 	requires javafx.base;
     
     opens application to javafx.graphics, javafx.fxml;
+    opens Student to javafx.graphics, javafx.fxml;
+    opens Attendance to javafx.graphics, javafx.fxml;
     exports application;
 }

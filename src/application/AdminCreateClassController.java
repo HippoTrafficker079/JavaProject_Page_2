@@ -57,49 +57,85 @@ import java.util.stream.Collectors;
 
 public class AdminCreateClassController {
 
-    @FXML private VBox rootPane;
+    @FXML
+    private VBox rootPane;
 
-    // Academic & Course Details (courseCodeField removed — auto-resolved from CourseCatalogStore)
-    @FXML private ComboBox<String> courseTitleCombo;
-    @FXML private ComboBox<String> majorCombo;
-    @FXML private ComboBox<String> semesterCombo;
-    @FXML private ComboBox<String> academicYearCombo;
+    // Academic & Course Details (courseCodeField removed — auto-resolved from
+    // CourseCatalogStore)
+    @FXML
+    private ComboBox<String> courseTitleCombo;
+    @FXML
+    private ComboBox<String> majorCombo;
+    @FXML
+    private ComboBox<String> semesterCombo;
+    @FXML
+    private ComboBox<String> academicYearCombo;
 
     // Custom Card Symbol & Badge Color + Live Preview
-    @FXML private ComboBox<String> iconSymbolCombo;
-    @FXML private ComboBox<String> badgeColorCombo;
-    @FXML private StackPane iconPreviewPane;
-    @FXML private Label iconPreviewLabel;
+    @FXML
+    private ComboBox<String> iconSymbolCombo;
+    @FXML
+    private ComboBox<String> badgeColorCombo;
+    @FXML
+    private StackPane iconPreviewPane;
+    @FXML
+    private Label iconPreviewLabel;
 
     // Faculty, Intake, Start Date & Total Sessions
-    @FXML private ComboBox<String> teacherCombo;
-    @FXML private TextField maxStudentsField;
-    @FXML private DatePicker startDatePicker;
-    @FXML private TextField totalSessionsField;
+    @FXML
+    private ComboBox<String> teacherCombo;
+    @FXML
+    private TextField maxStudentsField;
+    @FXML
+    private DatePicker startDatePicker;
+    @FXML
+    private TextField totalSessionsField;
 
     // Weekly Timetable Slot Builder
-    @FXML private ComboBox<String> slotDayCombo;
-    @FXML private ComboBox<String> slotPeriodCombo;
-    @FXML private ComboBox<String> slotDurationCombo;
-    @FXML private FlowPane weeklySlotsPane;
+    @FXML
+    private ComboBox<String> slotDayCombo;
+    @FXML
+    private ComboBox<String> slotPeriodCombo;
+    @FXML
+    private ComboBox<String> slotDurationCombo;
+    @FXML
+    private FlowPane weeklySlotsPane;
 
     // Live Generated Session Preview Table
-    @FXML private TableView<SessionRow> sessionTable;
-    @FXML private TableColumn<SessionRow, String> colSessionNo;
-    @FXML private TableColumn<SessionRow, String> colSessionDate;
-    @FXML private TableColumn<SessionRow, String> colSessionDay;
-    @FXML private TableColumn<SessionRow, String> colSessionPeriod;
-    @FXML private TableColumn<SessionRow, String> colSessionAction;
-    @FXML private Label sessionSummaryLabel;
+    @FXML
+    private TableView<SessionRow> sessionTable;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionNo;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionDate;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionDay;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionPeriod;
+    @FXML
+    private TableColumn<SessionRow, String> colSessionAction;
+    @FXML
+    private Label sessionSummaryLabel;
 
     // Exam & Assessment Distribution
-    @FXML private TextField tutorialWeightField;
-    @FXML private TextField assignmentWeightField;
-    @FXML private TextField labTestWeightField;
-    @FXML private TextField practicalWeightField;
-    @FXML private TextField finalExamWeightField;
-    @FXML private Label weightTotalBadge;
-    @FXML private ProgressBar weightProgressBar;
+    @FXML
+    private TextField tutorialWeightField;
+    @FXML
+    private TextField assignmentWeightField;
+    @FXML
+    private TextField labTestWeightField;
+    @FXML
+    private TextField practicalWeightField;
+    @FXML
+    private TextField finalExamWeightField;
+    @FXML
+    private Label weightTotalBadge;
+    @FXML
+    private ProgressBar weightProgressBar;
+    
+    private boolean isUpdatingYearOrSem = false;
+    private boolean yearWasAutoSelected = false;
+    private boolean semWasAutoSelected = false;
 
     private final Map<String, String> colorPalette = new LinkedHashMap<>();
     private final List<WeeklySlot> weeklySlots = new ArrayList<>();
@@ -109,23 +145,23 @@ public class AdminCreateClassController {
     private boolean isSyncingSessionCount = false;
 
     private static final String[] PERIOD_START_TIMES = {
-        "", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM",
-        "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"
+            "", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM",
+            "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"
     };
 
     private static final String[] PERIOD_END_TIMES = {
-        "", "8:50 AM", "9:50 AM", "10:50 AM", "11:50 AM",
-        "12:50 PM", "1:50 PM", "2:50 PM", "3:50 PM", "4:50 PM"
+            "", "8:50 AM", "9:50 AM", "10:50 AM", "11:50 AM",
+            "12:50 PM", "1:50 PM", "2:50 PM", "3:50 PM", "4:50 PM"
     };
 
     private static final String[] PERIOD_START_24H = {
-        "", "08:00", "09:00", "10:00", "11:00",
-        "12:00", "13:00", "14:00", "15:00", "16:00"
+            "", "08:00", "09:00", "10:00", "11:00",
+            "12:00", "13:00", "14:00", "15:00", "16:00"
     };
 
     private static final String[] PERIOD_END_24H = {
-        "", "08:50", "09:50", "10:50", "11:50",
-        "12:50", "13:50", "14:50", "15:50", "16:50"
+            "", "08:50", "09:50", "10:50", "11:50",
+            "12:50", "13:50", "14:50", "15:50", "16:50"
     };
 
     @FXML
@@ -174,8 +210,8 @@ public class AdminCreateClassController {
 
         if (iconSymbolCombo != null) {
             iconSymbolCombo.setItems(FXCollections.observableArrayList(
-                "</>", "💾", "🌐", "🖥", "⚙", "<*>", "📘", "☕", "🔌", "🧠", "🔒", "☁", "🏗", "🔥", "📡", "⚡", "🤖", "🧪"
-            ));
+                    "</>", "💾", "🌐", "🖥", "⚙", "<*>", "📘", "☕", "🔌", "🧠", "🔒", "☁", "🏗", "🔥", "📡", "⚡", "🤖",
+                    "🧪"));
             iconSymbolCombo.setValue("</>");
             iconSymbolCombo.valueProperty().addListener((obs, o, n) -> updateIconPreview());
             if (iconSymbolCombo.getEditor() != null) {
@@ -194,7 +230,8 @@ public class AdminCreateClassController {
 
     private void updateIconPreview() {
         String sym = getComboText(iconSymbolCombo);
-        if (sym.isEmpty()) sym = "📘";
+        if (sym.isEmpty())
+            sym = "📘";
         String colorHex = resolveSelectedColorHex();
 
         if (iconPreviewLabel != null) {
@@ -210,6 +247,31 @@ public class AdminCreateClassController {
         return colorPalette.getOrDefault(selected, "#2563eb");
     }
 
+    private void onAcademicYearChanged() {
+        if (courseTitleCombo == null) return;
+
+        String selectedYear = academicYearCombo != null ? academicYearCombo.getValue() : null;
+
+        isUpdatingCourse = true;
+        TextField editor = courseTitleCombo.getEditor();
+        String currentText = (editor != null && editor.getText() != null) ? editor.getText().trim() : "";
+        CourseCatalogStore.CourseItem currentCourse = CourseCatalogStore.findByLabelOrCode(currentText);
+
+        // Filter strictly by Year only (semester = null)
+        List<String> filtered = CourseCatalogStore.getActiveCourseLabelsByYearAndSemester(selectedYear, null);
+        courseBackingItems.setAll(filtered);
+
+        if (currentCourse != null && selectedYear != null) {
+            String courseYear = CourseCatalogStore.extractAcademicYearFromCode(currentCourse.courseCode);
+            if (courseYear == null || !courseYear.equalsIgnoreCase(selectedYear)) {
+                courseTitleCombo.getSelectionModel().clearSelection();
+                courseTitleCombo.setValue(null);
+                if (editor != null) editor.clear();
+            }
+        }
+        isUpdatingCourse = false;
+    }
+
     private void initSearchableCourseCombo() {
         if (courseTitleCombo == null) return;
 
@@ -219,7 +281,6 @@ public class AdminCreateClassController {
         TextField editor = courseTitleCombo.getEditor();
         if (editor == null) return;
 
-        // When opening the dropdown after a selection (or when blank), show all active courses
         courseTitleCombo.setOnShowing(e -> {
             if (isUpdatingCourse) return;
             String text = editor.getText() != null ? editor.getText().trim() : "";
@@ -229,11 +290,10 @@ public class AdminCreateClassController {
 
             if (text.isEmpty() || isSelectedCourse) {
                 isUpdatingCourse = true;
-                List<String> allActive = CourseCatalogStore.getActiveCourseLabels();
-                if (courseBackingItems.size() != allActive.size()) {
-                    courseBackingItems.setAll(allActive);
-                }
-                if (isSelectedCourse) {
+                String activeYear = academicYearCombo != null ? academicYearCombo.getValue() : null;
+                List<String> baseList = CourseCatalogStore.getActiveCourseLabelsByYearAndSemester(activeYear, null);
+                courseBackingItems.setAll(baseList);
+                if (isSelectedCourse && baseList.contains(text)) {
                     courseTitleCombo.getSelectionModel().select(text);
                     editor.setText(text);
                 } else {
@@ -243,7 +303,6 @@ public class AdminCreateClassController {
             }
         });
 
-        // Backspace once on any selected course clears it straight to blank
         editor.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.BACK_SPACE) {
                 String text = editor.getText() != null ? editor.getText() : "";
@@ -257,9 +316,25 @@ public class AdminCreateClassController {
                     courseTitleCombo.hide();
                     courseTitleCombo.getSelectionModel().clearSelection();
                     courseTitleCombo.setValue(null);
-                    courseBackingItems.setAll(CourseCatalogStore.getActiveCourseLabels());
-                    courseTitleCombo.getSelectionModel().clearSelection();
                     editor.clear();
+
+                    isUpdatingYearOrSem = true;
+                    if (yearWasAutoSelected && academicYearCombo != null) {
+                        academicYearCombo.setValue(null);
+                        academicYearCombo.getSelectionModel().clearSelection();
+                        yearWasAutoSelected = false;
+                    }
+                    if (semWasAutoSelected && semesterCombo != null) {
+                        semesterCombo.setValue(null);
+                        semesterCombo.getSelectionModel().clearSelection();
+                        semWasAutoSelected = false;
+                    }
+                    isUpdatingYearOrSem = false;
+
+                    String activeYear = academicYearCombo != null ? academicYearCombo.getValue() : null;
+                    courseBackingItems.setAll(
+                            CourseCatalogStore.getActiveCourseLabelsByYearAndSemester(activeYear, null));
+                    courseTitleCombo.getSelectionModel().clearSelection();
                     isUpdatingCourse = false;
 
                     Platform.runLater(() -> {
@@ -271,28 +346,42 @@ public class AdminCreateClassController {
             }
         });
 
+        // Picking a course auto-fills Year (and fills Semester only if still unselected)
         courseTitleCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (isUpdatingCourse || newVal == null) return;
             CourseCatalogStore.CourseItem course = CourseCatalogStore.findByLabelOrCode(newVal);
-            if (course != null && majorCombo != null && majorCombo.getItems().contains(course.deptCode)) {
-                majorCombo.setValue(course.deptCode);
+            if (course == null) return;
+
+            String derivedYear = CourseCatalogStore.extractAcademicYearFromCode(course.courseCode);
+            String derivedSem = CourseCatalogStore.extractSemesterFromCode(course.courseCode);
+
+            isUpdatingYearOrSem = true;
+            if (derivedYear != null && academicYearCombo != null && academicYearCombo.getItems().contains(derivedYear)) {
+                boolean wasEmpty = (academicYearCombo.getValue() == null);
+                academicYearCombo.setValue(derivedYear);
+                if (wasEmpty) yearWasAutoSelected = true;
             }
+            if (derivedSem != null && semesterCombo != null
+                    && semesterCombo.getValue() == null
+                    && semesterCombo.getItems().contains(derivedSem)) {
+                semesterCombo.setValue(derivedSem);
+                semWasAutoSelected = true;
+            }
+            isUpdatingYearOrSem = false;
         });
 
-        // Live search while typing (mutates backing list without replacing it)
         editor.textProperty().addListener((obs, oldText, newText) -> {
             if (isUpdatingCourse) return;
-
             String selected = courseTitleCombo.getSelectionModel().getSelectedItem();
-            if (selected != null && selected.equals(newText)) {
-                return;
-            }
+            if (selected != null && selected.equals(newText)) return;
 
             isUpdatingCourse = true;
             String typed = newText == null ? "" : newText;
             String q = typed.trim().toLowerCase();
 
-            List<String> matches = CourseCatalogStore.getActiveCourseLabels().stream()
+            String activeYear = academicYearCombo != null ? academicYearCombo.getValue() : null;
+            List<String> matches = CourseCatalogStore.getActiveCourseLabelsByYearAndSemester(activeYear, null)
+                    .stream()
                     .filter(label -> q.isEmpty() || label.toLowerCase().contains(q))
                     .collect(Collectors.toList());
 
@@ -306,16 +395,16 @@ public class AdminCreateClassController {
             }
             isUpdatingCourse = false;
 
-            if (!matches.isEmpty() && !courseTitleCombo.isShowing() && (courseTitleCombo.isFocused() || editor.isFocused())) {
+            if (!matches.isEmpty() && !courseTitleCombo.isShowing()
+                    && (courseTitleCombo.isFocused() || editor.isFocused())) {
                 courseTitleCombo.show();
             }
         });
-
-        lockComboPopupWidth(courseTitleCombo);
     }
 
     private void lockComboPopupWidth(ComboBox<String> combo) {
-        if (combo == null) return;
+        if (combo == null)
+            return;
 
         Runnable bindWidth = () -> {
             if (combo.getSkin() instanceof ComboBoxListViewSkin<?> skin
@@ -335,25 +424,33 @@ public class AdminCreateClassController {
     private void initDropdowns() {
         if (majorCombo != null) {
             majorCombo.setItems(FXCollections.observableArrayList(
-                "CEIT", "C", "Mech", "EC", "EP", "McE", "ChE", "Tex", "Mn", "PE", "Arch", "Tele", "Met", "FE"
-            ));
+                    "CEIT", "C", "Mech", "EC", "EP", "McE", "ChE", "Tex", "Mn", "PE", "Arch", "Tele", "Met", "FE"));
             String defaultDept = UserSession.departmentCode != null ? UserSession.departmentCode : "CEIT";
             majorCombo.setValue(defaultDept);
         }
 
-        if (semesterCombo != null) {
-            semesterCombo.setItems(FXCollections.observableArrayList("First Semester", "Second Semester"));
-            semesterCombo.setValue("Second Semester");
-        }
-
         if (academicYearCombo != null) {
             academicYearCombo.setItems(FXCollections.observableArrayList(
-                "First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year"
-            ));
-            academicYearCombo.setValue("Second Year");
+                    "First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year"));
+            academicYearCombo.setValue(null);
+            academicYearCombo.getSelectionModel().clearSelection();
+
+            academicYearCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (isUpdatingYearOrSem) return;
+                yearWasAutoSelected = false;
+                onAcademicYearChanged();
+            });
         }
 
-        // Load all active faculty from MySQL (supports cross-major teaching), with fallback to directory store
+        if (semesterCombo != null) {
+            semesterCombo.setItems(FXCollections.observableArrayList(
+                    "First Semester", "Second Semester"));
+            semesterCombo.setValue(null);
+            semesterCombo.getSelectionModel().clearSelection();
+        }
+
+        // Load all active faculty from MySQL (supports cross-major teaching), with
+        // fallback to directory store
         if (teacherCombo != null) {
             List<String> teachers = loadAllActiveTeachersFromDb();
             if (teachers.isEmpty()) {
@@ -364,37 +461,34 @@ public class AdminCreateClassController {
 
         if (slotDayCombo != null) {
             slotDayCombo.setItems(FXCollections.observableArrayList(
-                "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"
-            ));
+                    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"));
             slotDayCombo.setValue("Tuesday");
         }
 
         if (slotPeriodCombo != null) {
             slotPeriodCombo.setItems(FXCollections.observableArrayList(
-                "Period 1 (8:00 – 8:50 AM)",
-                "Period 2 (9:00 – 9:50 AM)",
-                "Period 3 (10:00 – 10:50 AM)",
-                "Period 4 (11:00 – 11:50 AM)",
-                "Period 5 (12:00 – 12:50 PM)",
-                "Period 6 (1:00 – 1:50 PM)",
-                "Period 7 (2:00 – 2:50 PM)",
-                "Period 8 (3:00 – 3:50 PM)",
-                "Period 9 (4:00 – 4:50 PM)"
-            ));
+                    "Period 1 (8:00 – 8:50 AM)",
+                    "Period 2 (9:00 – 9:50 AM)",
+                    "Period 3 (10:00 – 10:50 AM)",
+                    "Period 4 (11:00 – 11:50 AM)",
+                    "Period 5 (12:00 – 12:50 PM)",
+                    "Period 6 (1:00 – 1:50 PM)",
+                    "Period 7 (2:00 – 2:50 PM)",
+                    "Period 8 (3:00 – 3:50 PM)",
+                    "Period 9 (4:00 – 4:50 PM)"));
             slotPeriodCombo.setValue("Period 6 (1:00 – 1:50 PM)");
         }
 
         if (slotDurationCombo != null) {
             slotDurationCombo.setItems(FXCollections.observableArrayList(
-                "1 Period (Single)",
-                "2 Periods (Double)",
-                "3 Periods (Triple)",
-                "4 Periods (Quad)"
-            ));
+                    "1 Period (Single)",
+                    "2 Periods (Double)",
+                    "3 Periods (Triple)",
+                    "4 Periods (Quad)"));
             slotDurationCombo.setValue("2 Periods (Double)");
         }
     }
-
+    
     private List<String> loadAllActiveTeachersFromDb() {
         List<String> names = new ArrayList<>();
         String sql = """
@@ -406,8 +500,8 @@ public class AdminCreateClassController {
                 ORDER BY t.full_name ASC
                 """;
         try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+                PreparedStatement pstmt = conn.prepareStatement(sql);
+                ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 names.add(rs.getString("full_name"));
             }
@@ -421,11 +515,12 @@ public class AdminCreateClassController {
 
     private void initWeightageControls() {
         TextField[] fields = {
-            tutorialWeightField, assignmentWeightField, labTestWeightField,
-            practicalWeightField, finalExamWeightField
+                tutorialWeightField, assignmentWeightField, labTestWeightField,
+                practicalWeightField, finalExamWeightField
         };
         for (TextField tf : fields) {
-            if (tf == null) continue;
+            if (tf == null)
+                continue;
             tf.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null && !newVal.matches("\\d*(\\.\\d{0,2})?")) {
                     tf.setText(oldVal);
@@ -462,7 +557,7 @@ public class AdminCreateClassController {
         if (remaining.compareTo(BigDecimal.ZERO) < 0) {
             showAlert(Alert.AlertType.WARNING, "Weights Exceed 100%",
                     "The other 4 components already total " + others.stripTrailingZeros().toPlainString()
-                    + "%. Lower them before auto-filling Final Exam.");
+                            + "%. Lower them before auto-filling Final Exam.");
             return;
         }
         if (finalExamWeightField != null) {
@@ -471,11 +566,16 @@ public class AdminCreateClassController {
     }
 
     private void setWeightFields(String tut, String assign, String lab, String prac, String fin) {
-        if (tutorialWeightField != null) tutorialWeightField.setText(tut);
-        if (assignmentWeightField != null) assignmentWeightField.setText(assign);
-        if (labTestWeightField != null) labTestWeightField.setText(lab);
-        if (practicalWeightField != null) practicalWeightField.setText(prac);
-        if (finalExamWeightField != null) finalExamWeightField.setText(fin);
+        if (tutorialWeightField != null)
+            tutorialWeightField.setText(tut);
+        if (assignmentWeightField != null)
+            assignmentWeightField.setText(assign);
+        if (labTestWeightField != null)
+            labTestWeightField.setText(lab);
+        if (practicalWeightField != null)
+            practicalWeightField.setText(prac);
+        if (finalExamWeightField != null)
+            finalExamWeightField.setText(fin);
         updateWeightageIndicator();
     }
 
@@ -518,17 +618,20 @@ public class AdminCreateClassController {
         if (weightTotalBadge != null) {
             if (cmp == 0) {
                 weightTotalBadge.setText("✔ Total: 100% — Ready");
-                weightTotalBadge.setStyle("-fx-background-color: #dcfce7; -fx-text-fill: #15803d; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;");
+                weightTotalBadge.setStyle(
+                        "-fx-background-color: #dcfce7; -fx-text-fill: #15803d; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;");
             } else if (cmp < 0) {
                 BigDecimal rem = hundred.subtract(total);
                 weightTotalBadge.setText("⚠ Total: " + total.stripTrailingZeros().toPlainString()
                         + "% (" + rem.stripTrailingZeros().toPlainString() + "% left)");
-                weightTotalBadge.setStyle("-fx-background-color: #fef3c7; -fx-text-fill: #b45309; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;");
+                weightTotalBadge.setStyle(
+                        "-fx-background-color: #fef3c7; -fx-text-fill: #b45309; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;");
             } else {
                 BigDecimal over = total.subtract(hundred);
                 weightTotalBadge.setText("✖ Total: " + total.stripTrailingZeros().toPlainString()
                         + "% (" + over.stripTrailingZeros().toPlainString() + "% over)");
-                weightTotalBadge.setStyle("-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;");
+                weightTotalBadge.setStyle(
+                        "-fx-background-color: #fee2e2; -fx-text-fill: #b91c1c; -fx-font-weight: bold; -fx-font-size: 12px; -fx-padding: 4px 12px; -fx-background-radius: 14px;");
             }
         }
     }
@@ -541,7 +644,8 @@ public class AdminCreateClassController {
         String periodStr = slotPeriodCombo != null ? slotPeriodCombo.getValue() : null;
         String durationStr = slotDurationCombo != null ? slotDurationCombo.getValue() : "1 Period (Single)";
 
-        if (dayName == null || periodStr == null) return;
+        if (dayName == null || periodStr == null)
+            return;
 
         DayOfWeek day = DayOfWeek.valueOf(dayName.toUpperCase(Locale.ENGLISH));
         int startPeriod = extractPeriodNumber(periodStr);
@@ -550,7 +654,7 @@ public class AdminCreateClassController {
         if (startPeriod + duration - 1 > 9) {
             showAlert(Alert.AlertType.WARNING, "Exceeds Daily Periods",
                     "Period 9 is the final period of the day, so a " + duration
-                    + "-period block cannot start at Period " + startPeriod + ".");
+                            + "-period block cannot start at Period " + startPeriod + ".");
             return;
         }
 
@@ -575,7 +679,8 @@ public class AdminCreateClassController {
     }
 
     private int extractDurationCount(String durationText) {
-        if (durationText == null || durationText.isEmpty()) return 1;
+        if (durationText == null || durationText.isEmpty())
+            return 1;
         char firstChar = durationText.trim().charAt(0);
         if (Character.isDigit(firstChar)) {
             int val = Character.getNumericValue(firstChar);
@@ -585,11 +690,13 @@ public class AdminCreateClassController {
     }
 
     private void renderWeeklySlotChips() {
-        if (weeklySlotsPane == null) return;
+        if (weeklySlotsPane == null)
+            return;
         weeklySlotsPane.getChildren().clear();
 
         if (weeklySlots.isEmpty()) {
-            Label emptyLbl = new Label("No weekly slots added yet. Pick a Day, Start Period, and Length above, then click + Add Slot.");
+            Label emptyLbl = new Label(
+                    "No weekly slots added yet. Pick a Day, Start Period, and Length above, then click + Add Slot.");
             emptyLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-style: italic;");
             weeklySlotsPane.getChildren().add(emptyLbl);
             return;
@@ -599,18 +706,16 @@ public class AdminCreateClassController {
             HBox chip = new HBox(6.0);
             chip.setAlignment(Pos.CENTER_LEFT);
             chip.setStyle(
-                "-fx-background-color: #dbeafe; -fx-border-color: #93c5fd; " +
-                "-fx-border-radius: 14px; -fx-background-radius: 14px; -fx-padding: 4px 10px;"
-            );
+                    "-fx-background-color: #dbeafe; -fx-border-color: #93c5fd; " +
+                            "-fx-border-radius: 14px; -fx-background-radius: 14px; -fx-padding: 4px 10px;");
 
             Label textLbl = new Label(slot.toChipLabel());
             textLbl.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;");
 
             Button closeBtn = new Button("✕");
             closeBtn.setStyle(
-                "-fx-background-color: transparent; -fx-text-fill: #1d4ed8; -fx-font-size: 10px; " +
-                "-fx-font-weight: bold; -fx-padding: 0 2px; -fx-cursor: hand;"
-            );
+                    "-fx-background-color: transparent; -fx-text-fill: #1d4ed8; -fx-font-size: 10px; " +
+                            "-fx-font-weight: bold; -fx-padding: 0 2px; -fx-cursor: hand;");
             closeBtn.setOnAction(e -> {
                 weeklySlots.remove(slot);
                 renderWeeklySlotChips();
@@ -623,7 +728,8 @@ public class AdminCreateClassController {
     }
 
     private void initSessionTable() {
-        if (sessionTable == null) return;
+        if (sessionTable == null)
+            return;
 
         colSessionNo.setCellValueFactory(c -> c.getValue().sessionNoProperty());
         colSessionDate.setCellValueFactory(c -> c.getValue().dateProperty());
@@ -636,17 +742,14 @@ public class AdminCreateClassController {
             {
                 removeBtn.setMinWidth(Button.USE_PREF_SIZE);
                 removeBtn.setStyle(
-                    "-fx-background-color: transparent; -fx-text-fill: #475569; " +
-                    "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"
-                );
+                        "-fx-background-color: transparent; -fx-text-fill: #475569; " +
+                                "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;");
                 removeBtn.setOnMouseEntered(e -> removeBtn.setStyle(
-                    "-fx-background-color: #fee2e2; -fx-text-fill: #e11d48; -fx-background-radius: 5px; " +
-                    "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"
-                ));
+                        "-fx-background-color: #fee2e2; -fx-text-fill: #e11d48; -fx-background-radius: 5px; " +
+                                "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"));
                 removeBtn.setOnMouseExited(e -> removeBtn.setStyle(
-                    "-fx-background-color: transparent; -fx-text-fill: #475569; " +
-                    "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"
-                ));
+                        "-fx-background-color: transparent; -fx-text-fill: #475569; " +
+                                "-fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 3px 8px;"));
                 removeBtn.setOnAction(e -> {
                     SessionRow row = getTableView().getItems().get(getIndex());
                     generatedSessions.remove(row);
@@ -699,16 +802,17 @@ public class AdminCreateClassController {
                     String dayShort = dow.getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
                     String dateStr = currentDate.toString();
 
-                    for (int offset = 0; offset < slot.duration && generatedSessions.size() < cappedSessions; offset++) {
+                    for (int offset = 0; offset < slot.duration
+                            && generatedSessions.size() < cappedSessions; offset++) {
                         int p = slot.startPeriod + offset;
-                        String periodDisplay = "Period " + p + " (" + PERIOD_START_TIMES[p] + " – " + PERIOD_END_TIMES[p] + ")";
+                        String periodDisplay = "Period " + p + " (" + PERIOD_START_TIMES[p] + " – "
+                                + PERIOD_END_TIMES[p] + ")";
                         generatedSessions.add(new SessionRow(
-                            String.valueOf(sessionCounter++),
-                            dateStr,
-                            dayShort,
-                            p,
-                            periodDisplay
-                        ));
+                                String.valueOf(sessionCounter++),
+                                dateStr,
+                                dayShort,
+                                p,
+                                periodDisplay));
                     }
                 }
             }
@@ -725,7 +829,8 @@ public class AdminCreateClassController {
     }
 
     private void updateSummaryLabel() {
-        if (sessionSummaryLabel == null) return;
+        if (sessionSummaryLabel == null)
+            return;
 
         if (weeklySlots.isEmpty()) {
             sessionSummaryLabel.setText("Add at least one Weekly Timetable Slot above to generate class sessions.");
@@ -742,8 +847,8 @@ public class AdminCreateClassController {
             String firstDate = generatedSessions.get(0).getDate();
             String lastDate = generatedSessions.get(generatedSessions.size() - 1).getDate();
             sessionSummaryLabel.setText(
-                "Generated " + generatedSessions.size() + " period sessions (" + patternSummary + " · " + firstDate + " → " + lastDate + ")"
-            );
+                    "Generated " + generatedSessions.size() + " period sessions (" + patternSummary + " · " + firstDate
+                            + " → " + lastDate + ")");
         }
     }
 
@@ -773,15 +878,24 @@ public class AdminCreateClassController {
         String courseCode = course.courseCode;
         String courseTitle = course.courseName;
         String major = majorCombo != null && majorCombo.getValue() != null ? majorCombo.getValue() : "CEIT";
-        String semester = semesterCombo != null && semesterCombo.getValue() != null ? semesterCombo.getValue() : "First Semester";
-        String year = academicYearCombo != null && academicYearCombo.getValue() != null ? academicYearCombo.getValue() : "Second Year";
+        // List<String> multiMajor = new ArrayList<>(); --If targetDept supports
+        // multiMajor
+        String semester = semesterCombo != null ? semesterCombo.getValue() : null;
+        String year = academicYearCombo != null ? academicYearCombo.getValue() : null;
+
+        if (year == null || year.isBlank() || semester == null || semester.isBlank()) {
+            showAlert(Alert.AlertType.WARNING, "Missing Required Fields",
+                    "Please select both Academic Year and Semester before creating the class.");
+            return;
+        }
         String teacher = teacherCombo != null ? teacherCombo.getValue() : null;
         String maxStudentsStr = getSafeText(maxStudentsField);
         String totalSessionsStr = getSafeText(totalSessionsField);
         LocalDate startDate = startDatePicker != null ? startDatePicker.getValue() : null;
 
         String customSymbol = getComboText(iconSymbolCombo);
-        if (customSymbol.isEmpty()) customSymbol = "📘";
+        if (customSymbol.isEmpty())
+            customSymbol = "📘";
         String badgeColor = resolveSelectedColorHex();
 
         if (teacher == null || maxStudentsStr.isEmpty() || totalSessionsStr.isEmpty() || startDate == null) {
@@ -819,7 +933,8 @@ public class AdminCreateClassController {
         if (generatedSessions.size() != totalSessions) {
             showAlert(Alert.AlertType.WARNING, "Session Count Conflict",
                     "Total Sessions is set to " + totalSessions + ", but the schedule table currently has "
-                    + generatedSessions.size() + " sessions. Please adjust Total Sessions or regenerate the schedule.");
+                            + generatedSessions.size()
+                            + " sessions. Please adjust Total Sessions or regenerate the schedule.");
             return;
         }
 
@@ -835,71 +950,14 @@ public class AdminCreateClassController {
         if (weightSum.compareTo(new BigDecimal("100.00")) != 0) {
             showAlert(Alert.AlertType.WARNING, "Invalid Exam Distribution",
                     "Exam & Assessment weights must total exactly 100% (currently "
-                    + weightSum.stripTrailingZeros().toPlainString()
-                    + "%). Tip: click 'Auto-Fill Final Exam' to balance.");
+                            + weightSum.stripTrailingZeros().toPlainString()
+                            + "%). Tip: click 'Auto-Fill Final Exam' to balance.");
             return;
         }
 
-        // Convert UI session rows to DAO SessionInput list
-        List<SessionInput> sessionInputs = generatedSessions.stream()
-                .map(row -> new SessionInput(LocalDate.parse(row.getDate()), row.getPeriodNumber()))
-                .collect(Collectors.toList());
-
-        int enrolledCount;
-        try (Connection conn = DatabaseConnector.getConnection()) {
-            DepartmentDAO departmentDAO = new DepartmentDAO();
-            CourseDAO courseDAO = new CourseDAO();
-            CourseOfferingDAO offeringDAO = new CourseOfferingDAO();
-
-            int createDeptId = departmentDAO.getDeptIdByUserId(UserSession.userId);
-            int targetDeptId = departmentDAO.getDeptIdByNameAndDept(conn, major, major);
-            int lecturerDeptId = departmentDAO.getDeptIdByTeacherName(conn, teacher);
-            int courseId = (course.courseId > 0)
-                    ? course.courseId
-                    : courseDAO.getCourseIdByCodeAndDept(conn, courseCode, createDeptId);
-
-            int offeringId = offeringDAO.createCourseOffering(
-                    teacher,
-                    lecturerDeptId,
-                    Collections.singletonList(targetDeptId),
-                    courseId,
-                    createDeptId,
-                    year,
-                    semester,
-                    startDate,
-                    capacity,
-                    generatedSessions.size(),
-                    customSymbol,
-                    badgeColor,
-                    sessionInputs,
-                    tutorialWeight,
-                    assignmentWeight,
-                    labTestWeight,
-                    practicalWeight,
-                    finalExamWeight
-            );
-
-            enrolledCount = offeringDAO.getTotalEnrolledStudents(conn, offeringId);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Database Error",
-                    "Failed to create class offering in database:\n" + e.getMessage());
-            return;
-        }
-
-        // Sync in-memory stores for instant UI updates
+        // Auto-assign matching (major, year, semester) students to this offering's
+        // Roster & Daily Log
         LocalDate firstDate = LocalDate.parse(generatedSessions.get(0).getDate());
-        ClassRosterStore.autoAssignStudentsForNewClass(
-                courseCode, courseTitle, major, year, semester, firstDate
-        );
-
-        SubjectWeightageStore.setForSubject(
-                courseTitle,
-                labTestWeight.add(practicalWeight).intValue(),
-                assignmentWeight.intValue(),
-                tutorialWeight.intValue(),
-                finalExamWeight.intValue()
-        );
 
         String patternSummary = weeklySlots.stream()
                 .map(WeeklySlot::toShortSummary)
@@ -909,36 +967,88 @@ public class AdminCreateClassController {
                 .collect(Collectors.joining(" | "));
         String shortSection = buildSectionLabel(year);
 
-        ClassesController.initSampleClassData();
-        ClassesController.SHARED_CLASS_DATA.add(0, new ClassesController.ClassItem(
-            courseCode,
-            courseTitle,
-            major,
-            year,
-            semester,
-            shortSection,
-            enrolledCount + " / " + capacity + " students",
-            scheduleSummary,
-            teacher,
-            badgeColor,
-            customSymbol
-        ));
+        if (ClassesController.SHARED_CLASS_DATA.isEmpty()) {
+            ClassesController.initSampleClassData();
+        }
+        int offeringId = -1;
+        System.out.println("Target Major: " + major);
+        try (Connection conn = DatabaseConnector.getConnection()) {
+            CourseOfferingDAO courseOfferingDAO = new CourseOfferingDAO();
+            DepartmentDAO departmentDAO = new DepartmentDAO();
+            CourseDAO courseDAO = new CourseDAO();
+            int userDeptId = departmentDAO.getDeptIdByUserId(UserSession.userId);
+            List<Integer> targetDeptIds = new ArrayList<>();
+            // =========================================================================
+            // if (multiMajor != null && !multiMajor.isEmpty()) {
+            // try (Connection conn = DatabaseConnector.getConnection()) {
+            // for (String eachMajor : multiMajor) {
+            // if (eachMajor == null || eachMajor.isBlank())
+            // continue;
+            // int majorId = departmentDAO.getDeptIdByNameAndDept(conn, null, eachMajor);
+            // targetDeptIds.add(majorId);
+            // }
+            // } catch (SQLException e) {
+            // e.printStackTrace();
+            // }
+            // }
+            // =========================================================================
+            int teacherDeptId = departmentDAO.getDeptIdByTeacherName(conn, teacher);
+            int targetDeptId = departmentDAO.getDeptIdByNameAndDept(conn, major, major);
+            targetDeptIds.add(targetDeptId);
+            int courseId = courseDAO.getCourseIdByNameAndDept(conn, courseTitle, userDeptId);
+            List<SessionInput> sessions = new ArrayList<>();
 
-        showAlert(Alert.AlertType.INFORMATION, "Class Created & Published",
-                String.format(Locale.ENGLISH,
-                    "Class (%s - %s) has been published!\n"
-                    + "Timetable: %s (Starting %s, %d sessions)\n"
-                    + "Exam Distribution: Tut %s%% | Assign %s%% | Lab %s%% | Prac %s%% | Final %s%%\n"
-                    + "Auto-Enrolled Students: %d students (%s · %s · %s)",
-                    courseCode, courseTitle, patternSummary, startDate, generatedSessions.size(),
-                    tutorialWeight.stripTrailingZeros().toPlainString(),
-                    assignmentWeight.stripTrailingZeros().toPlainString(),
-                    labTestWeight.stripTrailingZeros().toPlainString(),
-                    practicalWeight.stripTrailingZeros().toPlainString(),
-                    finalExamWeight.stripTrailingZeros().toPlainString(),
-                    enrolledCount, major, year, semester));
+            for (SessionRow row : generatedSessions) {
+                LocalDate sessionDate = LocalDate.parse(row.getDate().trim());
+                int period = row.getPeriodNumber();
+                sessions.add(new SessionInput(sessionDate, period));
+            }
 
-        navigateBackToClasses(event);
+            offeringId = courseOfferingDAO.createCourseOffering(teacher, teacherDeptId, targetDeptIds, courseId,
+                    userDeptId, year, semester, startDate, capacity,
+                    totalSessions, customSymbol, badgeColor, sessions,
+                    tutorialWeight, assignmentWeight, labTestWeight, practicalWeight, finalExamWeight);
+            if (offeringId > 0) {
+                int enrolledCount = courseOfferingDAO.getTotalEnrolledStudents(conn, offeringId);
+
+                ClassesController.SHARED_CLASS_DATA.add(0, new ClassesController.ClassItem(
+                        offeringId,
+                        courseCode,
+                        courseTitle,
+                        major,
+                        year,
+                        semester,
+                        shortSection,
+                        enrolledCount + " / " + capacity + " students",
+                        scheduleSummary,
+                        teacher,
+                        badgeColor,
+                        customSymbol));
+
+                showAlert(Alert.AlertType.INFORMATION, "Class Created & Published",
+                        String.format(Locale.ENGLISH,
+                                "Class (%s - %s) has been published to both Admin and Lecturer views!\n"
+                                        + "Timetable: %s (Starting %s, %d sessions)\n"
+                                        + "Exam Distribution: Tut %s%% | Assign %s%% | Lab %s%% | Prac %s%% | Final %s%%\n"
+                                        + "Auto-Assigned Students: %d students (%s · %s · %s)",
+                                courseCode, courseTitle, patternSummary, startDate, generatedSessions.size(),
+                                tutorialWeight.stripTrailingZeros().toPlainString(),
+                                assignmentWeight.stripTrailingZeros().toPlainString(),
+                                labTestWeight.stripTrailingZeros().toPlainString(),
+                                practicalWeight.stripTrailingZeros().toPlainString(),
+                                finalExamWeight.stripTrailingZeros().toPlainString(),
+                                enrolledCount, major, year, semester));
+
+                navigateBackToClasses(event);
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Class Creation Failed",
+                        "Could not create the class offering. No offering ID was returned.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Database Error",
+                    "Failed to create class offering: " + e.getMessage());
+        }
     }
 
     private void navigateBackToClasses(ActionEvent event) {
@@ -972,8 +1082,10 @@ public class AdminCreateClassController {
     }
 
     private String getComboText(ComboBox<String> combo) {
-        if (combo == null) return "";
-        if (combo.isEditable() && combo.getEditor() != null && combo.getEditor().getText() != null && !combo.getEditor().getText().trim().isEmpty()) {
+        if (combo == null)
+            return "";
+        if (combo.isEditable() && combo.getEditor() != null && combo.getEditor().getText() != null
+                && !combo.getEditor().getText().trim().isEmpty()) {
             return combo.getEditor().getText().trim();
         }
         if (combo.getValue() != null && !combo.getValue().trim().isEmpty()) {
@@ -983,7 +1095,8 @@ public class AdminCreateClassController {
     }
 
     private int extractPeriodNumber(String periodText) {
-        if (periodText == null) return 1;
+        if (periodText == null)
+            return 1;
         for (char ch : periodText.toCharArray()) {
             if (Character.isDigit(ch)) {
                 return Character.getNumericValue(ch);
@@ -1003,12 +1116,12 @@ public class AdminCreateClassController {
 
     private String buildSectionLabel(String year) {
         return switch (year) {
-            case "First Year"  -> "Year 1 - Class 1A";
+            case "First Year" -> "Year 1 - Class 1A";
             case "Second Year" -> "Year 2 - Class 2A";
-            case "Third Year"  -> "Year 3 - Class 3A";
+            case "Third Year" -> "Year 3 - Class 3A";
             case "Fourth Year" -> "Year 4 - Class 4A";
-            case "Fifth Year"  -> "Year 5 - Class 5A";
-            default            -> year + " - Class A";
+            case "Fifth Year" -> "Year 5 - Class 5A";
+            default -> year + " - Class A";
         };
     }
 
@@ -1071,24 +1184,50 @@ public class AdminCreateClassController {
             this.periodLabel = new SimpleStringProperty(periodLabel);
         }
 
-        public String getSessionNo() { return sessionNo.get(); }
-        public void setSessionNo(String val) { sessionNo.set(val); }
-        public StringProperty sessionNoProperty() { return sessionNo; }
+        public String getSessionNo() {
+            return sessionNo.get();
+        }
 
-        public String getDate() { return date.get(); }
-        public StringProperty dateProperty() { return date; }
+        public void setSessionNo(String val) {
+            sessionNo.set(val);
+        }
 
-        public String getDay() { return day.get(); }
-        public StringProperty dayProperty() { return day; }
+        public StringProperty sessionNoProperty() {
+            return sessionNo;
+        }
 
-        public int getPeriodNumber() { return periodNumber; }
+        public String getDate() {
+            return date.get();
+        }
 
-        public String getPeriodLabel() { return periodLabel.get(); }
-        public StringProperty periodLabelProperty() { return periodLabel; }
+        public StringProperty dateProperty() {
+            return date;
+        }
+
+        public String getDay() {
+            return day.get();
+        }
+
+        public StringProperty dayProperty() {
+            return day;
+        }
+
+        public int getPeriodNumber() {
+            return periodNumber;
+        }
+
+        public String getPeriodLabel() {
+            return periodLabel.get();
+        }
+
+        public StringProperty periodLabelProperty() {
+            return periodLabel;
+        }
     }
 
     private void lockTableColumns(TableView<?> table, double... ratios) {
-        if (table == null || table.getColumns().size() != ratios.length) return;
+        if (table == null || table.getColumns().size() != ratios.length)
+            return;
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         for (int i = 0; i < ratios.length; i++) {
             TableColumn<?, ?> col = table.getColumns().get(i);
@@ -1099,4 +1238,5 @@ public class AdminCreateClassController {
             col.prefWidthProperty().bind(table.widthProperty().multiply(ratios[i]));
         }
     }
+    
 }

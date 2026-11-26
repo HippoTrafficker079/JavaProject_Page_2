@@ -17,17 +17,12 @@
       <!-- LEFT BRANDING PANEL (Matches Minimal YTU Navy Layout) -->
       <VBox alignment="CENTER" prefWidth="420.0" style="-fx-background-color: #1b315e; -fx-padding: 36px 40px;">
          <children>
-            <ImageView fitHeight="156.0" fitWidth="295.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fitHeight="148.0" fitWidth="334.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../../../../Downloads/photo_2026-10-14_21-55-21-removebg-preview.png" />
+                  <Image url="@YTU_logo.png" />
                </image>
             </ImageView>
-            <VBox alignment="CENTER" spacing="8.0">
-               <children>
-                  <Label style="-fx-text-fill: #ffffff; -fx-font-size: 32px; -fx-font-weight: bold;" text="YTU" textAlignment="CENTER" />
-                  <Label style="-fx-text-fill: #94a3b8; -fx-font-size: 13px; -fx-font-weight: bold; -fx-letter-spacing: 0.5px;" text="YANGON TECHNOLOGICAL UNIVERSITY" textAlignment="CENTER" wrapText="true" />
-               </children>
-            </VBox>
+            <VBox alignment="CENTER" spacing="8.0" />
             <Region VBox.vgrow="ALWAYS" />
             <Region VBox.vgrow="ALWAYS" />
             <Label style="-fx-text-fill: #64748b; -fx-font-size: 12px;" text="Student Information Management System" textAlignment="CENTER" wrapText="true" />

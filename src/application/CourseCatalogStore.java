@@ -92,4 +92,98 @@ public class CourseCatalogStore {
                 .findFirst()
                 .orElse(null);
     }
+    /**
+     * Validates YTU course code format: [Prefix]-[5-Digit Number]
+     * - Prefix: 1 to 6 letters (e.g., EM, ME, CEIT, ECh, Met)
+     * - 1st digit: Year (1–5)
+     * - 2nd digit: Semester (1–2)
+     * - Last 3 digits: Course sequence (001–999)
+     */
+    private static final java.util.regex.Pattern YTU_COURSE_CODE_PATTERN =
+            java.util.regex.Pattern.compile("^[A-Za-z]{1,6}-[1-5][1-2]\\d{3}$");
+    public static boolean isValidYtuCourseCode(String courseCode) {
+    	
+        if (courseCode == null) return false;
+        String trimmed = courseCode.trim();
+        return YTU_COURSE_CODE_PATTERN.matcher(trimmed).matches()
+                && !trimmed.endsWith("000");
+    }
+
+    /**
+     * Extracts Academic Year from the 1st digit after the hyphen (or 1st digit in code).
+     * e.g. EM-11001 -> "First Year", ME-31016 -> "Third Year"
+     */
+    public static String extractAcademicYearFromCode(String courseCode) {
+        String digits = extractNumericPart(courseCode);
+        if (digits.isEmpty()) return null;
+        return switch (digits.charAt(0)) {
+            case '1' -> "First Year";
+            case '2' -> "Second Year";
+            case '3' -> "Third Year";
+            case '4' -> "Fourth Year";
+            case '5' -> "Fifth Year";
+            default -> null;
+        };
+    }
+
+    /**
+     * Extracts Semester from the 2nd digit after the hyphen (or 2nd digit in code).
+     * e.g. EM-11001 -> "First Semester", CEIT-22005 -> "Second Semester"
+     */
+    public static String extractSemesterFromCode(String courseCode) {
+        String digits = extractNumericPart(courseCode);
+        if (digits.length() < 2) return null;
+        return switch (digits.charAt(1)) {
+            case '1' -> "First Semester";
+            case '2' -> "Second Semester";
+            default -> null;
+        };
+    }
+
+    private static String extractNumericPart(String courseCode) {
+        if (courseCode == null || courseCode.isBlank()) return "";
+        String part = courseCode.contains("-")
+                ? courseCode.substring(courseCode.indexOf('-') + 1).trim()
+                : courseCode.trim();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < part.length(); i++) {
+            if (Character.isDigit(part.charAt(i))) {
+                sb.append(part.charAt(i));
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Filters active courses by Academic Year and/or Semester derived from the course code.
+     */
+    public static List<String> getActiveCourseLabelsByYearAndSemester(String academicYear, String semester) {
+        return COURSES.stream()
+                .filter(c -> c.isActive)
+                .filter(c -> academicYear == null || academicYear.isBlank()
+                        || academicYear.equalsIgnoreCase(extractAcademicYearFromCode(c.courseCode)))
+                .filter(c -> semester == null || semester.isBlank()
+                        || semester.equalsIgnoreCase(extractSemesterFromCode(c.courseCode)))
+                .map(CourseItem::getDisplayLabel)
+                .collect(Collectors.toList());
+    }
+ 
+
+
+    /**
+     * Returns active course labels filtered by academic year (based on first digit of courseCode).
+     * If academicYear is null or blank, returns all active courses.
+     */
+    public static List<String> getActiveCourseLabelsByYear(String academicYear) {
+        if (academicYear == null || academicYear.isBlank()) {
+            return getActiveCourseLabels();
+        }
+        return COURSES.stream()
+                .filter(c -> c.isActive)
+                .filter(c -> academicYear.equalsIgnoreCase(extractAcademicYearFromCode(c.courseCode)))
+                .map(CourseItem::getDisplayLabel)
+                .collect(Collectors.toList());
+    }
+    
+    
 }

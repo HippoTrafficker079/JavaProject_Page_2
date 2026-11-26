@@ -1,7 +1,5 @@
 package application.dao;
 
-//import java.lang.classfile.instruction.SwitchCase;
-
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -66,8 +64,8 @@ public class CourseOfferingDAO {
         if (maxStudent < 0 || totalSessions <= 0) {
             throw new IllegalArgumentException("maxStudent must be non-negative and totalSessions must be positive.");
         }
-        // validateWeights(tutorialWeight, assignmentWeight, labTestWeight,
-        // practicalWeight, finalExamWeight);
+        validateWeights(tutorialWeight, assignmentWeight, labTestWeight,
+                practicalWeight, finalExamWeight);
 
         String insertOfferingSql = """
                 INSERT INTO course_offering (
@@ -94,19 +92,17 @@ public class CourseOfferingDAO {
                 VALUES (?, ?, ?)
                 """;
 
-        /*
-         * String insertWeightSql = """
-         * INSERT INTO assessment_weight (
-         * offering_id,
-         * tutorial_weight,
-         * assignment_weight,
-         * lab_test_weight,
-         * practical_weight,
-         * final_exam_weight
-         * )
-         * VALUES (?, ?, ?, ?, ?, ?)
-         * """;
-         */
+        String insertWeightSql = """
+                INSERT INTO assessment_weight (
+                    offering_id,
+                    tutorial_weight,
+                    assignment_weight,
+                    lab_test_weight,
+                    practical_weight,
+                    final_exam_weight
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                """;
 
         String placeholders = String.join(", ", java.util.Collections.nCopies(targetDeptIds.size(), "?"));
 
@@ -136,8 +132,7 @@ public class CourseOfferingDAO {
 
                     offeringStmt.setInt(1, teacherId);
                     offeringStmt.setInt(2, courseId);
-                    offeringStmt.setInt(3, createDeptId); // Department that created the offering
-
+                    offeringStmt.setInt(3, createDeptId);
                     offeringStmt.setInt(4, academicYear);
                     offeringStmt.setString(5, year);
                     offeringStmt.setInt(6, totalSessions);
@@ -175,21 +170,18 @@ public class CourseOfferingDAO {
                     }
                 }
 
-                /*
-                 * try (PreparedStatement weightStmt = conn.prepareStatement(insertWeightSql)) {
-                 * weightStmt.setInt(1, offeringId);
-                 * weightStmt.setBigDecimal(2, tutorialWeight);
-                 * weightStmt.setBigDecimal(3, assignmentWeight);
-                 * weightStmt.setBigDecimal(4, labTestWeight);
-                 * weightStmt.setBigDecimal(5, practicalWeight);
-                 * weightStmt.setBigDecimal(6, finalExamWeight);
-                 * 
-                 * if (weightStmt.executeUpdate() == 0) {
-                 * throw new
-                 * SQLException("Creating assessment_weight failed, no rows affected.");
-                 * }
-                 * }
-                 */
+                try (PreparedStatement weightStmt = conn.prepareStatement(insertWeightSql)) {
+                    weightStmt.setInt(1, offeringId);
+                    weightStmt.setBigDecimal(2, tutorialWeight);
+                    weightStmt.setBigDecimal(3, assignmentWeight);
+                    weightStmt.setBigDecimal(4, labTestWeight);
+                    weightStmt.setBigDecimal(5, practicalWeight);
+                    weightStmt.setBigDecimal(6, finalExamWeight);
+
+                    if (weightStmt.executeUpdate() == 0) {
+                        throw new SQLException("Creating assessment_weight failed, no rows affected.");
+                    }
+                }
 
                 try (PreparedStatement enrollStmt = conn.prepareStatement(enrollStudentsSql)) {
                     enrollStmt.setInt(1, offeringId);
@@ -220,40 +212,36 @@ public class CourseOfferingDAO {
                 try {
                     conn.setAutoCommit(previousAutoCommit);
                 } catch (SQLException ignored) {
-                    // Connection is about to close
                 }
             }
         }
     }
 
-    /*
-     * private void validateWeights(
-     * BigDecimal tutorial,
-     * BigDecimal assignment,
-     * BigDecimal labTest,
-     * BigDecimal practical,
-     * BigDecimal finalExam) {
-     * 
-     * BigDecimal[] weights = { tutorial, assignment, labTest, practical, finalExam
-     * };
-     * BigDecimal sum = BigDecimal.ZERO;
-     * 
-     * for (BigDecimal w : weights) {
-     * if (w == null || w.compareTo(BigDecimal.ZERO) < 0) {
-     * throw new
-     * IllegalArgumentException("Assessment weights must be non-negative.");
-     * }
-     * sum = sum.add(w);
-     * }
-     * 
-     * if (sum.compareTo(new BigDecimal("100.00")) != 0) {
-     * throw new IllegalArgumentException(
-     * "Assessment weights must sum to 100.00, got: " + sum);
-     * }
-     * }
-     */
+    private void validateWeights(
+            BigDecimal tutorial,
+            BigDecimal assignment,
+            BigDecimal labTest,
+            BigDecimal practical,
+            BigDecimal finalExam) {
+
+        BigDecimal[] weights = { tutorial, assignment, labTest, practical, finalExam };
+        BigDecimal sum = BigDecimal.ZERO;
+
+        for (BigDecimal w : weights) {
+            if (w == null || w.compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Assessment weights must be non-negative.");
+            }
+            sum = sum.add(w);
+        }
+
+        if (sum.compareTo(new BigDecimal("100.00")) != 0) {
+            throw new IllegalArgumentException(
+                    "Assessment weights must sum to 100.00, got: " + sum);
+        }
+    }
+
     public int getTotalEnrolledStudents(Connection conn, int offeringId) throws SQLException {
-        String countSql = "SELECT COUNT(*) AS cnt FROM course_enrollment WHERE offering_id = ?";
+        String countSql = "SELECT COUNT(*) AS cnt FROM course_enrollment WHERE offering_id = ? AND status = 'ENROLLED'";
         try (PreparedStatement countStmt = conn.prepareStatement(countSql)) {
             countStmt.setInt(1, offeringId);
             try (ResultSet rs = countStmt.executeQuery()) {
@@ -360,7 +348,7 @@ public class CourseOfferingDAO {
                 continue;
 
             DayOfWeek dow = d.getDayOfWeek();
-            String dayLabel = dow.name().substring(0, 3); // "MON", "TUE", "WED"...
+            String dayLabel = dow.name().substring(0, 3);
             uniqueSlots.add(new SlotKey(dow.getValue(), dayLabel, p, periodToTimeRange(p)));
         }
 
@@ -373,7 +361,7 @@ public class CourseOfferingDAO {
         Map<Integer, String> scheduleByOffering = getSchedulesByOffering(userDeptId);
         List<ClassItem> classItems = new ArrayList<>();
         String classSql = """
-                    SELECT
+                SELECT
                     co.offering_id,
                     c.course_code,
                     c.course_name,
@@ -408,7 +396,7 @@ public class CourseOfferingDAO {
                          AND s.dept_id = ?
                    )
                 ORDER BY co.offering_id DESC;
-                        """;
+                """;
         try (Connection conn = DatabaseConnector.getConnection();
                 PreparedStatement pstmtClass = conn.prepareStatement(classSql)) {
             pstmtClass.setInt(1, userDeptId);
@@ -434,7 +422,7 @@ public class CourseOfferingDAO {
 
                     String lecturer = rs.getString("lecturer");
                     if (lecturer == null || lecturer.isBlank()) {
-                        lecturer = "Unassigned"; // teacher_id is nullable
+                        lecturer = "Unassigned";
                     }
 
                     String badgeColor = rs.getString("badge_color");
@@ -448,12 +436,13 @@ public class CourseOfferingDAO {
                     }
 
                     classItems.add(new ClassItem(
+                            rs.getInt("offering_id"),
                             courseCode,
                             courseTitle,
                             major,
                             year,
                             term,
-                            "", // className (not needed on card)
+                            "",
                             studentCountStr,
                             scheduleStr,
                             lecturer,
@@ -489,25 +478,6 @@ public class CourseOfferingDAO {
         };
     }
 
-    private String formatYear(int yearNum) {
-        return switch (yearNum) {
-            case 1 -> "First Year";
-            case 2 -> "Second Year";
-            case 3 -> "Third Year";
-            case 4 -> "Fourth Year";
-            case 5 -> "Fifth Year";
-            default -> "Year " + yearNum;
-        };
-    }
-
-    private String formatTerm(int termNum) {
-        return switch (termNum) {
-            case 1 -> "First Semester";
-            case 2 -> "Second Semester";
-            default -> "Semester " + termNum;
-        };
-    }
-    
     public int findOfferingId(Connection conn, String courseCode, String year, String term) throws SQLException {
         String sql = """
                 SELECT co.offering_id
@@ -546,7 +516,7 @@ public class CourseOfferingDAO {
                 ORDER BY cs.session_date ASC, cs.period ASC
                 """;
         try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, courseCode);
             pstmt.setString(2, year);
             pstmt.setString(3, term);
@@ -586,7 +556,6 @@ public class CourseOfferingDAO {
                     return false;
                 }
 
-                // Resolve teacher_id by name
                 int teacherId = -1;
                 String findTeacherSql = """
                         SELECT t.teacher_id
@@ -606,7 +575,6 @@ public class CourseOfferingDAO {
                     }
                 }
 
-                // Update course_offering (teacher + total_sessions)
                 if (teacherId > 0) {
                     String updateOfferingSql = "UPDATE course_offering SET teacher_id = ?, total_sessions = ? WHERE offering_id = ?";
                     try (PreparedStatement uStmt = conn.prepareStatement(updateOfferingSql)) {
@@ -624,12 +592,10 @@ public class CourseOfferingDAO {
                     }
                 }
 
-                // Build a set of desired (date|period) keys so untouched sessions keep their attendance records
                 Set<String> desiredKeys = newSessions.stream()
                         .map(s -> s.sessionDate().toString() + "|" + s.period())
                         .collect(Collectors.toSet());
 
-                // Delete only sessions removed by the admin
                 List<Integer> sessionIdsToDelete = new ArrayList<>();
                 String existingSql = "SELECT session_id, session_date, period FROM class_session WHERE offering_id = ?";
                 try (PreparedStatement eStmt = conn.prepareStatement(existingSql)) {
@@ -655,7 +621,6 @@ public class CourseOfferingDAO {
                     }
                 }
 
-                // Insert newly added sessions (existing matching ones are ignored cleanly)
                 String insertSql = "INSERT IGNORE INTO class_session (offering_id, session_date, period) VALUES (?, ?, ?)";
                 try (PreparedStatement iStmt = conn.prepareStatement(insertSql)) {
                     for (SessionInput s : newSessions) {
@@ -675,16 +640,18 @@ public class CourseOfferingDAO {
                 } catch (SQLException rollbackEx) {
                     ex.addSuppressed(rollbackEx);
                 }
-                if (ex instanceof SQLException sqlEx) throw sqlEx;
+                if (ex instanceof SQLException sqlEx)
+                    throw sqlEx;
                 throw new SQLException("Failed to update offering schedule", ex);
             } finally {
                 try {
                     conn.setAutoCommit(prevAutoCommit);
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
         }
     }
-    
+
     public boolean updateOfferingMetadata(
             String courseCode,
             String oldYear,
@@ -707,7 +674,6 @@ public class CourseOfferingDAO {
                     return false;
                 }
 
-                // 1. Update offering fields (year, term, max_student, card_symbol, badge_color)
                 String updateOfferingSql = """
                         UPDATE course_offering
                         SET `year` = ?, term = ?, max_student = ?, card_symbol = ?, badge_color = ?
@@ -723,7 +689,6 @@ public class CourseOfferingDAO {
                     oStmt.executeUpdate();
                 }
 
-                // 2. Update course title if changed
                 if (newCourseName != null && !newCourseName.isBlank()) {
                     String updateCourseSql = """
                             UPDATE course c
@@ -746,13 +711,493 @@ public class CourseOfferingDAO {
                 } catch (SQLException rollbackEx) {
                     ex.addSuppressed(rollbackEx);
                 }
-                if (ex instanceof SQLException sqlEx) throw sqlEx;
+                if (ex instanceof SQLException sqlEx)
+                    throw sqlEx;
                 throw new SQLException("Failed to update class details", ex);
             } finally {
                 try {
                     conn.setAutoCommit(prevAutoCommit);
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
+        }
+    }
+
+    /**
+     * Permanently deletes a course offering and its enrollments/sessions/assessments/grades.
+     */
+    public boolean deleteCourseOffering(int offeringId) throws SQLException {
+        if (offeringId <= 0) {
+            return false;
+        }
+
+        String deleteEnrollmentsSql = "DELETE FROM course_enrollment WHERE offering_id = ?";
+        String deleteOfferingSql = "DELETE FROM course_offering WHERE offering_id = ?";
+
+        try (Connection conn = DatabaseConnector.getConnection()) {
+            boolean prevAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+
+            try {
+                // Must delete course_enrollment first because offering_id FK is ON DELETE RESTRICT
+                try (PreparedStatement enrollStmt = conn.prepareStatement(deleteEnrollmentsSql)) {
+                    enrollStmt.setInt(1, offeringId);
+                    enrollStmt.executeUpdate();
+                }
+
+                int deleted;
+                try (PreparedStatement offStmt = conn.prepareStatement(deleteOfferingSql)) {
+                    offStmt.setInt(1, offeringId);
+                    deleted = offStmt.executeUpdate();
+                }
+
+                conn.commit();
+                return deleted > 0;
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw ex;
+            } finally {
+                conn.setAutoCommit(prevAutoCommit);
+            }
+        }
+    }
+
+    public record TopLevelMetrics(
+            int totalStudents,
+            int totalTeachers,
+            int totalCourses,
+            double todayAttendancePct,
+            int todayPresentCount,
+            int todayTotalCount) {
+    }
+
+    public record EnrolledStudentRecord(
+            String studentId,
+            String rollNo,
+            String fullName,
+            String email,
+            int attendancePercent,
+            double gpa) {
+    }
+
+    public record DailyAttendanceLogRecord(
+            int no,
+            String rollNo,
+            String studentName,
+            String date,
+            int period,
+            String subject,
+            String status,
+            String remarks) {
+    }
+
+    public TopLevelMetrics getTopLevelMetrics() {
+        int totalStudents = 0;
+        int totalTeachers = 0;
+        int totalCourses = 0;
+        double todayAttendancePct = 0.0;
+        int todayPresentCount = 0;
+        int todayTotalCount = 0;
+
+        String countsSql = """
+                SELECT
+                    (SELECT COUNT(*) FROM student s
+                     JOIN user_account ua ON s.user_id = ua.user_id
+                     WHERE ua.status = TRUE) AS total_students,
+                    (SELECT COUNT(*) FROM teacher t
+                     JOIN user_account ua ON t.user_id = ua.user_id
+                     WHERE ua.status = TRUE) AS total_teachers,
+                    (SELECT COUNT(*) FROM course WHERE is_active = TRUE) AS total_courses
+                """;
+
+        String todayAttendanceSql = """
+                SELECT
+                    (COUNT(*) - COUNT(a.attendance_id)) AS present_count,
+                    COUNT(*) AS total_count
+                FROM class_session cs
+                JOIN course_enrollment ce
+                    ON cs.offering_id = ce.offering_id AND ce.status = 'ENROLLED'
+                JOIN student s
+                    ON ce.student_id = s.student_id
+                JOIN user_account ua
+                    ON s.user_id = ua.user_id AND ua.status = TRUE
+                LEFT JOIN attendance a
+                    ON cs.session_id = a.session_id AND a.enrollment_id = ce.enrollment_id
+                WHERE cs.is_cancelled = FALSE
+                  AND cs.session_date = CURDATE()
+                """;
+
+        try (Connection conn = DatabaseConnector.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(countsSql);
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    totalStudents = rs.getInt("total_students");
+                    totalTeachers = rs.getInt("total_teachers");
+                    totalCourses = rs.getInt("total_courses");
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(todayAttendanceSql);
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    todayPresentCount = rs.getInt("present_count");
+                    todayTotalCount = rs.getInt("total_count");
+                    if (todayTotalCount > 0) {
+                        todayAttendancePct = (todayPresentCount * 100.0) / todayTotalCount;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return new TopLevelMetrics(
+                totalStudents, totalTeachers, totalCourses,
+                todayAttendancePct, todayPresentCount, todayTotalCount
+        );
+    }
+
+    public List<EnrolledStudentRecord> getEnrolledStudentsWithAttendance(
+            String courseCode, String year, String term) {
+
+        List<EnrolledStudentRecord> list = new ArrayList<>();
+        String sql = """
+                SELECT
+                    s.student_id,
+                    s.roll_no,
+                    s.full_name,
+                    COALESCE(ci.email_address, ua.email) AS email,
+                    COALESCE(s.gpa, 0.00) AS gpa,
+                    (SELECT COUNT(*)
+                     FROM class_session cs
+                     WHERE cs.offering_id = ce.offering_id
+                       AND cs.is_cancelled = FALSE
+                       AND cs.session_date <= CURDATE()) AS sessions_held,
+                    (SELECT COUNT(*)
+                     FROM attendance a
+                     JOIN class_session cs ON a.session_id = cs.session_id
+                     WHERE a.enrollment_id = ce.enrollment_id
+                       AND cs.is_cancelled = FALSE
+                       AND cs.session_date <= CURDATE()) AS absences
+                FROM course_enrollment ce
+                JOIN course_offering co ON ce.offering_id = co.offering_id
+                JOIN course c ON co.course_id = c.course_id
+                JOIN student s ON ce.student_id = s.student_id
+                JOIN user_account ua ON s.user_id = ua.user_id
+                LEFT JOIN student_contact_information ci ON s.student_id = ci.student_id
+                WHERE c.course_code = ?
+                  AND co.`year` = ?
+                  AND co.term = ?
+                  AND ce.status = 'ENROLLED'
+                  AND ua.status = TRUE
+                ORDER BY s.roll_no ASC
+                """;
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, courseCode);
+            ps.setString(2, year);
+            ps.setString(3, term);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int held = rs.getInt("sessions_held");
+                    int absences = rs.getInt("absences");
+                    int attPct = (held <= 0)
+                            ? 100
+                            : (int) Math.round(((held - absences) * 100.0) / held);
+                    attPct = Math.max(0, Math.min(100, attPct));
+
+                    list.add(new EnrolledStudentRecord(
+                            String.valueOf(rs.getInt("student_id")),
+                            rs.getString("roll_no"),
+                            rs.getString("full_name"),
+                            rs.getString("email"),
+                            attPct,
+                            rs.getDouble("gpa")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<DailyAttendanceLogRecord> getDailyLogsForOffering(
+            String courseCode, String year, String term) {
+
+        List<DailyAttendanceLogRecord> logs = new ArrayList<>();
+        String sql = """
+                SELECT
+                    s.roll_no,
+                    s.full_name,
+                    cs.session_date,
+                    cs.period,
+                    c.course_name,
+                    a.status AS absence_status,
+                    a.reason
+                FROM class_session cs
+                JOIN course_offering co ON cs.offering_id = co.offering_id
+                JOIN course c ON co.course_id = c.course_id
+                JOIN course_enrollment ce
+                    ON co.offering_id = ce.offering_id AND ce.status = 'ENROLLED'
+                JOIN student s ON ce.student_id = s.student_id
+                JOIN user_account ua ON s.user_id = ua.user_id AND ua.status = TRUE
+                LEFT JOIN attendance a
+                    ON cs.session_id = a.session_id AND a.enrollment_id = ce.enrollment_id
+                WHERE c.course_code = ?
+                  AND co.`year` = ?
+                  AND co.term = ?
+                  AND cs.is_cancelled = FALSE
+                ORDER BY cs.session_date DESC, cs.period ASC, s.roll_no ASC
+                """;
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, courseCode);
+            ps.setString(2, year);
+            ps.setString(3, term);
+            try (ResultSet rs = ps.executeQuery()) {
+                int no = 1;
+                while (rs.next()) {
+                    String absenceStatus = rs.getString("absence_status");
+                    String uiStatus;
+                    String remarks = rs.getString("reason");
+
+                    if (absenceStatus == null) {
+                        uiStatus = "Present";
+                        if (remarks == null || remarks.isBlank()) remarks = "On Time";
+                    } else if (absenceStatus.equalsIgnoreCase("EXCUSED")) {
+                        uiStatus = "Excused";
+                        if (remarks == null || remarks.isBlank()) remarks = "Excused";
+                    } else {
+                        uiStatus = "Absent";
+                        if (remarks == null || remarks.isBlank()) remarks = "Unexcused";
+                    }
+
+                    logs.add(new DailyAttendanceLogRecord(
+                            no++,
+                            rs.getString("roll_no"),
+                            rs.getString("full_name"),
+                            rs.getDate("session_date").toLocalDate().toString(),
+                            rs.getInt("period"),
+                            rs.getString("course_name"),
+                            uiStatus,
+                            remarks
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return logs;
+    }
+
+    public Map<String, Integer> getAttendancePercentByStudent(int offeringId) {
+        Map<String, Integer> result = new HashMap<>();
+        String sql = """
+                SELECT
+                    ce.student_id,
+                    (SELECT COUNT(*)
+                     FROM class_session cs
+                     WHERE cs.offering_id = ce.offering_id
+                       AND cs.is_cancelled = FALSE
+                       AND cs.session_date <= CURDATE()) AS sessions_held,
+                    (SELECT COUNT(*)
+                     FROM attendance a
+                     JOIN class_session cs ON a.session_id = cs.session_id
+                     WHERE a.enrollment_id = ce.enrollment_id
+                       AND cs.is_cancelled = FALSE
+                       AND cs.session_date <= CURDATE()) AS absences
+                FROM course_enrollment ce
+                WHERE ce.offering_id = ?
+                  AND ce.status = 'ENROLLED'
+                """;
+
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, offeringId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int held = rs.getInt("sessions_held");
+                    int absences = rs.getInt("absences");
+                    int attPct = (held <= 0)
+                            ? 100
+                            : (int) Math.round(((held - absences) * 100.0) / held);
+                    result.put(
+                            String.valueOf(rs.getInt("student_id")),
+                            Math.max(0, Math.min(100, attPct))
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
+    public List<DailyAttendanceLogRecord> getDailyLogsByOfferingId(int offeringId) {
+        List<DailyAttendanceLogRecord> logs = new ArrayList<>();
+        String sql = """
+                SELECT
+                    s.roll_no,
+                    s.full_name,
+                    cs.session_date,
+                    cs.period,
+                    c.course_name,
+                    a.status AS absence_status,
+                    a.reason
+                FROM class_session cs
+                JOIN course_offering co ON cs.offering_id = co.offering_id
+                JOIN course c ON co.course_id = c.course_id
+                JOIN course_enrollment ce
+                    ON co.offering_id = ce.offering_id AND ce.status = 'ENROLLED'
+                JOIN student s ON ce.student_id = s.student_id
+                JOIN user_account ua ON s.user_id = ua.user_id AND ua.status = TRUE
+                LEFT JOIN attendance a
+                    ON cs.session_id = a.session_id AND a.enrollment_id = ce.enrollment_id
+                WHERE cs.offering_id = ?
+                  AND cs.is_cancelled = FALSE
+                ORDER BY cs.session_date DESC, cs.period ASC, s.roll_no ASC
+                """;
+
+        try (Connection conn = DatabaseConnector.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, offeringId);
+            try (ResultSet rs = ps.executeQuery()) {
+                int no = 1;
+                while (rs.next()) {
+                    String absenceStatus = rs.getString("absence_status");
+                    String uiStatus;
+                    String remarks = rs.getString("reason");
+
+                    if (absenceStatus == null) {
+                        uiStatus = "Present";
+                        if (remarks == null || remarks.isBlank()) remarks = "On Time";
+                    } else if (absenceStatus.equalsIgnoreCase("EXCUSED")) {
+                        uiStatus = "Excused";
+                        if (remarks == null || remarks.isBlank()) remarks = "Excused";
+                    } else {
+                        uiStatus = "Absent";
+                        if (remarks == null || remarks.isBlank()) remarks = "Unexcused";
+                    }
+
+                    logs.add(new DailyAttendanceLogRecord(
+                            no++,
+                            rs.getString("roll_no"),
+                            rs.getString("full_name"),
+                            rs.getDate("session_date").toLocalDate().toString(),
+                            rs.getInt("period"),
+                            rs.getString("course_name"),
+                            uiStatus,
+                            remarks
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return logs;
+    }
+    public List<Integer> getDistinctPeriodsForOffering(int offeringId) {
+        List<Integer> periods = new ArrayList<>();
+        String sql = """
+                SELECT DISTINCT cs.period
+                FROM class_session cs
+                WHERE cs.offering_id = ?
+                  AND cs.is_cancelled = FALSE
+                ORDER BY cs.period ASC
+                """;
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, offeringId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    periods.add(rs.getInt("period"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return periods;
+    }
+    
+    public record AssessmentWeightRecord(
+            int tutorial,
+            int assignment,
+            int labTest,
+            int practical,
+            int finalExam) {
+    }
+
+    public AssessmentWeightRecord getAssessmentWeightByOfferingId(int offeringId) {
+        if (offeringId <= 0) {
+            return null;
+        }
+        String sql = """
+                SELECT
+                    tutorial_weight,
+                    assignment_weight,
+                    lab_test_weight,
+                    practical_weight,
+                    final_exam_weight
+                FROM assessment_weight
+                WHERE offering_id = ?
+                LIMIT 1
+                """;
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, offeringId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new AssessmentWeightRecord(
+                            (int) Math.round(rs.getDouble("tutorial_weight")),
+                            (int) Math.round(rs.getDouble("assignment_weight")),
+                            (int) Math.round(rs.getDouble("lab_test_weight")),
+                            (int) Math.round(rs.getDouble("practical_weight")),
+                            (int) Math.round(rs.getDouble("final_exam_weight"))
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean updateAssessmentWeight(
+            int offeringId,
+            int tutorial,
+            int assignment,
+            int labTest,
+            int practical,
+            int finalExam) throws SQLException {
+
+        if (offeringId <= 0) return false;
+
+        String sql = """
+                INSERT INTO assessment_weight (
+                    offering_id, tutorial_weight, assignment_weight,
+                    lab_test_weight, practical_weight, final_exam_weight
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    tutorial_weight = VALUES(tutorial_weight),
+                    assignment_weight = VALUES(assignment_weight),
+                    lab_test_weight = VALUES(lab_test_weight),
+                    practical_weight = VALUES(practical_weight),
+                    final_exam_weight = VALUES(final_exam_weight)
+                """;
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, offeringId);
+            ps.setBigDecimal(2, BigDecimal.valueOf(tutorial));
+            ps.setBigDecimal(3, BigDecimal.valueOf(assignment));
+            ps.setBigDecimal(4, BigDecimal.valueOf(labTest));
+            ps.setBigDecimal(5, BigDecimal.valueOf(practical));
+            ps.setBigDecimal(6, BigDecimal.valueOf(finalExam));
+            return ps.executeUpdate() > 0;
         }
     }
 }
